@@ -7,26 +7,19 @@ args = commandArgs(trailingOnly=TRUE)
 if (length(args)==0) {
   cat('no arguments provided\n')
 
-  source("~/dev/rscripts/0_used_functions.R")
+  source("/Users/alex/dev/repos/10x_neural_tube/R/scripts/0_used_functions.R")
 
-
-  plot.path = "~/dev/output/10x_neural_tube/plots/1_seurat_full/"
-  rds.path = "~/dev/output/10x_neural_tube/RDS.files/1_seurat_full/"
+  plot.path = "/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/"
+  rds.path = "/Users/alex/dev/output/10x_neural_tube/RDS.files/1_seurat_full/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
-
-  input.dat = paste0(project.dir, "cellranger_output/"
-
-
+  
   ###### load data ##########
   sample.paths<-data.frame(tissue = c("hh4", "hh6", "ss4", "ss8"),
-                           path = c("../cellranger/cellranger_output/cellranger_count_hh4/outs/filtered_feature_bc_matrix_chr_edit/",
-                                    "../cellranger/cellranger_output/cellranger_count_hh6/outs/filtered_feature_bc_matrix_chr_edit/",
-                                    "../cellranger/cellranger_output/cellranger_count_4ss/outs/filtered_feature_bc_matrix_chr_edit/",
-                                    "../cellranger/cellranger_output/cellranger_count_8ss/outs/filtered_feature_bc_matrix_chr_edit/"))
-
-
-
+                           path = c("/Users/alex/dev/data/10x/cellranger_output/cellranger_count_hh4/outs/filtered_feature_bc_matrix_chr_edit/",
+                                    "/Users/alex/dev/data/10x/cellranger_output/cellranger_count_hh6/outs/filtered_feature_bc_matrix_chr_edit/",
+                                    "/Users/alex/dev/data/10x/cellranger_output/cellranger_count_4ss/outs/filtered_feature_bc_matrix_chr_edit/",
+                                    "/Users/alex/dev/data/10x/cellranger_output/cellranger_count_8ss/outs/filtered_feature_bc_matrix_chr_edit/"))
 } else if (length(args)==1) {
   if (args[1] == "camp") {
     cat('data loaded from CAMP\n')
@@ -36,12 +29,12 @@ if (length(args)==0) {
     
     source(paste0(project.dir, "repo/scripts/0_used_functions.R"))
 
-    plot.path = paste0(project.dir, "output/plots/1_seurat_full/"))
-    rds.path = paste0(project.dir, "output/RDS.files/1_seurat_full/"))
+    plot.path = paste0(project.dir, "output/plots/1_seurat_full/")
+    rds.path = paste0(project.dir, "output/RDS.files/1_seurat_full/")
     dir.create(plot.path, recursive = T)
     dir.create(rds.path, recursive = T)
 
-    input.dat = paste0(project.dir, "cellranger_output/"
+    input.dat = paste0(project.dir, "cellranger_output/")
 
     ###### load data ##########
     sample.paths<-data.frame(tissue = c("hh4", "hh6", "ss4", "ss8"),
@@ -279,7 +272,7 @@ dir.create(plot.path)
 # identify mesoderm
 # UMAP plots GOI
 genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
-multi.feature.plot(seurat.obj = norm.data.sexfilt, multi.obj.list = F, gene.list = genes, cluster.res = 1.4, plot.clusters = T, 
+multi.feature.plot(seurat.obj = norm.data.sexfilt, multi.obj.list = F, gene.list = genes, cluster.res = 1.4, plot.clusters = T,
                    plot.stage = T, n.col = 4, label = "", cluster.col = "RNA_snn_res.1.4")
 
 # Dotplot for identifying PGCs, Early mesoderm and Late mesoderm
@@ -293,9 +286,9 @@ dev.off()
 # Clust 20 = Late mesoderm - expresses twist1, six1, eya2
 # Clust 21 = PGC's - expresses dazl very highly
 norm.data.clustfilt <- rownames(norm.data.sexfilt@meta.data)[norm.data.sexfilt@meta.data$seurat_clusters == 12 |
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 14 | 
+                                                               norm.data.sexfilt@meta.data$seurat_clusters == 14 |
                                                                norm.data.sexfilt@meta.data$seurat_clusters == 17 |
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 18 | 
+                                                               norm.data.sexfilt@meta.data$seurat_clusters == 18 |
                                                                norm.data.sexfilt@meta.data$seurat_clusters == 20 |
                                                                norm.data.sexfilt@meta.data$seurat_clusters == 21]
 
@@ -402,7 +395,7 @@ tenx_pheatmap(data = norm.data.clustfilt.cc, metadata = c("orig.ident", "seurat_
 plot.path <- "plots/1_seurat_full/4_cell_type_classification/"
 dir.create(plot.path)
 
-###################### Nerual crest and placode cell type identification ###################### 
+###################### Nerual crest and placode cell type identification ######################
 placNC_genes <- c(
   # delaminating NC
   "ETS1", "SOX10", "SOX8", "LMO4",  "TFAP2B", "SOX9",
@@ -435,7 +428,7 @@ DotPlot(norm.data.clustfilt.cc[, !is.na(norm.data.clustfilt.cc@meta.data$placNC_
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 dev.off()
 
-###################### Neural tube cell identification ###################### 
+###################### Neural tube cell identification ######################
 NP_genes <- c(
   # HB
   "GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20",
@@ -456,7 +449,7 @@ multi.feature.plot(norm.data.clustfilt.cc, stage.name = "all.stages", gene.list 
 norm.data.clustfilt.cc@meta.data$NP_clust <- apply(norm.data.clustfilt.cc@meta.data, 1, function(x)
   if(x["seurat_clusters"] == 3){"Late Forebrain"} else if(x["seurat_clusters"] == 4){"Late Midbrain"}
   else if(x["seurat_clusters"] == 6){"Early Midbrain"} else if(x["seurat_clusters"] == 7){"Early Forebrain"}
-  else if(x["seurat_clusters"] == 14){"Ventral Forebrain"} else if(x["seurat_clusters"] == 13){"Hindbrain"} 
+  else if(x["seurat_clusters"] == 14){"Ventral Forebrain"} else if(x["seurat_clusters"] == 13){"Hindbrain"}
   else {NA})
 
 
