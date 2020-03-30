@@ -1,8 +1,60 @@
 
 
-source('0_my_functions.R')
-library(Seurat)
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
+
+# at start of script check args in order to supply the file path input - this allows to input as to whether data is pulled from web server or locally
+if (length(args)==0) {
+  cat('no arguments provided\n')
+
+  source("~/dev/rscripts/0_used_functions.R")
+
+
+  plot.path = "~/dev/output/10x_neural_tube/plots/1_seurat_full/"
+  rds.path = "~/dev/output/10x_neural_tube/RDS.files/1_seurat_full/"
+  dir.create(plot.path, recursive = T)
+  dir.create(rds.path, recursive = T)
+
+  input.dat = paste0(project.dir, "cellranger_output/"
+
+
+  ###### load data ##########
+  sample.paths<-data.frame(tissue = c("hh4", "hh6", "ss4", "ss8"),
+                           path = c("../cellranger/cellranger_output/cellranger_count_hh4/outs/filtered_feature_bc_matrix_chr_edit/",
+                                    "../cellranger/cellranger_output/cellranger_count_hh6/outs/filtered_feature_bc_matrix_chr_edit/",
+                                    "../cellranger/cellranger_output/cellranger_count_4ss/outs/filtered_feature_bc_matrix_chr_edit/",
+                                    "../cellranger/cellranger_output/cellranger_count_8ss/outs/filtered_feature_bc_matrix_chr_edit/"))
+
+
+
+} else if (length(args)==1) {
+  if (args[1] == "camp") {
+    cat('data loaded from CAMP\n')
+    Sys.setenv(RENV_PATHS_ROOT = "/camp/lab/luscomben/working/alexthiery/conda/")
+    .libPaths("/camp/lab/luscomben/working/alexthiery/conda/envs/10x_r/lib/R/library")
+    project.dir = "/camp/home/thierya/working/alexthiery/analysis/10x_scRNAseq_2019/"
+    
+    source(paste0(project.dir, "repo/scripts/0_used_functions.R"))
+
+    plot.path = paste0(project.dir, "output/plots/1_seurat_full/"))
+    rds.path = paste0(project.dir, "output/RDS.files/1_seurat_full/"))
+    dir.create(plot.path, recursive = T)
+    dir.create(rds.path, recursive = T)
+
+    input.dat = paste0(project.dir, "cellranger_output/"
+
+    ###### load data ##########
+    sample.paths<-data.frame(tissue = c("hh4", "hh6", "ss4", "ss8"),
+                             path = c(paste0(input.dat, 'hh4_filtered_feature_bc_matrix_chr_edit'),
+                                      paste0(input.dat, 'hh6_filtered_feature_bc_matrix_chr_edit'),
+                                      paste0(input.dat, '4ss_filtered_feature_bc_matrix_chr_edit'),
+                                      paste0(input.dat, '8ss_filtered_feature_bc_matrix_chr_edit')))
+
+  } else {stop("Only camp can be supplied as arguments")}
+} else {stop("only one argument can be supplied")}
+
 library(Antler)
+library(Seurat)
 library(cowplot)
 library(clustree)
 library(dplyr)
@@ -12,17 +64,6 @@ library(pheatmap)
 library(tidyverse)
 
 
-
-data.dir = "~/dev/data/10x/cellranger_output/"
-plot.path = "~/dev/output/10x_neural_tube/plots/1_Seurat_full/"
-rds.path = '~/dev/output/10x_neural_tube/rds.files/1_Seurat_full/'
-
-###### load data ##########
-sample.paths<-data.frame(tissue = c("hh4", "hh6", "ss4", "ss8"),
-                         path = c(paste0(data.dir, "cellranger_count_hh4/outs/filtered_feature_bc_matrix_chr_edit/"),
-                                  paste0(data.dir, "cellranger_count_hh6/outs/filtered_feature_bc_matrix_chr_edit/"),
-                                  paste0(data.dir, "cellranger_count_4ss/outs/filtered_feature_bc_matrix_chr_edit/"),
-                                  paste0(data.dir, "cellranger_count_8ss/outs/filtered_feature_bc_matrix_chr_edit/")))
 
 # Make Seurat objects for each of the different samples. The raw data for each sample is found in the relative directory assigned above in sample.paths.
 for(i in 1:nrow(sample.paths["path"])){
@@ -63,17 +104,17 @@ saveRDS(norm.data, paste0(rds.path, "norm.data.RDS"))
 # read in RDS data if needed
 # norm.data <- readRDS(paste0(rds.path, "norm.data.RDS"))
 
-curr.plot.path <- paste0(plot.path, "0_filt_data/")
-dir.create(curr.plot.path)
+plot.path <- "plots/1_seurat_full/0_filt_data/"
+dir.create(plot.path)
 
 # Run PCA analysis on the each set of data
 norm.data <- RunPCA(object = norm.data, verbose = FALSE)
 # Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept!
-pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
+pdf(paste0(plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data, dims = 1:30, balanced = TRUE, cells = 500)
 dev.off()
 # another heuristic method is ElbowPlot which ranks PCs based on the % variance explained by each PC
-pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
+pdf(paste0(plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data, ndims = 40))
 dev.off()
 
@@ -88,6 +129,9 @@ norm.data <- FindClusters(norm.data, resolution = 0.5, verbose = FALSE)
 # plot UMAP for clusters and developmental stage
 clust.stage.plot(norm.data)
 
+# plot cluster QC for each stage
+QC_plot(norm.data)
+
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(norm.data, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
@@ -97,9 +141,9 @@ tenx_pheatmap(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), u
 #####################################################################################################
 #                                   Check for sex differences                                       #
 #####################################################################################################
-curr.plot.path <- paste0(plot.path, "1_sex_filt/")
 
-dir.create(curr.plot.path)
+plot.path <- "plots/1_seurat_full/1_sex_filt/"
+dir.create(plot.path)
 
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are hh4 clusters. Clustering is driven by sex genes
 tenx_pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
@@ -130,8 +174,7 @@ if(sumclus1 < sumclus2){
 }
 
 cell.sex.ID <- list("male.cells" = k.male, "female.cells" = k.female)
-saveRDS(object = cell.sex.ID, paste0(rds.path, 'sex_kmeans.RDS'))
-#cell.sex.ID <- readRDS(file = paste0(rds.path, 'sex_kmeans.RDS'))
+saveRDS(object = cell.sex.ID, "RDS.files/1_seurat_full/sex_kmeans.RDS")
 
 # add sex data to meta.data
 norm.data@meta.data$sex <- unlist(lapply(rownames(norm.data@meta.data), function(x)
@@ -169,7 +212,7 @@ FC$auto <-  mean.auto.male - mean.auto.female
 # plot hist/boxplot of data
 hist(FC$Z$Z.mean)
 hist(FC$auto$auto.mean)
-pdf(paste0(curr.plot.path,"sex_kmeans_log2FC_boxplot.pdf"))
+pdf(paste0(plot.path,"sex_kmeans_log2FC_boxplot.pdf"))
 boxplot(c(FC$Z, FC$auto),  ylab = "male - female log2 FC (mean normalised UMI +1)", names = c("Z chromosome genes", "autosomal genes"))
 dev.off()
 
@@ -198,11 +241,10 @@ saveRDS(norm.data.sexfilt, paste0(rds.path, "norm.data.sexfilt.RDS"))
 
 norm.data.sexfilt <- RunPCA(object = norm.data.sexfilt, verbose = FALSE)
 
-pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
+pdf(paste0(plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data.sexfilt, dims = 1:30, balanced = TRUE, cells = 500)
 dev.off()
-
-pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
+pdf(paste0(plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data.sexfilt, ndims = 40))
 dev.off()
 
@@ -231,8 +273,8 @@ tenx_pheatmap(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clust
 #                 Identify and remove poor quality clusters / contamination (mesoderm)              #
 #####################################################################################################
 
-curr.plot.path <- past0(plot.path, "2_cluster_filt/")
-dir.create(curr.plot.path)
+plot.path <- "plots/1_seurat_full/2_cluster_filt/"
+dir.create(plot.path)
 
 # identify mesoderm
 # UMAP plots GOI
@@ -274,10 +316,10 @@ saveRDS(norm.data.clustfilt, paste0(rds.path, "norm.data.clustfilt.RDS"))
 
 norm.data.clustfilt <- RunPCA(object = norm.data.clustfilt, verbose = FALSE)
 
-pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
+pdf(paste0(plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data.clustfilt, dims = 1:30, balanced = TRUE, cells = 500)
 dev.off()
-pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
+pdf(paste0(plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data.clustfilt, ndims = 40))
 dev.off()
 
@@ -295,8 +337,8 @@ clust.stage.plot(norm.data.clustfilt)
 ####################################################################################
 #                            Check for cell cycle effect                           #
 ####################################################################################
-curr.plot.path <- paste0(plot.path, "3_cell_cycle/")
-dir.create(curr.plot.path)
+plot.path <- "plots/1_seurat_full/3_cell_cycle/"
+dir.create(plot.path)
 
 s.genes <- cc.genes$s.genes
 g2m.genes <- cc.genes$g2m.genes
@@ -317,11 +359,11 @@ saveRDS(norm.data.clustfilt.cc, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
 
 norm.data.clustfilt.cc <- RunPCA(object = norm.data.clustfilt.cc, verbose = FALSE)
 
-pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
+pdf(paste0(plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data.clustfilt.cc, dims = 1:30, balanced = TRUE, cells = 500)
 dev.off()
 
-pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
+pdf(paste0(plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data.clustfilt.cc, ndims = 40))
 dev.off()
 
@@ -333,7 +375,7 @@ clust.res(seurat.obj = norm.data.clustfilt.cc, multi.obj.list = F, by = 0.2)
 norm.data.clustfilt.cc <- FindClusters(norm.data.clustfilt.cc, resolution = 1.2)
 
 # UMAP of cell cycle before and after regressing out
-pdf(paste0(curr.plot.path, "cell.cycle.pdf"), width = 14, height = 7)
+pdf(paste0(plot.path, "cell.cycle.pdf"), width = 14, height = 7)
 pre.plot <- DimPlot(pre.cell.cycle.dat, group.by = "Phase", reduction = "umap")
 post.plot <- DimPlot(norm.data.clustfilt.cc, group.by = "Phase", reduction = "umap")
 print(gridExtra::grid.arrange(pre.plot, post.plot, ncol = 2))
@@ -357,8 +399,8 @@ tenx_pheatmap(data = norm.data.clustfilt.cc, metadata = c("orig.ident", "seurat_
 #                                        Cell type identification                                   #
 #####################################################################################################
 
-curr.plot.path <- paste0(plot.path, "4_cell_type_classification/")
-dir.create(curr.plot.path)
+plot.path <- "plots/1_seurat_full/4_cell_type_classification/"
+dir.create(plot.path)
 
 ###################### Nerual crest and placode cell type identification ###################### 
 placNC_genes <- c(
@@ -383,12 +425,12 @@ norm.data.clustfilt.cc@meta.data$placNC_clust <- apply(norm.data.clustfilt.cc@me
   else if(x["seurat_clusters"] == 9){"Placodes"}else {NA})
 
 # plot annotated neural crest and placodal clusters
-png(paste0(curr.plot.path, "plac.clust.png"), width = 13, height = 10, res = 200, units = "cm")
+png(paste0(plot.path, "plac.clust.png"), width = 13, height = 10, res = 200, units = "cm")
 DimPlot(norm.data.clustfilt.cc, group.by = "placNC_clust")  + ggtitle("Clusters") + theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
 # plot dotplot for neural crest and placodal genes and clusters
-png(paste0(curr.plot.path, "plac.dotplot.png"), width = 25, height = 10, res = 200, units = "cm")
+png(paste0(plot.path, "plac.dotplot.png"), width = 25, height = 10, res = 200, units = "cm")
 DotPlot(norm.data.clustfilt.cc[, !is.na(norm.data.clustfilt.cc@meta.data$placNC_clust)], group.by = "placNC_clust", features = placNC_genes) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 dev.off()
@@ -419,7 +461,7 @@ norm.data.clustfilt.cc@meta.data$NP_clust <- apply(norm.data.clustfilt.cc@meta.d
 
 
 # plot annotated NP clusters
-png(paste0(curr.plot.path, "NP.clust.png"), width = 13, height = 10, res = 200, units = "cm")
+png(paste0(plot.path, "NP.clust.png"), width = 13, height = 10, res = 200, units = "cm")
 DimPlot(norm.data.clustfilt.cc, group.by = "NP_clust")  + ggtitle("Clusters") + theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
@@ -428,13 +470,80 @@ norm.data.clustfilt.cc@meta.data$NP_clust <- factor(norm.data.clustfilt.cc@meta.
                                                     levels = c("Hindbrain", "Early Midbrain", "Late Midbrain", "Early Forebrain",
                                                                "Late Forebrain", "Ventral Forebrain"))
 
-png(paste0(curr.plot.path, "NP.dotplot.png"), width = 25, height = 10, res = 200, units = "cm")
+png(paste0(plot.path, "NP.dotplot.png"), width = 25, height = 10, res = 200, units = "cm")
 DotPlot(norm.data.clustfilt.cc[, !is.na(norm.data.clustfilt.cc@meta.data$NP_clust)], group.by = "NP_clust", features = NP_genes) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 dev.off()
 
 
+###################### HH6 cell type plots ######################
+HH6_genes <- c("FRZB",  "SOX2",  "SOX21","SIX1","BMP4", "GATA2", "DLX5", "MSX1")
+
+# plot expression of HH6 genes
+multi.feature.plot(norm.data.clustfilt.cc, stage.name = "all.stages", gene.list = HH6_genes, multi.obj.list = F,
+                   plot.clusters = T, n.col = 5, basename = "HH6.UMAP.GOI.pdf", label = "UMAP of genes used to identify HH6 clusters",
+                   plot.stage = T)
+
+# add NP cell types to metadata
+norm.data.clustfilt.cc@meta.data$interm_clust <- apply(norm.data.clustfilt.cc@meta.data, 1, function(x)
+  if(x["seurat_clusters"] == 0){"Putative Neural Progenitors"} else if(x["seurat_clusters"] == 5){"Putative Placodal Progenitors"}
+  else {NA})
 
 
+# plot annotated HH6 clusters
+png(paste0(plot.path, "HH6.clust.png"), width = 14, height = 10, res = 200, units = "cm")
+DimPlot(norm.data.clustfilt.cc, group.by = "interm_clust")  + ggtitle("Clusters") + theme(plot.title = element_text(hjust = 0.5))
+dev.off()
 
+# plot dotplot for HH6 genes and clusters
+png(paste0(plot.path, "HH6.dotplot.png"), width = 25, height = 10, res = 200, units = "cm")
+DotPlot(norm.data.clustfilt.cc[, !is.na(norm.data.clustfilt.cc@meta.data$interm_clust)], group.by = "interm_clust", features = HH6_genes) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+dev.off()
+
+# add column to metadata with all celltypes
+# rename clusters with cell types
+cell_types = list("0" = "Putative Neural Progenitors",
+                  "1" = "HH4",
+                  "2" = "HH4",
+                  "3" = "Late Forebrain",
+                  "4" = "Late Midbrain",
+                  "5" = "Putative Placodal Progenitors",
+                  "6" = "Early Midbrain",
+                  "7" = "Early Forebrain",
+                  "8" = "HH4",
+                  "9" = "Placodes",
+                  "10" = "Delaminating NC",
+                  "11" = "HH4",
+                  "12" = "NC Progenitors",
+                  "13" = "Hindbrain",
+                  "14" = "Ventral Forebrain"
+)
+
+
+# add cell type to seurat metadata
+norm.data.clustfilt.cc$cell_type <- unlist(unname(sapply(norm.data.clustfilt.cc@meta.data[,"seurat_clusters"], function(x) cell_types[names(cell_types) %in% x])))
+
+#####################################################################################################
+#                                        Save output from Seurat                                    #
+#####################################################################################################
+
+saveRDS(norm.data.clustfilt.cc, paste0(rds.path, "seurat_out_all.RDS"))
+
+# if you want to work on the dataset with hh4 removed save and load object below
+# norm.data.hh4filt <- readRDS("output/RDS.files/1_seurat_full/seurat_out_all.RDS")
+norm.data.hh4filt <- rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.cc@meta.data$orig.ident == "hh4"]
+norm.data.hh4filt <- subset(norm.data.clustfilt.cc, cells = norm.data.hh4filt, invert = T)
+norm.data.hh4filt <- FindVariableFeatures(norm.data.hh4filt, selection.method = "vst", nfeatures = 2000)
+norm.data.hh4filt <- ScaleData(norm.data.hh4filt, features = rownames(norm.data.hh4filt), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
+saveRDS(norm.data.hh4filt, paste0(rds.path, "norm.data.hh4filt.RDS"))
+norm.data.hh4filt <- RunPCA(object = norm.data.hh4filt, verbose = FALSE)
+norm.data.hh4filt <- FindNeighbors(norm.data.hh4filt, dims = 1:15, verbose = FALSE)
+norm.data.hh4filt <- RunUMAP(norm.data.hh4filt, dims = 1:15, verbose = FALSE)
+norm.data.hh4filt <- FindClusters(norm.data.hh4filt, resolution = 0.6)
+
+saveRDS(norm.data.hh4filt, paste0(rds.path, "seurat_out_hh4_filt.RDS"))
+
+# snail2
+FeaturePlot(temp, "ENSGALG00000030902")
 
