@@ -25,7 +25,7 @@ if (length(args)==0) {
     
     project.dir = "~/working/alexthiery/analysis/10x_scRNAseq_2019/"
     
-    sapply(list.files(pasteo(project.dir, 'repo/scripts/my_functions/'), full.names = T), source)
+    sapply(list.files(paste0(project.dir, 'repo/scripts/my_functions/'), full.names = T), source)
 
     plot.path = paste0(project.dir, "output/plots/1_seurat_full/")
     rds.path = paste0(project.dir, "output/RDS.files/1_seurat_full/")
