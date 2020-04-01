@@ -2,7 +2,8 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 
-# at start of script check args in order to supply the file path input - this allows to input as to whether data is pulled from web server or locally
+# In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
+
 if (length(args)==0) {
   cat('no arguments provided\n')
   
@@ -45,6 +46,8 @@ if (length(args)==0) {
 } else {stop("only one argument can be supplied")}
 
 
+# Load packages - packages are stored within renv in the repository
+
 library(dplyr)
 library(Antler)
 library(Seurat)
@@ -55,7 +58,7 @@ library(grid)
 library(pheatmap)
 
 
-# Make Seurat objects for each of the different samples. The raw data for each sample is found in the relative directory assigned above in sample.paths.
+# Make Seurat objects for each of the different samples.
 for(i in 1:nrow(sample.paths["path"])){
   name<-paste(sample.paths[i,"tissue"])
   assign(name, CreateSeuratObject(counts= Read10X(data.dir = paste(sample.paths[i,"path"])), project = paste(sample.paths[i, "tissue"])))
@@ -68,7 +71,7 @@ merged.data<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "ch
 # The original Seurat objects are then removed from the global environment
 rm(hh4, hh6, ss4, ss8, sample.paths, temp)
 
-# store mitochondrial percentage in object meta data
+# Store mitochondrial percentage in object meta data
 merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "percent.mt")
 
 
@@ -76,69 +79,90 @@ merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "p
 #                           Filter data based on variable threshold                                 #
 #####################################################################################################
 
-# remove data which do not pass filter threshold
+# Remove data which do not pass filter threshold
 merged.data <- subset(merged.data, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
-# log normalize data and find variable features
+
+# Log normalize data and find variable features
 norm.data <- NormalizeData(merged.data, normalization.method = "LogNormalize", scale.factor = 10000)
 norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures = 2000)
-# scale data and regress out MT content
+
+# Scale data and regress out MT content
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 
-# save RDS after scaling as this step takes time
+# Save RDS after scaling as this step takes time
 saveRDS(norm.data, paste0(rds.path, "norm.data.RDS"))
 
 #####################################################################################################
 #                    Perform dimensionality reduction by PCA and UMAP embedding                    #
 #####################################################################################################
 
-# read in RDS data if needed
+# Read in RDS data if needed
 # norm.data <- readRDS(paste0(rds.path, "norm.data.RDS"))
 
+# Change plot path
 curr.plot.path <- paste0(plot.path, '0_filt_data/')
 dir.create(curr.plot.path)
 
 # Run PCA analysis on the each set of data
 norm.data <- RunPCA(object = norm.data, verbose = FALSE)
-# Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept!
+
+#####################################################################################################
+#   Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept!                   #
+#####################################################################################################
+
+# Plot heatmap of top variable genes across top principle components
 pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data, dims = 1:30, balanced = TRUE, cells = 500)
-dev.off()
+graphics.off()
+
 # another heuristic method is ElbowPlot which ranks PCs based on the % variance explained by each PC
 pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data, ndims = 40))
-dev.off()
+graphics.off()
 
 # Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
+pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
 PCA.level.comparison(norm.data, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+graphics.off()
+
 # Use PCA=15 as elbow plot is relatively stable across stages
 # Use clustering resolution = 0.5 for filtering
 norm.data <- FindNeighbors(norm.data, dims = 1:15, verbose = FALSE)
 norm.data <- RunUMAP(norm.data, dims = 1:15, verbose = FALSE)
 norm.data <- FindClusters(norm.data, resolution = 0.5, verbose = FALSE)
 
-# plot UMAP for clusters and developmental stage
+# Plot UMAP for clusters and developmental stage
+pdf(paste0(plot.path, "UMAP.pdf"), width=10, height=5)
 clust.stage.plot(norm.data)
+graphics.off()
 
-# plot cluster QC for each stage
+# Plot cluster QC for each stage
+pdf(paste0(curr.plot.path, "cluster.QC.pdf"), height = 7, width = 18)
 QC.plot(norm.data)
+graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(norm.data, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
-tenx.pheatmap(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), width = 40, height = 20, main = "")
 
+png(paste0(curr.plot.path, "HM.top15.DE.png"), width=28, height=17, units = "cm", res = 200)
+tenx.pheatmap(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), main = "")
+graphics.off()
 
 #####################################################################################################
-#                                   Check for sex differences                                       #
+#           Heatmap clearly shows clusters segregate by sex - check this and remove sex genes                                       #
 #####################################################################################################
 
+# set new plot.path and make directory
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 dir.create(curr.plot.path)
 
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are hh4 clusters. Clustering is driven by sex genes
+png(paste0(curr.plot.path, "HM.top15.DE.png"), width=28, height=17, units = "cm", res = 200)
 tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
               metadata = c("orig.ident", "seurat_clusters"), used.genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)),
               width = 40, height = 20, main = "", hclust_rows = T, basename = "sex.effect")
+graphics.off()
 
 # Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
 W_genes <- as.matrix(norm.data@assays$RNA[grepl("W-", rownames(norm.data@assays$RNA)),])
@@ -213,6 +237,7 @@ dev.off()
 #                                       Filter sex genes                                            #
 #####################################################################################################
 
+# remove sex genes
 norm.data.sexfilt <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.data)) & !grepl("Z-", rownames(norm.data))], ]
 
 # re-run findvariablefeatures and scaling
