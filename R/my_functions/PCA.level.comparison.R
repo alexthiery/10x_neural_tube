@@ -1,6 +1,6 @@
 #### compare PCA levels ####
 # loop through nested list containing Seurat objects for different filtering thresholds, developmental stages and PCA levels
-PCA.level.comparison <- function(data, PCA.levels = c(10, 15, 20, 30), plot.path = curr.plot.path, cluster_res = 0.5, basename = "UMAP_PCA_comparison.pdf", height = 20, width = 15){
+PCA.level.comparison <- function(data, PCA.levels = c(10, 15, 20, 30), cluster_res = 0.5){
   if(class(data) == "list") {
     data.stage.PCA <- list()
     for (stage in names(data)){
@@ -14,9 +14,7 @@ PCA.level.comparison <- function(data, PCA.levels = c(10, 15, 20, 30), plot.path
     plots <- lapply(seq_along(1:length(data.stage.PCA)), function(dat){
       DimPlot(data.stage.PCA[[dat]]) + ggtitle(paste(names(data.stage.PCA[dat])))
     })
-    pdf(paste0(plot.path, basename), width = width, height = height)
-    gridExtra::grid.arrange(grobs = plots)
-    dev.off()
+    return(gridExtra::grid.arrange(grobs = plots))
   } else {
     data.PCA <- list()
     for (val in PCA.levels){
@@ -28,8 +26,6 @@ PCA.level.comparison <- function(data, PCA.levels = c(10, 15, 20, 30), plot.path
     plots <- lapply(seq_along(1:length(data.PCA)), function(dat){
       DimPlot(data.PCA[[dat]]) + ggtitle(paste(names(data.PCA[dat])))
     })
-    pdf(paste0(plot.path, basename), width = width, height = height)
-    gridExtra::grid.arrange(grobs = plots)
-    dev.off()
+    return(gridExtra::grid.arrange(grobs = plots))
   }
 }

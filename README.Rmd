@@ -3,8 +3,8 @@ title: '10x Chick Neural Tube'
 author: 'Alex Thiery'
 output:
   html_document:
-    fig_width: 8.49
-    fig_height: 7.90
+    fig_width: 6
+    fig_height: 4
     theme: simplex
     dev: jpeg
     keep_md: true
@@ -13,15 +13,15 @@ output:
 In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
 
 
-``` r
+```{r, results='hide', message=FALSE, warning=FALSE}
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 
 if (length(args)==0) {
-  cat('no arguments provided\n')
+  cat('Running locally\n')
   
   # load functions
-  sapply(list.files('./my_functions/', full.names = T), source)
+  sapply(list.files('/Users/alex/dev/repos/10x_neural_tube/R/my_functions/', full.names = T), source)
   
   plot.path = "/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/"
   rds.path = "/Users/alex/dev/output/10x_neural_tube/RDS.files/1_seurat_full/"
@@ -34,7 +34,7 @@ if (length(args)==0) {
                                     "/Users/alex/dev/data/10x/cellranger_output/cellranger_count_8ss/outs/filtered_feature_bc_matrix_chr_edit/"))
 } else if (length(args)==1) {
   if (args[1] == "CAMP") {
-    cat('data loaded from CAMP\n')
+    cat('Data loaded from CAMP\n')
     project.dir = "~/working/alexthiery/analysis/10x_scRNAseq_2019/"
     
     # load functions
@@ -58,7 +58,7 @@ if (length(args)==0) {
 
 Load packages - packages are stored within renv in the repository
 
-``` r
+```{r, results='hide', message=FALSE, warning=FALSE}
 library(dplyr)
 library(Antler)
 library(Seurat)
@@ -71,7 +71,7 @@ library(pheatmap)
 
 Make Seurat objects for each of the different samples.
 
-``` r
+```{r, results='hide', message=FALSE, warning=FALSE}
 for(i in 1:nrow(sample.paths["path"])){
   name<-paste(sample.paths[i,"tissue"])
   assign(name, CreateSeuratObject(counts= Read10X(data.dir = paste(sample.paths[i,"path"])), project = paste(sample.paths[i, "tissue"])))
@@ -80,18 +80,18 @@ for(i in 1:nrow(sample.paths["path"])){
 
 The four Seurat objects are then merged, before running CreateSeuratObject again on the output in order to apply the min.cells parameter on the final merged dataset.
 
-``` r
+```{r, results='hide', message=FALSE, warning=FALSE}
 temp <- merge(hh4, y = c(hh6, ss4, ss8), add.cell.ids = c("hh4", "hh6", "ss4", "ss8"), project = "chick.10x")
 merged.data<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
 ```
 
 The original Seurat objects are then removed from the global environment
-``` r
+```{r, results='hide', message=FALSE, warning=FALSE}
 rm(hh4, hh6, ss4, ss8, sample.paths, temp)
 ```
 
 Store mitochondrial percentage in object meta data
-``` r
+```{r, results='hide', message=FALSE, warning=FALSE}
 merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "percent.mt")
 ```
 
@@ -99,20 +99,21 @@ merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "p
 ***
 
 remove data which do not pass filter threshold
-``` r
+```{r, results='hide', message=FALSE, warning=FALSE}
 merged.data <- subset(merged.data, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
 ```
 log normalize data and find variable features
-``` r
+``` {r}
 norm.data <- NormalizeData(merged.data, normalization.method = "LogNormalize", scale.factor = 10000)
 norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures = 2000)
 ```
 scale data and regress out MT content
-``` r
+``` {r}
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 ```
+
 save RDS after scaling as this step takes time
-``` r
+``` {r}
 saveRDS(norm.data, paste0(rds.path, "norm.data.RDS"))
 ```
 
@@ -120,64 +121,78 @@ saveRDS(norm.data, paste0(rds.path, "norm.data.RDS"))
 ***
 
 Read in RDS data if needed
-``` r
+```{r, results='hide', message=FALSE, warning=FALSE}
 # norm.data <- readRDS(paste0(rds.path, "norm.data.RDS"))
 ```
 
 Change plot path
-``` r
+```{r, results='hide', message=FALSE, warning=FALSE}
 curr.plot.path <- paste0(plot.path, '0_filt_data/')
 dir.create(curr.plot.path)
 ```
 
 Run PCA analysis on the each set of data
-
-``` r
+```{r, results='hide', message=FALSE, warning=FALSE}
 norm.data <- RunPCA(object = norm.data, verbose = FALSE)
 ```
 
-Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept!
+#### Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept!
 
-``` r
-pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
+Plot heatmap of top variable genes across top principle components
+***
+
+``` {r, fig.show = 'hide', message=FALSE}
+#pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data, dims = 1:30, balanced = TRUE, cells = 500)
-dev.off()
+#dev.off()
 ```
+![Alt text](https://github.com/alexthiery/10x_neural_tube/blob/Dev/R/plots/1_seurat_full/0_filt_data/dimHM.pdf)
+
 
 Another heuristic method is ElbowPlot which ranks PCs based on the % variance explained by each PC
 
-``` r
+Plot ElbowPlot
+***
+``` {r, fig.show = 'hide', message=FALSE}
 pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data, ndims = 40))
 dev.off()
 ```
+![Alt text](https://github.com/alexthiery/10x_neural_tube/blob/Dev/R/plots/1_seurat_full/0_filt_data/elbowplot.pdf)
+
 
 Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
 
-``` r
+``` {r, fig.show = 'hide', message=FALSE}
 PCA.level.comparison(norm.data, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 ```
+![Alt text](https://github.com/alexthiery/10x_neural_tube/blob/Dev/R/plots/1_seurat_full/0_filt_data/UMAP_PCA_comparison.pdf)
+
+
 Use PCA=15 as elbow plot is relatively stable across stages
 Use clustering resolution = 0.5 for filtering
 
-``` r
+``` {r}
 norm.data <- FindNeighbors(norm.data, dims = 1:15, verbose = FALSE)
 norm.data <- RunUMAP(norm.data, dims = 1:15, verbose = FALSE)
 norm.data <- FindClusters(norm.data, resolution = 0.5, verbose = FALSE)
 ```
 
 Plot UMAP for clusters and developmental stage
-``` r
+``` {r, fig.show = 'hide', message=FALSE}
 clust.stage.plot(norm.data)
 ```
+![Alt text](https://github.com/alexthiery/10x_neural_tube/blob/Dev/R/plots/1_seurat_full/0_filt_data/UMAP_PCA_comparison.pdf)
+
 
 Plot cluster QC for each stage
-``` r
+``` {r, fig.show = 'hide', message=FALSE}
 QC.plot(norm.data)
 ```
+![Alt text](https://github.com/alexthiery/10x_neural_tube/blob/Dev/R/plots/1_seurat_full/0_filt_data/UMAP_PCA_comparison.pdf)
 
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
-``` r
+``` {r}
 markers <- FindAllMarkers(norm.data, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
 tenx.pheatmap(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), width = 40, height = 20, main = "")
@@ -187,12 +202,12 @@ tenx.pheatmap(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), u
 ***
 Heatmap clearly shows clusters segregate by sex - check this and remove sex genes
 
-``` r
+``` {r}
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 dir.create(curr.plot.path)
 ```
 
-``` r
+``` {r}
 There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are hh4 clusters. Clustering is driven by sex genes
 tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
               metadata = c("orig.ident", "seurat_clusters"), used.genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)),
@@ -201,7 +216,7 @@ tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_cl
 
 Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
 
-``` r
+``` {r}
 W_genes <- as.matrix(norm.data@assays$RNA[grepl("W-", rownames(norm.data@assays$RNA)),])
 k_clusters <- kmeans(t(W_genes), 2)
 k_clusters <- data.frame(k_clusters$cluster)
@@ -209,14 +224,14 @@ norm.data@meta.data$k_clusters <- k_clusters[match(colnames(norm.data@assays$RNA
 ```
 
 Get rownames for kmeans clusters 1 and 2
-``` r
+``` {r}
 k_clus_1 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 1,])
 k_clus_2 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 2,])
 ```
 
 K clustering identities are stochastic, so I mneed to identify which cluster is male and female
 Sum of W genes is order of magnitude greater in cluster 2 - these are the female cells
-``` r
+``` {r}
 sumclus1 <- sum(W_genes[,k_clus_1])
 sumclus2 <- sum(W_genes[,k_clus_2])
 
@@ -233,7 +248,7 @@ cell.sex.ID <- list("male.cells" = k.male, "female.cells" = k.female)
 
 Add sex data to meta.data
 
-``` r
+``` {r}
 norm.data@meta.data$sex <- unlist(lapply(rownames(norm.data@meta.data), function(x)
   if(x %in% k.male){"male"} else if(x %in% k.female){"female"} else{stop("cell sex is not assigned")}))
 ```
@@ -246,22 +261,22 @@ Next - subset autosomal genes and Z genes - then calculate the average for each 
 This is a test on autosomal genes to try and calculate and compare FC betweeen clusters
 Calculating median is tricky as there are a lot of dropouts in 10x data so you end up with either 0s (when the median  = 0) or 1 (when the median expression in both clusters is the same - probably a result of normalisation resulting in a UMI of 0 or 1 being normalised to a nominal value)
 
-``` r
+``` {r}
 mean.Z.male <- data.frame(Z.mean = apply(norm.data@assays$RNA[grepl("Z-", rownames(norm.data@assays$RNA)), k.male], 1, mean))
 ```
 Add 1 before log2 as log2(1) = 0
-``` r
+``` {r}
 mean.Z.male <- log2(mean.Z.male + 1)
 ```
 
-``` r
+``` {r}
 mean.Z.female <- data.frame(Z.mean = apply(norm.data@assays$RNA[grepl("Z-", rownames(norm.data@assays$RNA)), k.female], 1, mean))
 mean.Z.female <- log2(mean.Z.female + 1)
 ```
 #### autosomal genes
 ***
 This is a test on autosomal genes to try and calculate and compare FC betweeen clusters
-``` r
+``` {r}
 mean.auto.male <- data.frame(auto.mean = apply(norm.data@assays$RNA[!grepl("Z-", rownames(norm.data@assays$RNA)) & !grepl("W-", rownames(norm.data@assays$RNA)), k.male], 1, mean))
 mean.auto.male <- log2(mean.auto.male + 1)
 mean.auto.female <- data.frame(auto.mean = apply(norm.data@assays$RNA[!grepl("Z-", rownames(norm.data@assays$RNA)) & !grepl("W-", rownames(norm.data@assays$RNA)), k.female], 1, mean))
@@ -269,14 +284,14 @@ mean.auto.female <- log2(mean.auto.female + 1)
 ```
 
 Calculate FC by subtracting log2 expression from each other
-``` r
+``` {r}
 FC <- list()
 FC$Z <- mean.Z.male - mean.Z.female
 FC$auto <-  mean.auto.male - mean.auto.female
 ```
 
 Plot hist/boxplot of data
-``` r
+``` {r}
 hist(FC$Z$Z.mean)
 hist(FC$auto$auto.mean)
 pdf(paste0(curr.plot.path,"sex_kmeans_log2FC_boxplot.pdf"))
@@ -291,22 +306,27 @@ Z genes are upregulated within male genes relative to female genes whereas autos
 #                                       Filter sex genes                                            #
 #####################################################################################################
 
+``` {r}
 norm.data.sexfilt <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.data)) & !grepl("Z-", rownames(norm.data))], ]
-
+```
 # re-run findvariablefeatures and scaling
+``` {r}
 norm.data.sexfilt <- FindVariableFeatures(norm.data.sexfilt, selection.method = "vst", nfeatures = 2000)
 norm.data.sexfilt <- ScaleData(norm.data.sexfilt, features = rownames(norm.data.sexfilt), vars.to.regress = c("percent.mt", "sex"))
-
 saveRDS(norm.data.sexfilt, paste0(rds.path, "norm.data.sexfilt.RDS"))
-
+```
 
 #####################################################################################################
 #                    Perform dimensionality reduction by PCA and UMAP embedding                     #
 #####################################################################################################
 
-# read in RDS data if needed
-# norm.data.sexfilt <- readRDS(paste0(rds.path, "norm.data.sexfilt.RDS"))
 
+# read in RDS data if needed
+``` {r}
+# norm.data.sexfilt <- readRDS(paste0(rds.path, "norm.data.sexfilt.RDS"))
+```
+
+``` {r}
 norm.data.sexfilt <- RunPCA(object = norm.data.sexfilt, verbose = FALSE)
 
 pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
@@ -335,14 +355,17 @@ QC.plot(norm.data.sexfilt)
 markers <- FindAllMarkers(norm.data.sexfilt, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
 tenx.pheatmap(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), width = 40, height = 30, main = "")
-
+```
 
 #####################################################################################################
 #                 Identify and remove poor quality clusters / contamination (mesoderm)              #
 #####################################################################################################
 
+``` {r}
 curr.plot.path <- paste0(plot.path, "2_cluster_filt/")
 dir.create(curr.plot.path)
+```
+
 
 # identify mesoderm
 # UMAP plots GOI
