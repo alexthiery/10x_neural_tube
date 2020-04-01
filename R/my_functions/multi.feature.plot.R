@@ -1,8 +1,6 @@
 #### plot multiple feature plots at once ####
-# if seurat object is not a list of objects then change multi.obj.list = F and
-# stage = "ss8" or equivalent stage. Can also input cluster resolution that you want to plot the clusters
-multi.feature.plot <- function(seurat.obj, stage.name = NULL, gene.list, multi.obj.list = T, plot.clusters = T, plot.stage = F, cluster.col = "seurat_clusters", cluster.res,
-                               n.col = 4, plot.path = curr.plot.path, basename = "UMAP_GOI.pdf", label = "UMAP plots for GOI on normalised filtered data", legend.pos = "right", plot.celltype = F,
+multi.feature.plot <- function(seurat.obj, stage.name = NULL, gene.list, plot.clusters = T, plot.stage = F, cluster.col = "seurat_clusters",
+                               n.col = 4, label = "UMAP plots for GOI on normalised filtered data", legend.pos = "right", plot.celltype = F,
                                celltype.col = NA){
   if(plot.stage == F & plot.clusters == F){
     tot.len = length(gene.list)
@@ -11,67 +9,31 @@ multi.feature.plot <- function(seurat.obj, stage.name = NULL, gene.list, multi.o
   } else {
     tot.len = length(gene.list) + 1
   }
-  
-  if(multi.obj.list == T){
-    for(i in names(seurat.obj)){
-      if(plot.celltype == T){
-        celltype.plot <- list(DimPlot(seurat.obj[[i]], group.by = celltype.col, label = T) + 
-                                ggtitle(paste("Cell Types")) +
-                                theme(plot.title = element_text(hjust = 0.5)) +
-                                NoLegend())
-      } else {
-        celltype.plot <-NULL
-      }
-      if(plot.clusters == T){
-        clust.plot <- list(DimPlot(seurat.obj[[i]], group.by = cluster.col) + 
-                             ggtitle(paste("Clusters")) +
-                             theme(plot.title = element_text(hjust = 0.5)))
-      }else{
-        clust.plot <- NULL
-      }
-      if(plot.stage == T){
-        stage.plot <- list(DimPlot(seurat.obj[[i]], group.by =  "orig.ident") + 
-                             ggtitle("Developmental Stage") +
-                             theme(plot.title = element_text(hjust = 0.5)))
-      }else{
-        stage.plot <- NULL
-      }
-      plots <- lapply(gene.list, function(x) FeaturePlot(seurat.obj[[i]], features = x))
-      plots <- c(stage.plot, celltype.plot, clust.plot, plots)
-      pdf(paste0(plot.path, i, "/", basename),width = n.col*5, height = 5*ceiling(tot.len/n.col))
-      print(gridExtra::grid.arrange(grobs = plots, ncol = n.col, top = textGrob(label = paste0(label, " (Stage = ", i, ")"), gp=gpar(fontsize=20, font = 2))))
-      dev.off()
+  if(plot.celltype == T){
+    celltype.plot <- list(DimPlot(seurat.obj, group.by = celltype.col, label = T) + 
+                              ggtitle(paste("Cell Types")) +
+                              theme(plot.title = element_text(hjust = 0.5)) +
+                              NoLegend())
+  } else {
+    celltype.plot <-NULL
     }
-  }else{
-    if(plot.clusters == T){
-      if(plot.celltype == T){
-        celltype.plot <- list(DimPlot(seurat.obj, group.by = celltype.col, label = T) + 
-                                ggtitle(paste("Cell Types")) +
-                                theme(plot.title = element_text(hjust = 0.5)) +
-                                NoLegend())
-      } else {
-        celltype.plot <-NULL
-      }
-      if(plot.clusters == T){
-        clust.plot <- list(DimPlot(seurat.obj, group.by = cluster.col) + 
-                             ggtitle(paste("Clusters")) +
-                             theme(plot.title = element_text(hjust = 0.5)))
-      }else{
-        clust.plot <- NULL
-      }
-      if(plot.stage == T){
-        stage.plot <- list(DimPlot(seurat.obj, group.by =  "orig.ident") + 
-                             ggtitle("Developmental Stage") +
-                             theme(plot.title = element_text(hjust = 0.5)))
-      }else{
-        stage.plot <- NULL
-      }
-      
-      plots <- lapply(gene.list, function(x) FeaturePlot(seurat.obj, features = x))
-      plots <- c(stage.plot, celltype.plot, clust.plot, plots)
-      pdf(paste0(plot.path, "/", basename),width = n.col*5, height = 5*ceiling(tot.len/n.col))
-      print(gridExtra::grid.arrange(grobs = plots, ncol = n.col, top = textGrob(label = label, gp=gpar(fontsize=20, font = 2))))
-      dev.off()
+  if(plot.clusters == T){
+    clust.plot <- list(DimPlot(seurat.obj, group.by = cluster.col) + 
+                           ggtitle(paste("Clusters")) +
+                           theme(plot.title = element_text(hjust = 0.5)))
+  } else {
+    clust.plot <- NULL
     }
-  }
+  if(plot.stage == T){
+    stage.plot <- list(DimPlot(seurat.obj, group.by =  "orig.ident") + 
+                           ggtitle("Developmental Stage") +
+                           theme(plot.title = element_text(hjust = 0.5)))
+    } else {
+      stage.plot <- NULL
+      }
+  plots <- lapply(gene.list, function(x) FeaturePlot(seurat.obj, features = x))
+  plots <- c(stage.plot, celltype.plot, clust.plot, plots)
+  print(gridExtra::grid.arrange(grobs = plots, ncol = n.col, top = textGrob(label = label, gp=gpar(fontsize=20, font = 2))))
 }
+
+

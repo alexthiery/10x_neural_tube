@@ -1,6 +1,6 @@
 
 #### cluster at different resolutions and plot clustree
-clust.res <- function(seurat.obj, multi.obj.list = F, stage = NULL, plot.path = curr.plot.path, basename = "clustree.pdf", by = 0.1, starting_res = 0){
+clust.res <- function(seurat.obj, multi.obj.list = F, stage = NULL, by = 0.1, starting_res = 0){
   plots <- list()
   resolutions <- c(seq(starting_res, starting_res+9*by, by=by))
   if(multi.obj.list == T){
@@ -19,7 +19,6 @@ clust.res <- function(seurat.obj, multi.obj.list = F, stage = NULL, plot.path = 
                    c(1,1,1,5,6,7),
                    c(1,1,1,8,9,10))
       plots2 <- gridExtra::arrangeGrob(grobs = plots[[stage]], layout_matrix = lay)
-      dev.off()
     }
   }else{
     if(length(seurat.obj@reductions) == 0){
@@ -36,10 +35,6 @@ clust.res <- function(seurat.obj, multi.obj.list = F, stage = NULL, plot.path = 
                  c(1,1,1,5,6,7),
                  c(1,1,1,8,9,10))
     plots2 <- gridExtra::arrangeGrob(grobs = plots, layout_matrix = lay)
-    dev.off()
   }
-  pdf(paste0(plot.path, stage, basename), width= 25, height= 15)
-  gridExtra::grid.arrange(plots2)
-  dev.off()
-  return(seurat.obj)
+  return(gridExtra::grid.arrange(plots2))
 }
