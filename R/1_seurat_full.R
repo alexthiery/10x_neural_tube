@@ -606,45 +606,14 @@ QC.plot(neural.seurat)
 graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
-markers <- FindAllMarkers(norm.data.clustfilt.cc, only.pos = T, logfc.threshold = 0.25)
+markers <- FindAllMarkers(neural.seurat, only.pos = T, logfc.threshold = 0.25)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
-top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = c(1,2,11,7,0,6,4,8,9,10,3,5,12,13,14)))
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
 
 png(paste0(curr.plot.path, "HM.top15.DE.png"), width=100, height=75, units = "cm", res = 200)
-tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene),
-              main = "", order.by = "seurat_clusters", custom_order = c(1,2,11,7,0,6,4,8,9,10,3,5,12,13,14))
+tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene),
+              main = "", order.by = "seurat_clusters")
 graphics.off()
 
-
-
-
-
-
-
-
-
-
-
-#####################################################################################################
-#                                        Save output from Seurat                                    #
-#####################################################################################################
-
-saveRDS(norm.data.clustfilt.cc, paste0(rds.path, "seurat_out_all.RDS"))
-
-# if you want to work on the dataset with hh4 removed save and load object below
-# norm.data.hh4filt <- readRDS("output/RDS.files/1_seurat_full/seurat_out_all.RDS")
-norm.data.hh4filt <- rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.cc@meta.data$orig.ident == "hh4"]
-norm.data.hh4filt <- subset(norm.data.clustfilt.cc, cells = norm.data.hh4filt, invert = T)
-norm.data.hh4filt <- FindVariableFeatures(norm.data.hh4filt, selection.method = "vst", nfeatures = 2000)
-norm.data.hh4filt <- ScaleData(norm.data.hh4filt, features = rownames(norm.data.hh4filt), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
-saveRDS(norm.data.hh4filt, paste0(rds.path, "norm.data.hh4filt.RDS"))
-norm.data.hh4filt <- RunPCA(object = norm.data.hh4filt, verbose = FALSE)
-norm.data.hh4filt <- FindNeighbors(norm.data.hh4filt, dims = 1:15, verbose = FALSE)
-norm.data.hh4filt <- RunUMAP(norm.data.hh4filt, dims = 1:15, verbose = FALSE)
-norm.data.hh4filt <- FindClusters(norm.data.hh4filt, resolution = 0.6)
-
-saveRDS(norm.data.hh4filt, paste0(rds.path, "seurat_out_hh4_filt.RDS"))
-
-# # snail2
-# FeaturePlot(temp, "ENSGALG00000030902")
+saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
 
