@@ -132,11 +132,11 @@ norm.data <- RunUMAP(norm.data, dims = 1:15, verbose = FALSE)
 norm.data <- FindClusters(norm.data, resolution = 0.5, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
-pdf(paste0(plot.path, "UMAP.pdf"), width=10, height=5)
+pdf(paste0(curr.plot.path, "UMAP.pdf"), width=10, height=5)
 clust.stage.plot(norm.data)
 graphics.off()
 
-# Plot cluster QC for each stage
+# Plot QC for each cluster
 pdf(paste0(curr.plot.path, "cluster.QC.pdf"), height = 7, width = 18)
 QC.plot(norm.data)
 graphics.off()
@@ -145,7 +145,7 @@ graphics.off()
 markers <- FindAllMarkers(norm.data, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
 
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=28, height=17, units = "cm", res = 200)
+png(paste0(curr.plot.path, "HM.top15.DE.png"), width=75, height=50, units = "cm", res = 200)
 tenx.pheatmap(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), main = "")
 graphics.off()
 
@@ -153,15 +153,15 @@ graphics.off()
 #           Heatmap clearly shows clusters segregate by sex - check this and remove sex genes                                       #
 #####################################################################################################
 
-# set new plot.path and make directory
+# Change plot path
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 dir.create(curr.plot.path)
 
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are hh4 clusters. Clustering is driven by sex genes
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=28, height=17, units = "cm", res = 200)
+png(paste0(curr.plot.path, "HM.top15.DE.png"), width=70, height=40, units = "cm", res = 200)
 tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
               metadata = c("orig.ident", "seurat_clusters"), used.genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)),
-              width = 40, height = 20, main = "", hclust_rows = T, basename = "sex.effect")
+              main = "", hclust_rows = T)
 graphics.off()
 
 # Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
@@ -170,12 +170,12 @@ k_clusters <- kmeans(t(W_genes), 2)
 k_clusters <- data.frame(k_clusters$cluster)
 norm.data@meta.data$k_clusters <- k_clusters[match(colnames(norm.data@assays$RNA), rownames(k_clusters)),]
 
-# get rownames for kmeans clusters 1 and 2
+# Get rownames for kmeans clusters 1 and 2
 k_clus_1 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 1,])
 k_clus_2 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 2,])
 
-# work out if cluster 1 is male or female
-# sum of W genes is order of magnitude greater in cluster 2 - these are the female cells
+# K clustering identities are stochastic, so I mneed to identify which cluster is male and female
+# Sum of W genes is order of magnitude greater in cluster 2 - these are the female cells
 sumclus1 <- sum(W_genes[,k_clus_1])
 sumclus2 <- sum(W_genes[,k_clus_2])
 
@@ -190,45 +190,42 @@ if(sumclus1 < sumclus2){
 cell.sex.ID <- list("male.cells" = k.male, "female.cells" = k.female)
 saveRDS(cell.sex.ID, paste0(rds.path, "sex_kmeans.RDS"))
 
-# add sex data to meta.data
+# Add sex data to meta.data
 norm.data@meta.data$sex <- unlist(lapply(rownames(norm.data@meta.data), function(x)
   if(x %in% k.male){"male"} else if(x %in% k.female){"female"} else{stop("cell sex is not assigned")}))
 
 
-# Next - subset autosomal genes and Z genes - then calculate the sums/means/medians for each gene for both kmeans clustered cells
-# and plot in order to compare whether the two groups show significant differences in their expression.
+###### Next - subset autosomal genes and Z genes - then calculate the average for each gene for both kmeans clustered cells and plot in order to compare whether the two groups show significant differences in their expression.
 
-###### Z- chromosome genes ######
+# This is a test on autosomal genes to try and calculate and compare FC betweeen clusters
+# Calculating median is tricky as there are a lot of dropouts in 10x data so you end up with either 0s (when the median  = 0) or 1 (when the median expression in both clusters is the same - probably a result of normalisation resulting in a UMI of 0 or 1 being normalised to a nominal value)
 
-# this is a test on autosomal genes to try and calculate and compare FC betweeen clusters
-# Calculating median is tricky as there are a lot of dropouts in 10x data so you end up with either 0s (when the median  = 0)
-# or 1 (when the median expression in both clusters is the same - probably a result of normalisation resulting in a UMI of 0 or
-# 1 being normalised to a nominal value)
+# Make dataframe for mean Z expression in male cells
 mean.Z.male <- data.frame(Z.mean = apply(norm.data@assays$RNA[grepl("Z-", rownames(norm.data@assays$RNA)), k.male], 1, mean))
 # add 1 before log2 as log2(1) = 0
 mean.Z.male <- log2(mean.Z.male + 1)
+
+# Make dataframe for mean Z expression in female cells
 mean.Z.female <- data.frame(Z.mean = apply(norm.data@assays$RNA[grepl("Z-", rownames(norm.data@assays$RNA)), k.female], 1, mean))
 mean.Z.female <- log2(mean.Z.female + 1)
 
-###### autosomal genes ######
-
-# this is a test on autosomal genes to try and calculate and compare FC betweeen clusters
+# Make dataframe for mean autosomal expression in male cells
 mean.auto.male <- data.frame(auto.mean = apply(norm.data@assays$RNA[!grepl("Z-", rownames(norm.data@assays$RNA)) & !grepl("W-", rownames(norm.data@assays$RNA)), k.male], 1, mean))
 mean.auto.male <- log2(mean.auto.male + 1)
+
+# Make dataframe for mean autosomal expression in male cells
 mean.auto.female <- data.frame(auto.mean = apply(norm.data@assays$RNA[!grepl("Z-", rownames(norm.data@assays$RNA)) & !grepl("W-", rownames(norm.data@assays$RNA)), k.female], 1, mean))
 mean.auto.female <- log2(mean.auto.female + 1)
 
-# calculate FC by subtracting log2 expression from each other
+# Calculate FC by subtracting log2 expression from each other
 FC <- list()
 FC$Z <- mean.Z.male - mean.Z.female
 FC$auto <-  mean.auto.male - mean.auto.female
 
-# plot hist/boxplot of data
-hist(FC$Z$Z.mean)
-hist(FC$auto$auto.mean)
+# Plot boxplot of Z gene and autosomal expression in male vs female cells
 pdf(paste0(curr.plot.path,"sex_kmeans_log2FC_boxplot.pdf"))
 boxplot(c(FC$Z, FC$auto),  ylab = "male - female log2 FC (mean normalised UMI +1)", names = c("Z chromosome genes", "autosomal genes"))
-dev.off()
+graphics.off()
 
 # Z genes are upregulated within male genes relative to female genes whereas autosomal genes have a normal distribution of logFCs
 # therefore Z genes should be filtered out - this could be done on a gene by gene basis, but can also be done through removing all Z genes
@@ -237,72 +234,94 @@ dev.off()
 #                                       Filter sex genes                                            #
 #####################################################################################################
 
-# remove sex genes
+# Following subsetting of cells and/or genes, the same pipeline as above is repeated i.e.
+# Find variable features -> Scale data/regress out confounding variables -> PCA -> Find neighbours -> Run UMAP -> Find Clusters -> Cluster QC -> Find top DE genes
+
+# Remove sex genes
 norm.data.sexfilt <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.data)) & !grepl("Z-", rownames(norm.data))], ]
 
-# re-run findvariablefeatures and scaling
+# Re-run findvariablefeatures and scaling
 norm.data.sexfilt <- FindVariableFeatures(norm.data.sexfilt, selection.method = "vst", nfeatures = 2000)
 norm.data.sexfilt <- ScaleData(norm.data.sexfilt, features = rownames(norm.data.sexfilt), vars.to.regress = c("percent.mt", "sex"))
 
+# Save RDS
 saveRDS(norm.data.sexfilt, paste0(rds.path, "norm.data.sexfilt.RDS"))
 
-
-#####################################################################################################
-#                    Perform dimensionality reduction by PCA and UMAP embedding                     #
-#####################################################################################################
-
-# read in RDS data if needed
+# Read in RDS data if needed
 # norm.data.sexfilt <- readRDS(paste0(rds.path, "norm.data.sexfilt.RDS"))
 
+# Set plot path
+curr.plot.path <- paste0(plot.path, '1_sex_filt/')
+
+# PCA
 norm.data.sexfilt <- RunPCA(object = norm.data.sexfilt, verbose = FALSE)
 
 pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data.sexfilt, dims = 1:30, balanced = TRUE, cells = 500)
-dev.off()
+graphics.off()
+
 pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data.sexfilt, ndims = 40))
-dev.off()
+graphics.off()
 
+pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
 PCA.level.comparison(norm.data.sexfilt, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+graphics.off()
 
 # Use PCA=15 as elbow plot is relatively stable across stages
 norm.data.sexfilt <- FindNeighbors(norm.data.sexfilt, dims = 1:15, verbose = FALSE)
 norm.data.sexfilt <- RunUMAP(norm.data.sexfilt, dims = 1:15, verbose = FALSE)
-clust.res(seurat.obj = norm.data.sexfilt, multi.obj.list = F, by = 0.2)
-# Use clustering resolution = 1.4 for subsequent filtering of poor quality clusters
-# this increases the stringency of poor quality clusters, removing the least data possible
+
+# Find optimal cluster resolution
+pdf(paste0(curr.plot.path, "clustree.pdf"), width= 25, height= 15, onefile = F)
+clust.res(seurat.obj = norm.data.sexfilt, by = 0.2)
+graphics.off()
+
+# Use clustering resolution = 1.4 for subsequent filtering of poor quality clusters this increases the stringency of poor quality clusters, removing the least data possible
 norm.data.sexfilt <- FindClusters(norm.data.sexfilt, resolution = 1.4, verbose = FALSE)
 
-# plot UMAP for clusters and developmental stage
+# Plot UMAP for clusters and developmental stage
+pdf(paste0(curr.plot.path, "UMAP.pdf"), width=10, height=5)
 clust.stage.plot(norm.data.sexfilt)
+graphics.off()
 
+# Plot QC for each cluster
+pdf(paste0(curr.plot.path, "cluster.QC.pdf"), height = 7, width = 18)
 QC.plot(norm.data.sexfilt)
+graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(norm.data.sexfilt, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
-tenx.pheatmap(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), width = 40, height = 30, main = "")
 
+png(paste0(curr.plot.path, "HM.top15.DE.png"), width=100, height=75, units = "cm", res = 200)
+tenx.pheatmap(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), main = "")
+graphics.off()
 
 #####################################################################################################
-#                 Identify and remove poor quality clusters / contamination (mesoderm)              #
+#                 Identify and remove poor quality clusters / contamination (mesoderm and PGCs)     #
 #####################################################################################################
 
+# Change plot path
 curr.plot.path <- paste0(plot.path, "2_cluster_filt/")
 dir.create(curr.plot.path)
 
-# identify mesoderm
+# Identify mesoderm and PGCs
 # UMAP plots GOI
 genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
-multi.feature.plot(seurat.obj = norm.data.sexfilt, multi.obj.list = F, gene.list = genes, cluster.res = 1.4, plot.clusters = T,
-                   plot.stage = T, n.col = 4, label = "", cluster.col = "RNA_snn_res.1.4")
+
+ncol = 3
+pdf(paste0(curr.plot.path, "UMAP_GOI.pdf"), width = ncol*4, height = 5*ceiling(length(genes)/ncol))
+multi.feature.plot(seurat.obj = norm.data.sexfilt, gene.list = genes, plot.clusters = T,
+                   plot.stage = T, label = "", cluster.col = "RNA_snn_res.1.4", n.col = ncol)
+graphics.off()
 
 # Dotplot for identifying PGCs, Early mesoderm and Late mesoderm
-pdf(file = paste0(curr.plot.path, "dotplot.GOI.pdf"), height = 8, width = 10)
+pdf(paste0(curr.plot.path, "dotplot.GOI.pdf"), height = 8, width = 10)
 DotPlot(norm.data.sexfilt, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SIX1",  "PITX2", "DAZL"))
-dev.off()
+graphics.off()
 
-############################### Remove cells from clusters ########################################
+############################### Remove contaminating cells from clusters ########################################
 # Clust 12, 14, 17 = poor quality cells
 # Clust 18 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
 # Clust 20 = Late mesoderm - expresses twist1, six1, eya2
@@ -316,77 +335,94 @@ norm.data.clustfilt <- rownames(norm.data.sexfilt@meta.data)[norm.data.sexfilt@m
 
 norm.data.clustfilt <- subset(norm.data.sexfilt, cells = norm.data.clustfilt, invert = T)
 
-# re-run findvariablefeatures and scaling
+# Re-run findvariablefeatures and scaling
 norm.data.clustfilt <- FindVariableFeatures(norm.data.clustfilt, selection.method = "vst", nfeatures = 2000)
 norm.data.clustfilt <- ScaleData(norm.data.clustfilt, features = rownames(norm.data.clustfilt), vars.to.regress = c("percent.mt", "sex"))
 
 saveRDS(norm.data.clustfilt, paste0(rds.path, "norm.data.clustfilt.RDS"))
 
-#####################################################################################################
-#                    Perform dimensionality reduction by PCA and UMAP embedding                     #
-#####################################################################################################
-
-# read in RDS data if needed
+# Read in RDS data if needed
 # norm.data.clustfilt <- readRDS(paste0(rds.path, "norm.data.clustfilt.RDS"))
 
+# PCA
 norm.data.clustfilt <- RunPCA(object = norm.data.clustfilt, verbose = FALSE)
 
 pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data.clustfilt, dims = 1:30, balanced = TRUE, cells = 500)
-dev.off()
+graphics.off()
+
 pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data.clustfilt, ndims = 40))
-dev.off()
+graphics.off()
 
+pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
 PCA.level.comparison(norm.data.clustfilt, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+graphics.off()
 
+# Use PCA=15 as elbow plot is relatively stable across stages
 norm.data.clustfilt <- FindNeighbors(norm.data.clustfilt, dims = 1:15, verbose = FALSE)
 norm.data.clustfilt <- RunUMAP(norm.data.clustfilt, dims = 1:15, verbose = FALSE)
-clust.res(seurat.obj = norm.data.clustfilt, multi.obj.list = F, by = 0.2)
-# Cluster data using resolution 0.8 (clusters are quite unstable)
+
+# Find optimal cluster resolution
+pdf(paste0(curr.plot.path, "clustree.pdf"), width= 25, height= 15, onefile = F)
+clust.res(seurat.obj = norm.data.clustfilt, by = 0.2)
+graphics.off()
+
+# Use clustering resolution = 0.8
 norm.data.clustfilt <- FindClusters(norm.data.clustfilt, resolution = 0.8)
 
-# plot UMAP for clusters and developmental stage
+# Plot UMAP for clusters and developmental stage
+pdf(paste0(curr.plot.path, "UMAP.pdf"), width=10, height=5)
 clust.stage.plot(norm.data.clustfilt)
+graphics.off()
 
 ####################################################################################
 #                            Check for cell cycle effect                           #
 ####################################################################################
+
+# Set plot path
 curr.plot.path <- paste0(plot.path, "3_cell_cycle/")
 dir.create(curr.plot.path)
 
+# Calculate cell cycle for each cell
 s.genes <- cc.genes$s.genes
 g2m.genes <- cc.genes$g2m.genes
 pre.cell.cycle.dat <- CellCycleScoring(norm.data.clustfilt, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)
 
-# re-run findvariablefeatures and scaling
+# Re-run findvariablefeatures and scaling
 norm.data.clustfilt.cc <- FindVariableFeatures(pre.cell.cycle.dat, selection.method = "vst", nfeatures = 2000)
 norm.data.clustfilt.cc <- ScaleData(norm.data.clustfilt.cc, features = rownames(norm.data.clustfilt.cc), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 saveRDS(norm.data.clustfilt.cc, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
 
-#####################################################################################################
-#                    Perform dimensionality reduction by PCA and UMAP embedding                     #
-#####################################################################################################
-
-# read in RDS data if needed
+# Read in RDS data if needed
 # norm.data.clustfilt.cc <- readRDS(paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
 
+# PCA
 norm.data.clustfilt.cc <- RunPCA(object = norm.data.clustfilt.cc, verbose = FALSE)
 
 pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data.clustfilt.cc, dims = 1:30, balanced = TRUE, cells = 500)
-dev.off()
+graphics.off()
 
 pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data.clustfilt.cc, ndims = 40))
-dev.off()
+graphics.off()
 
+pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
 PCA.level.comparison(norm.data.clustfilt.cc, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+graphics.off()
 
+# Use PCA=15 as elbow plot is relatively stable across stages
 norm.data.clustfilt.cc <- FindNeighbors(norm.data.clustfilt.cc, dims = 1:15, verbose = FALSE)
 norm.data.clustfilt.cc <- RunUMAP(norm.data.clustfilt.cc, dims = 1:15, verbose = FALSE)
-clust.res(seurat.obj = norm.data.clustfilt.cc, multi.obj.list = F, by = 0.2)
+
+# Find optimal cluster resolution
+pdf(paste0(curr.plot.path, "clustree.pdf"), width= 25, height= 15, onefile = F)
+clust.res(seurat.obj = norm.data.clustfilt.cc, by = 0.2)
+graphics.off()
+
+# Use clustering resolution = 1.2
 norm.data.clustfilt.cc <- FindClusters(norm.data.clustfilt.cc, resolution = 1.2)
 
 # UMAP of cell cycle before and after regressing out
@@ -394,150 +430,200 @@ pdf(paste0(curr.plot.path, "cell.cycle.pdf"), width = 14, height = 7)
 pre.plot <- DimPlot(pre.cell.cycle.dat, group.by = "Phase", reduction = "umap")
 post.plot <- DimPlot(norm.data.clustfilt.cc, group.by = "Phase", reduction = "umap")
 print(gridExtra::grid.arrange(pre.plot, post.plot, ncol = 2))
-dev.off()
+graphics.off()
 
-# plot UMAP for clusters and developmental stage
+# Plot UMAP for clusters and developmental stage
+pdf(paste0(curr.plot.path, "UMAP.pdf"), width=10, height=5)
 clust.stage.plot(norm.data.clustfilt.cc)
+graphics.off()
 
-# plot cluster QC
+# Plot QC for each cluster
+pdf(paste0(curr.plot.path, "cluster.QC.pdf"), height = 7, width = 18)
 QC.plot(norm.data.clustfilt.cc)
+graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(norm.data.clustfilt.cc, only.pos = T, logfc.threshold = 0.25)
-# re-order genes in top15 based on desired cluster order is subsequent plot - this orders them in the heatmap in the correct order
-top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = c(1,2,8,11,0,5,6,7,9,12,13,3,4,10,14)))
-tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("orig.ident", "seurat_clusters"),
-              used.genes = unique(top15$gene), width = 40, height = 30, main = "", order.by = "seurat_clusters", custom_order = c(1,2,8,11,0,5,6,7,9,12,13,3,4,10,14))
+# Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = c(1,2,11,7,0,6,4,8,9,10,3,5,12,13,14)))
 
+png(paste0(curr.plot.path, "HM.top15.DE.png"), width=100, height=75, units = "cm", res = 200)
+tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene),
+              main = "", order.by = "seurat_clusters", custom_order = c(1,2,11,7,0,6,4,8,9,10,3,5,12,13,14))
+graphics.off()
 
 #####################################################################################################
 #                                        Cell type identification                                   #
 #####################################################################################################
 
-curr.plot.path <- paste0(plot.path, "4_cell_type_classification/")
+# Set plot path
+curr.plot.path <- paste0(plot.path, "4_stage_split/")
 dir.create(curr.plot.path)
 
-###################### Nerual crest and placode cell type identification ######################
-placNC_genes <- c(
-  # delaminating NC
-  "ETS1", "SOX10", "SOX8", "LMO4",  "TFAP2B", "SOX9",
-  # NPB
-  "TFAP2A", "DRAXIN", "MSX1", "CSRNP1", "PAX7", "BMP5", "MSX2",
-  # NC
-  "WNT6",
-  # Placodes
-  "PITX1", "PITX2", "ZNF385C",  "SIX1", "EYA2", "DLX6", "HOMER2"
-)
-
-# plot expression of NP genes
-multi.feature.plot(norm.data.clustfilt.cc, stage.name = "all.stages", gene.list = placNC_genes, multi.obj.list = F,
-                   plot.clusters = T, n.col = 5, basename = "plac.UMAP.GOI.pdf", label = "UMAP of genes used to identify non-NP clusters",
-                   plot.stage = T)
-
-# add neural crest and placodal cell types to metadata
-norm.data.clustfilt.cc@meta.data$placNC_clust <- apply(norm.data.clustfilt.cc@meta.data, 1, function(x)
-  if(x["seurat_clusters"] == 10){"Delaminating NC"} else if(x["seurat_clusters"] == 12){"NC Progenitors"}
-  else if(x["seurat_clusters"] == 9){"Placodes"}else {NA})
-
-# plot annotated neural crest and placodal clusters
-png(paste0(curr.plot.path, "plac.clust.png"), width = 13, height = 10, res = 200, units = "cm")
-DimPlot(norm.data.clustfilt.cc, group.by = "placNC_clust")  + ggtitle("Clusters") + theme(plot.title = element_text(hjust = 0.5))
-dev.off()
-
-# plot dotplot for neural crest and placodal genes and clusters
-png(paste0(curr.plot.path, "plac.dotplot.png"), width = 25, height = 10, res = 200, units = "cm")
-DotPlot(norm.data.clustfilt.cc[, !is.na(norm.data.clustfilt.cc@meta.data$placNC_clust)], group.by = "placNC_clust", features = placNC_genes) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-dev.off()
-
-###################### Neural tube cell identification ######################
-NP_genes <- c(
-  # HB
-  "GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20",
-  # MHB
-  "WNT4", "PAX2", "FGF8", "WNT1",
-  # Anterior
-  "PAX6", "OTX2", "OLIG2" , "SIX3",
-  # Ventral floor
-  "SHH", "NKX2-2", "FOXA2"
-)
-
-# plot expression of NP genes
-multi.feature.plot(norm.data.clustfilt.cc, stage.name = "all.stages", gene.list = NP_genes, multi.obj.list = F,
-                   plot.clusters = T, n.col = 5, basename = "NP.UMAP.GOI.pdf", label = "UMAP of genes used to identify non-NP clusters",
-                   plot.stage = T)
-
-# add NP cell types to metadata
-norm.data.clustfilt.cc@meta.data$NP_clust <- apply(norm.data.clustfilt.cc@meta.data, 1, function(x)
-  if(x["seurat_clusters"] == 3){"Late Forebrain"} else if(x["seurat_clusters"] == 4){"Late Midbrain"}
-  else if(x["seurat_clusters"] == 6){"Early Midbrain"} else if(x["seurat_clusters"] == 7){"Early Forebrain"}
-  else if(x["seurat_clusters"] == 14){"Ventral Forebrain"} else if(x["seurat_clusters"] == 13){"Hindbrain"}
-  else {NA})
+# Split dataset into different stages
+seurat_stage <- lapply(c('hh4', 'hh6', 'ss4', 'ss8'),
+       function(x) subset(norm.data.clustfilt.cc, cells = rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.cc$orig.ident == x]))
+names(seurat_stage) = c('hh4', 'hh6', 'ss4', 'ss8')
 
 
-# plot annotated NP clusters
-png(paste0(curr.plot.path, "NP.clust.png"), width = 13, height = 10, res = 200, units = "cm")
-DimPlot(norm.data.clustfilt.cc, group.by = "NP_clust")  + ggtitle("Clusters") + theme(plot.title = element_text(hjust = 0.5))
-dev.off()
+# Re-run findvariablefeatures and scaling
+seurat_stage <- lapply(seurat_stage, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
+seurat_stage <- lapply(seurat_stage, function(x) ScaleData(x, features = rownames(norm.data.clustfilt.cc),
+                                                           vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score")))
 
-# plot dotplot for NP genes and clusters
-norm.data.clustfilt.cc@meta.data$NP_clust <- factor(norm.data.clustfilt.cc@meta.data$NP_clust,
-                                                    levels = c("Hindbrain", "Early Midbrain", "Late Midbrain", "Early Forebrain",
-                                                               "Late Forebrain", "Ventral Forebrain"))
+saveRDS(seurat_stage, paste0(rds.path, "seurat_stage.RDS"))
 
-png(paste0(curr.plot.path, "NP.dotplot.png"), width = 25, height = 10, res = 200, units = "cm")
-DotPlot(norm.data.clustfilt.cc[, !is.na(norm.data.clustfilt.cc@meta.data$NP_clust)], group.by = "NP_clust", features = NP_genes) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-dev.off()
+# Read in RDS data if needed
+# seurat_stage <- readRDS(paste0(rds.path, "seurat_stage.RDS"))
+
+# PCA
+seurat_stage <- lapply(seurat_stage, function(x) RunPCA(object = x, verbose = FALSE))
+
+for(stage in names(seurat_stage)){
+  pdf(paste0(curr.plot.path, "dimHM.", stage, ".pdf"),width=15,height=25)
+  DimHeatmap(seurat_stage[[stage]], dims = 1:30, balanced = TRUE, cells = 500)
+  graphics.off()
+  
+  pdf(paste0(curr.plot.path, "elbowplot.", stage, ".pdf"),width=12,height=10)
+  print(ElbowPlot(seurat_stage[[stage]], ndims = 40))
+  graphics.off()
+  
+  pdf(paste0(curr.plot.path, "UMAP_PCA_comparison.", stage, ".pdf"), width= 20, height= 15)
+  PCA.level.comparison(seurat_stage[[stage]], PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+  graphics.off()
+}
+
+# Use PCA=15 as elbow plot is relatively stable across stages
+seurat_stage <- lapply(seurat_stage, function(x) FindNeighbors(x, dims = 1:20, verbose = FALSE))
+seurat_stage <- lapply(seurat_stage, function(x) RunUMAP(x, dims = 1:20, verbose = FALSE))
+
+# Find optimal cluster resolution
+for(stage in names(seurat_stage)){
+  pdf(paste0(curr.plot.path, "clustree.", stage, ".pdf"), width= 25, height= 15, onefile = F)
+  clust.res(seurat.obj = seurat_stage[[stage]], by = 0.1)
+  graphics.off()
+}
+
+# Use custom clustering resolution for each stage
+res = c("hh4" = 0.5, "hh6" = 0.8, "ss4" = 0.3, "ss8" = 0.3)
+seurat_stage <- lapply(names(res), function(x) FindClusters(seurat_stage[[x]], resolution = res[names(res) %in% x]))
+names(seurat_stage) = names(res)
+
+# Plot UMAP for clusters and developmental stage
+for(stage in names(seurat_stage)){
+  pdf(paste0(curr.plot.path, "UMAP.", stage, ".pdf"), width=10, height=5)
+  clust.stage.plot(seurat_stage[[stage]])
+  graphics.off()
+}
+
+# Plot features listed below at each stage
+GOI = list("hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "SIX3", "GBX2", "SOX2", "SOX21"),
+            "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
+            "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
+
+for(stage in names(GOI)){
+  ncol = 3
+  pdf(paste0(curr.plot.path, "UMAP_GOI.", stage, ".pdf"), width = ncol*4, height = 5*ceiling(length(genes)/ncol))
+  multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage]))
+  graphics.off()
+}
+
+# Change order or clusters for plotting dotplots
+levels = list("hh6" = c(5,0,3,2,1,4), "ss4" = c(2,3,1,4,0), "ss8" = c(3,2,1,4,0))
+for(stage in names(levels)){
+  seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
+}
+
+# Plot dotplot to identify clusters
+for(stage in names(GOI)){
+  pdf(paste0(curr.plot.path, "dotplot.", stage, ".pdf"), width = 15, height = 6)
+  print(DotPlot(seurat_stage[[stage]], group.by = "seurat_clusters", features = unlist(GOI[names(GOI) %in% stage])) +
+          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
+  graphics.off()
+}
+
+# Make list of clusters to subset
+clust.sub = list("hh6" = c(2,1,4), "ss4" = c(0,1,4), "ss8" = c(0,1,4))
+
+########## Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
+
+# Set plot path
+curr.plot.path <- paste0(plot.path, "5_neural_subset/")
+dir.create(curr.plot.path)
+
+# Get cell IDs from each stage based on clusters to subset
+cell.sub = unlist(lapply(names(clust.sub), function(x){
+  rownames(seurat_stage[[x]]@meta.data)[seurat_stage[[x]]$seurat_clusters %in% unlist(clust.sub[names(clust.sub) %in% x])]
+}))
+
+# Subset neural cells
+neural.seurat <- subset(norm.data.clustfilt.cc, cells = cell.sub)
+
+# Re-run findvariablefeatures and scaling
+neural.seurat <- FindVariableFeatures(neural.seurat, selection.method = "vst", nfeatures = 2000)
+neural.seurat <- ScaleData(neural.seurat, features = rownames(neural.seurat), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
+
+saveRDS(neural.seurat, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
+
+# Read in RDS data if needed
+# neural.seurat <- readRDS(paste0(rds.path, "neural.seurat.RDS"))
+
+# PCA
+neural.seurat <- RunPCA(object = neural.seurat, verbose = FALSE)
+
+pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
+DimHeatmap(neural.seurat, dims = 1:30, balanced = TRUE, cells = 500)
+graphics.off()
+
+pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
+print(ElbowPlot(neural.seurat, ndims = 40))
+graphics.off()
+
+pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
+PCA.level.comparison(neural.seurat, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+graphics.off()
+
+# Use PCA=15 as elbow plot is relatively stable across stages
+neural.seurat <- FindNeighbors(neural.seurat, dims = 1:20, verbose = FALSE)
+neural.seurat <- RunUMAP(neural.seurat, dims = 1:20, verbose = FALSE)
+
+# Find optimal cluster resolution
+pdf(paste0(curr.plot.path, "clustree.pdf"), width= 25, height= 15, onefile = F)
+clust.res(seurat.obj = neural.seurat, by = 0.2)
+graphics.off()
+
+# Use clustering resolution = 1.2
+neural.seurat <- FindClusters(neural.seurat, resolution = 1.2)
+
+# Plot UMAP for clusters and developmental stage
+pdf(paste0(curr.plot.path, "UMAP.pdf"), width=10, height=5)
+clust.stage.plot(neural.seurat)
+graphics.off()
+
+# Plot QC for each cluster
+pdf(paste0(curr.plot.path, "cluster.QC.pdf"), height = 7, width = 18)
+QC.plot(neural.seurat)
+graphics.off()
+
+# Find differentially expressed genes and plot heatmap of top DE genes for each cluster
+markers <- FindAllMarkers(norm.data.clustfilt.cc, only.pos = T, logfc.threshold = 0.25)
+# Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = c(1,2,11,7,0,6,4,8,9,10,3,5,12,13,14)))
+
+png(paste0(curr.plot.path, "HM.top15.DE.png"), width=100, height=75, units = "cm", res = 200)
+tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene),
+              main = "", order.by = "seurat_clusters", custom_order = c(1,2,11,7,0,6,4,8,9,10,3,5,12,13,14))
+graphics.off()
 
 
-###################### HH6 cell type plots ######################
-HH6_genes <- c("FRZB",  "SOX2",  "SOX21","SIX1","BMP4", "GATA2", "DLX5", "MSX1")
-
-# plot expression of HH6 genes
-multi.feature.plot(norm.data.clustfilt.cc, stage.name = "all.stages", gene.list = HH6_genes, multi.obj.list = F,
-                   plot.clusters = T, n.col = 5, basename = "HH6.UMAP.GOI.pdf", label = "UMAP of genes used to identify HH6 clusters",
-                   plot.stage = T)
-
-# add NP cell types to metadata
-norm.data.clustfilt.cc@meta.data$interm_clust <- apply(norm.data.clustfilt.cc@meta.data, 1, function(x)
-  if(x["seurat_clusters"] == 0){"Putative Neural Progenitors"} else if(x["seurat_clusters"] == 5){"Putative Placodal Progenitors"}
-  else {NA})
 
 
-# plot annotated HH6 clusters
-png(paste0(curr.plot.path, "HH6.clust.png"), width = 14, height = 10, res = 200, units = "cm")
-DimPlot(norm.data.clustfilt.cc, group.by = "interm_clust")  + ggtitle("Clusters") + theme(plot.title = element_text(hjust = 0.5))
-dev.off()
-
-# plot dotplot for HH6 genes and clusters
-png(paste0(curr.plot.path, "HH6.dotplot.png"), width = 25, height = 10, res = 200, units = "cm")
-DotPlot(norm.data.clustfilt.cc[, !is.na(norm.data.clustfilt.cc@meta.data$interm_clust)], group.by = "interm_clust", features = HH6_genes) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-dev.off()
-
-# add column to metadata with all celltypes
-# rename clusters with cell types
-cell_types = list("0" = "Putative Neural Progenitors",
-                  "1" = "HH4",
-                  "2" = "HH4",
-                  "3" = "Late Forebrain",
-                  "4" = "Late Midbrain",
-                  "5" = "Putative Placodal Progenitors",
-                  "6" = "Early Midbrain",
-                  "7" = "Early Forebrain",
-                  "8" = "HH4",
-                  "9" = "Placodes",
-                  "10" = "Delaminating NC",
-                  "11" = "HH4",
-                  "12" = "NC Progenitors",
-                  "13" = "Hindbrain",
-                  "14" = "Ventral Forebrain"
-)
 
 
-# add cell type to seurat metadata
-norm.data.clustfilt.cc$cell_type <- unlist(unname(sapply(norm.data.clustfilt.cc@meta.data[,"seurat_clusters"], function(x) cell_types[names(cell_types) %in% x])))
+
+
+
+
 
 #####################################################################################################
 #                                        Save output from Seurat                                    #
