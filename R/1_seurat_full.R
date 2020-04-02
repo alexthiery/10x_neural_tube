@@ -494,8 +494,8 @@ for(stage in names(seurat_stage)){
 }
 
 # Use PCA=15 as elbow plot is relatively stable across stages
-seurat_stage <- lapply(seurat_stage, function(x) FindNeighbors(x, dims = 1:20, verbose = FALSE))
-seurat_stage <- lapply(seurat_stage, function(x) RunUMAP(x, dims = 1:20, verbose = FALSE))
+seurat_stage <- lapply(seurat_stage, function(x) FindNeighbors(x, dims = 1:15, verbose = FALSE))
+seurat_stage <- lapply(seurat_stage, function(x) RunUMAP(x, dims = 1:15, verbose = FALSE))
 
 # Find optimal cluster resolution
 for(stage in names(seurat_stage)){
@@ -505,7 +505,7 @@ for(stage in names(seurat_stage)){
 }
 
 # Use custom clustering resolution for each stage
-res = c("hh4" = 0.5, "hh6" = 0.8, "ss4" = 0.3, "ss8" = 0.3)
+res = c("hh4" = 0.5, "hh6" = 0.5, "ss4" = 0.3, "ss8" = 0.3)
 seurat_stage <- lapply(names(res), function(x) FindClusters(seurat_stage[[x]], resolution = res[names(res) %in% x]))
 names(seurat_stage) = names(res)
 
@@ -517,19 +517,19 @@ for(stage in names(seurat_stage)){
 }
 
 # Plot features listed below at each stage
-GOI = list("hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "SIX3", "GBX2", "SOX2", "SOX21"),
+GOI = list("hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
             "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
             "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
 
 for(stage in names(GOI)){
   ncol = 3
-  pdf(paste0(curr.plot.path, "UMAP_GOI.", stage, ".pdf"), width = ncol*4, height = 5*ceiling(length(genes)/ncol))
-  multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage]))
+  pdf(paste0(curr.plot.path, "UMAP_GOI.", stage, ".pdf"), width = ncol*4, height = 5*ceiling(length(unlist(GOI[names(GOI) %in% stage]))/ncol))
+  print(multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage])))
   graphics.off()
 }
 
 # Change order or clusters for plotting dotplots
-levels = list("hh6" = c(5,0,3,2,1,4), "ss4" = c(2,3,1,4,0), "ss8" = c(3,2,1,4,0))
+levels = list("hh6" = c(2,1,3,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,1,4,0))
 for(stage in names(levels)){
   seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
 }
@@ -543,7 +543,7 @@ for(stage in names(GOI)){
 }
 
 # Make list of clusters to subset
-clust.sub = list("hh6" = c(2,1,4), "ss4" = c(0,1,4), "ss8" = c(0,1,4))
+clust.sub = list("hh6" = c(0,3), "ss4" = c(0,1), "ss8" = c(0,1,4))
 
 ########## Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
 
