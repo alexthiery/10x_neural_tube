@@ -158,7 +158,7 @@ curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 dir.create(curr.plot.path)
 
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are hh4 clusters. Clustering is driven by sex genes
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=70, height=40, units = "cm", res = 200)
+png(paste0(curr.plot.path, "HM.top15.DE.pre-sexfilt.png"), width=70, height=40, units = "cm", res = 200)
 tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
               metadata = c("orig.ident", "seurat_clusters"), used.genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)),
               main = "", hclust_rows = T)
@@ -294,7 +294,7 @@ graphics.off()
 markers <- FindAllMarkers(norm.data.sexfilt, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
 
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=100, height=75, units = "cm", res = 200)
+png(paste0(curr.plot.path, "HM.top15.DE.post-sexfilt.png"), width=100, height=75, units = "cm", res = 200)
 tenx.pheatmap(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), main = "")
 graphics.off()
 
