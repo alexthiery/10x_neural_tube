@@ -146,11 +146,11 @@ Run PCA analysis on the each set of data
 norm.data <- RunPCA(object = norm.data, verbose = FALSE)
 ```
 
-Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept!
-
 <br />
 
 #### PCA {.tabset .tabset-fade .tabset-pills}
+
+Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept!
 
 ##### Dimensions heatmap
 Plot heatmap of top variable genes across top principle components
@@ -387,33 +387,27 @@ curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 
 ```{r eval = FALSE}
 norm.data.sexfilt <- RunPCA(object = norm.data.sexfilt, verbose = FALSE)
-```
 
-##### Dimensions heatmap
-```{r eval = FALSE}
 pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data.sexfilt, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
-```
 
-<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/1_sex_filt/dimHM.pdf" width="800px" height="1200px" />
-
-##### ElbowPlot
-```{r eval = FALSE}
 pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data.sexfilt, ndims = 40))
 graphics.off()
-```
 
-<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/1_sex_filt/elbowplot.pdf" width="800px" height="1200px" />
-
-##### PCA level comparison
-```{r eval = FALSE}
 pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
 PCA.level.comparison(norm.data.sexfilt, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 ```
 
+##### Dimensions heatmap
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/1_sex_filt/dimHM.pdf" width="800px" height="1200px" />
+
+##### ElbowPlot
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/1_sex_filt/elbowplot.pdf" width="800px" height="1200px" />
+
+##### PCA level comparison
 <iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/1_sex_filt/UMAP_PCA_comparison.pdf" width="800px" height="1200px" />
 
 #### {-}
@@ -550,33 +544,27 @@ Read in RDS data if needed
   
 ```{r eval = FALSE}
 norm.data.clustfilt <- RunPCA(object = norm.data.clustfilt, verbose = FALSE)
-```
 
-##### Dimensions heatmap
-```{r eval = FALSE}
 pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data.clustfilt, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
-```
 
-<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/2_cluster_filt/dimHM.pdf" width="800px" height="1200px" />
-
-##### ElbowPlot
-```{r eval = FALSE}
 pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data.clustfilt, ndims = 40))
 graphics.off()
-```
 
-<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/2_cluster_filt/elbowplot.pdf" width="800px" height="1200px" />
-
-##### PCA level comparison
-```{r eval = FALSE}
 pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
 PCA.level.comparison(norm.data.clustfilt, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 ```
 
+##### Dimensions heatmap
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/2_cluster_filt/dimHM.pdf" width="800px" height="1200px" />
+
+##### ElbowPlot
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/2_cluster_filt/elbowplot.pdf" width="800px" height="1200px" />
+
+##### PCA level comparison
 <iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/2_cluster_filt/UMAP_PCA_comparison.pdf" width="800px" height="1200px" />
 
 #### {-}
@@ -662,33 +650,27 @@ Read in RDS data if needed
   
 ```{r eval = FALSE}
 norm.data.clustfilt.cc <- RunPCA(object = norm.data.clustfilt.cc, verbose = FALSE)
-```
 
-##### Dimensions heatmap
-```{r eval = FALSE}
 pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
 DimHeatmap(norm.data.clustfilt.cc, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
-```
 
-<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cell_cycle/dimHM.pdf" width="800px" height="1200px" />
-
-##### ElbowPlot
-```{r eval = FALSE}
 pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
 print(ElbowPlot(norm.data.clustfilt.cc, ndims = 40))
 graphics.off()
-```
 
-<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cell_cycle/elbowplot.pdf" width="800px" height="1200px" />
-
-##### PCA level comparison
-```{r eval = FALSE}
 pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
 PCA.level.comparison(norm.data.clustfilt.cc, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 ```
 
+##### Dimensions heatmap
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cell_cycle/dimHM.pdf" width="800px" height="1200px" />
+
+##### ElbowPlot
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cell_cycle/elbowplot.pdf" width="800px" height="1200px" />
+
+##### PCA level comparison
 <iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cell_cycle/UMAP_PCA_comparison.pdf" width="800px" height="1200px" />
 
 #### {-}
@@ -710,7 +692,7 @@ clust.res(seurat.obj = norm.data.clustfilt.cc, by = 0.2)
 graphics.off()
 ```
 
-<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cluster_filt/clustree.pdf" width="800px" height="1200px" />
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cell_cycle/clustree.pdf" width="800px" height="1200px" />
 
 Use clustering resolution = 1.2
 ```{r eval = FALSE}
@@ -728,7 +710,7 @@ print(gridExtra::grid.arrange(pre.plot, post.plot, ncol = 2))
 graphics.off()
 ```
 
-<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cluster_filt/cell.cycle.pdf" width="800px" height="1200px" />
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cell_cycle/cell.cycle.pdf" width="800px" height="1200px" />
 
 ##### UMAP
 Plot UMAP for clusters and developmental stage
@@ -738,7 +720,7 @@ clust.stage.plot(norm.data.clustfilt.cc)
 graphics.off()
 ```
 
-<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cluster_filt/UMAP.pdf" width="800px" height="1200px" />
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cell_cycle/UMAP.pdf" width="800px" height="1200px" />
 
 ##### Cluster QC
 Plot QC for each cluster
@@ -748,7 +730,7 @@ QC.plot(norm.data.clustfilt.cc)
 graphics.off()
 ```
 
-<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cluster_filt/cluster.QC.pdf" width="800px" height="1200px" />
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/3_cell_cycle/cluster.QC.pdf" width="800px" height="1200px" />
 
 ##### DE heatmap
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
@@ -876,13 +858,20 @@ for(stage in names(seurat_stage)){
 
 <br />
 
+
+
+#### Clustering and UMAP
+
 Use PCA=15 as elbow plot is relatively stable across stages
 ```{r eval = FALSE}
 seurat_stage <- lapply(seurat_stage, function(x) FindNeighbors(x, dims = 1:20, verbose = FALSE))
 seurat_stage <- lapply(seurat_stage, function(x) RunUMAP(x, dims = 1:20, verbose = FALSE))
 ```
 
-Find optimal cluster resolution
+<br />
+
+##### Find optimal cluster resolution {.tabset .tabset-fade .tabset-pills}
+
 ```{r eval = FALSE}
 for(stage in names(seurat_stage)){
   pdf(paste0(curr.plot.path, "clustree.", stage, ".pdf"), width= 25, height= 15, onefile = F)
@@ -891,14 +880,21 @@ for(stage in names(seurat_stage)){
 }
 ```
 
+###### HH4
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/clustree.hh4.pdf" width="800px" height="1200px" />
 
+###### HH6
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/clustree.hh6.pdf" width="800px" height="1200px" />
 
+###### 4ss
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/clustree.ss4.pdf" width="800px" height="1200px" />
 
+###### 8ss
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/clustree.ss8.pdf" width="800px" height="1200px" />
 
+##### {-}
 
-
-
-
+#### {-}
 
 Use custom clustering resolution for each stage
 ```{r eval = FALSE}
@@ -907,7 +903,13 @@ seurat_stage <- lapply(names(res), function(x) FindClusters(seurat_stage[[x]], r
 names(seurat_stage) = names(res)
 ```
 
+<br />
+
+#### Plots {.tabset .tabset-fade .tabset-pills}
+
+##### UMAP {.tabset .tabset-fade .tabset-pills}
 Plot UMAP for clusters and developmental stage
+
 ```{r eval = FALSE}
 for(stage in names(seurat_stage)){
   pdf(paste0(curr.plot.path, "UMAP.", stage, ".pdf"), width=10, height=5)
@@ -916,7 +918,24 @@ for(stage in names(seurat_stage)){
 }
 ```
 
+###### HH4
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/UMAP.hh4.pdf" width="800px" height="1200px" />
+
+###### HH6
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/UMAP.hh6.pdf" width="800px" height="1200px" />
+
+###### 4ss
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/UMAP.ss4.pdf" width="800px" height="1200px" />
+
+###### 8ss
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/UMAP.ss8.pdf" width="800px" height="1200px" />
+
+##### {-}
+
+
+##### Feature plots {.tabset .tabset-fade .tabset-pills}
 Plot features listed below at each stage
+
 ```{r eval = FALSE}
 GOI = list("hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "SIX3", "GBX2", "SOX2", "SOX21"),
             "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
@@ -929,6 +948,23 @@ for(stage in names(GOI)){
   graphics.off()
 }
 ```
+
+###### HH4
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/UMAP_GOI.hh4.pdf" width="800px" height="1200px" />
+
+###### HH6
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/UMAP_GOI.hh6.pdf" width="800px" height="1200px" />
+
+###### 4ss
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/UMAP_GOI.ss4.pdf" width="800px" height="1200px" />
+
+###### 8ss
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/UMAP_GOI.ss8.pdf" width="800px" height="1200px" />
+
+##### {-}
+
+
+##### DotPlots {.tabset .tabset-fade .tabset-pills}
 
 Change order or clusters for plotting dotplots
 ```{r eval = FALSE}
@@ -948,11 +984,31 @@ for(stage in names(GOI)){
 }
 ```
 
+###### HH4
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/dotplot.hh4.pdf" width="800px" height="1200px" />
+
+###### HH6
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/dotplot.hh6.pdf" width="800px" height="1200px" />
+
+###### 4ss
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/dotplot.ss4.pdf" width="800px" height="1200px" />
+
+###### 8ss
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/dotplot.ss8.pdf" width="800px" height="1200px" />
+
+##### {-}
+
+#### {-}
+
+
 Make list of clusters to subset
 ```{r eval = FALSE}
 clust.sub = list("hh6" = c(2,1,4), "ss4" = c(0,1,4), "ss8" = c(0,1,4))
 ```
 
+<br />
+
+***
 ### Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
 ***
 
@@ -987,7 +1043,10 @@ Read in RDS data if needed
 # neural.seurat <- readRDS(paste0(rds.path, "neural.seurat.RDS"))
 ```
 
-PCA
+<br />
+
+#### PCA {.tabset .tabset-fade .tabset-pills}
+  
 ```{r eval = FALSE}
 neural.seurat <- RunPCA(object = neural.seurat, verbose = FALSE)
 
@@ -1004,6 +1063,21 @@ PCA.level.comparison(neural.seurat, PCA.levels = c(7, 10, 15, 20), cluster_res =
 graphics.off()
 ```
 
+##### Dimensions heatmap
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/5_neural_subset/dimHM.pdf" width="800px" height="1200px" />
+
+##### ElbowPlot
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/5_neural_subset/elbowplot.pdf" width="800px" height="1200px" />
+
+##### PCA level comparison
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/5_neural_subset/UMAP_PCA_comparison.pdf" width="800px" height="1200px" />
+
+#### {-}
+
+<br />
+
+#### Clustering and UMAP {.tabset .tabset-fade .tabset-pills}
+
 Use PCA=15 as elbow plot is relatively stable across stages
 ```{r eval = FALSE}
 neural.seurat <- FindNeighbors(neural.seurat, dims = 1:20, verbose = FALSE)
@@ -1016,26 +1090,32 @@ pdf(paste0(curr.plot.path, "clustree.pdf"), width= 25, height= 15, onefile = F)
 clust.res(seurat.obj = neural.seurat, by = 0.2)
 graphics.off()
 ```
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/5_neural_subset/clustree.pdf" width="800px" height="1200px" />
 
 Use clustering resolution = 1.2
 ```{r eval = FALSE}
 neural.seurat <- FindClusters(neural.seurat, resolution = 1.2)
 ```
 
+##### UMAP
 Plot UMAP for clusters and developmental stage
 ```{r eval = FALSE}
 pdf(paste0(curr.plot.path, "UMAP.pdf"), width=10, height=5)
 clust.stage.plot(neural.seurat)
 graphics.off()
 ```
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/5_neural_subset/UMAP.pdf" width="800px" height="1200px" />
 
+##### Cluster QC
 Plot QC for each cluster
 ```{r eval = FALSE}
 pdf(paste0(curr.plot.path, "cluster.QC.pdf"), height = 7, width = 18)
 QC.plot(neural.seurat)
 graphics.off()
 ```
+<iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/5_neural_subset/cluster.QC.pdf" width="800px" height="1200px" />
 
+##### DE heatmap
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 ```{r eval = FALSE}
 markers <- FindAllMarkers(neural.seurat, only.pos = T, logfc.threshold = 0.25)
@@ -1052,4 +1132,6 @@ saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
 
 <!-- ![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/5_neural_subset/HM.top15.DE.png) -->
 
+#### {-}
 
+<br />
