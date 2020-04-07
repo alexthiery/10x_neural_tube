@@ -7,7 +7,7 @@ output:
     fig_height: 6
     theme: simplex
     dev: jpeg
-    keep_md: true
+    keep_md: false
 ---
 ***
 This analysis is ran using Seurat v3.1. For more information see <https://satijalab.org/seurat/>
