@@ -1,8 +1,9 @@
 
-#!/usr/bin/env Rscript
-args = commandArgs(trailingOnly=TRUE)
 
 # In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
+
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
 
 if (length(args)==0) {
   cat('no arguments provided\n')
