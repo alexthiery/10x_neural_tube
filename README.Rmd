@@ -160,9 +160,6 @@ DimHeatmap(norm.data, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 ```
 
-
-![Alt text](https://github.com/alexthiery/10x_neural_tube/blob/Dev/R/plots/1_seurat_full/0_filt_data/dimHM.pdf)
-
 <iframe src="/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/0_filt_data/dimHM.pdf" width="800px" height="1390px" />
 
 ##### ElbowPlot
