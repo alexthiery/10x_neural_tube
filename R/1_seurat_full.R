@@ -25,7 +25,7 @@ if (length(args)==0) {
   if (args[1] == "CAMP") {
     cat('data loaded from CAMP\n')
     
-    project.dir = "~/working/alexthiery/analysis/10x_scRNAseq_2019/"
+    project.dir = "~/working/alexthiery/analysis/10x_neural_tube/"
     
     sapply(list.files(paste0(project.dir, 'repo/scripts/my_functions/'), full.names = T), source)
 
@@ -38,10 +38,10 @@ if (length(args)==0) {
 
     ###### load data ##########
     sample.paths<-data.frame(tissue = c("hh4", "hh6", "ss4", "ss8"),
-                             path = c('~/working/alexthiery/analysis/10x_scRNAseq_2019/cellranger_ouput/hh4_filtered_feature_bc_matrix_chr_edit/',
-                                      '~/working/alexthiery/analysis/10x_scRNAseq_2019/cellranger_ouput/hh6_filtered_feature_bc_matrix_chr_edit/',
-                                      '~/working/alexthiery/analysis/10x_scRNAseq_2019/cellranger_ouput/4ss_filtered_feature_bc_matrix_chr_edit/',
-                                      '~/working/alexthiery/analysis/10x_scRNAseq_2019/cellranger_ouput/8ss_filtered_feature_bc_matrix_chr_edit/'))
+                             path = c('~/working/alexthiery/analysis/10x_neural_tube/cellranger_ouput/hh4_filtered_feature_bc_matrix_chr_edit/',
+                                      '~/working/alexthiery/analysis/10x_neural_tube/cellranger_ouput/hh6_filtered_feature_bc_matrix_chr_edit/',
+                                      '~/working/alexthiery/analysis/10x_neural_tube/cellranger_ouput/4ss_filtered_feature_bc_matrix_chr_edit/',
+                                      '~/working/alexthiery/analysis/10x_neural_tube/cellranger_ouput/8ss_filtered_feature_bc_matrix_chr_edit/'))
 
   } else {stop("Only CAMP can be supplied as arguments")}
 } else {stop("only one argument can be supplied")}
