@@ -1029,7 +1029,7 @@ Re-run findvariablefeatures and scaling
 neural.seurat <- FindVariableFeatures(neural.seurat, selection.method = "vst", nfeatures = 2000)
 neural.seurat <- ScaleData(neural.seurat, features = rownames(neural.seurat), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
-saveRDS(neural.seurat, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
+saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.RDS"))
 ```
 
 Read in RDS data if needed
