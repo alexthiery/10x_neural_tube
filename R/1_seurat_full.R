@@ -1,8 +1,9 @@
 
-#!/usr/bin/env Rscript
-args = commandArgs(trailingOnly=TRUE)
 
 # In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
+
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
 
 if (length(args)==0) {
   cat('no arguments provided\n')
@@ -111,17 +112,17 @@ norm.data <- RunPCA(object = norm.data, verbose = FALSE)
 #####################################################################################################
 
 # Plot heatmap of top variable genes across top principle components
-pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
+png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
 DimHeatmap(norm.data, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 
 # another heuristic method is ElbowPlot which ranks PCs based on the % variance explained by each PC
-pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
+png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
 print(ElbowPlot(norm.data, ndims = 40))
 graphics.off()
 
 # Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
-pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
+png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
 PCA.level.comparison(norm.data, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 
@@ -132,12 +133,12 @@ norm.data <- RunUMAP(norm.data, dims = 1:15, verbose = FALSE)
 norm.data <- FindClusters(norm.data, resolution = 0.5, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
-pdf(paste0(curr.plot.path, "UMAP.pdf"), width=10, height=5)
+png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 clust.stage.plot(norm.data)
 graphics.off()
 
 # Plot QC for each cluster
-pdf(paste0(curr.plot.path, "cluster.QC.pdf"), height = 7, width = 18)
+png(paste0(curr.plot.path, "cluster.QC.png"), width=36, height=14, units = 'cm', res = 200)
 QC.plot(norm.data)
 graphics.off()
 
@@ -158,7 +159,7 @@ curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 dir.create(curr.plot.path)
 
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are hh4 clusters. Clustering is driven by sex genes
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=70, height=40, units = "cm", res = 200)
+png(paste0(curr.plot.path, "HM.top15.DE.pre-sexfilt.png"), width=70, height=40, units = "cm", res = 200)
 tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
               metadata = c("orig.ident", "seurat_clusters"), used.genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)),
               main = "", hclust_rows = T)
@@ -223,7 +224,7 @@ FC$Z <- mean.Z.male - mean.Z.female
 FC$auto <-  mean.auto.male - mean.auto.female
 
 # Plot boxplot of Z gene and autosomal expression in male vs female cells
-pdf(paste0(curr.plot.path,"sex_kmeans_log2FC_boxplot.pdf"))
+png(paste0(curr.plot.path,"sex_kmeans_log2FC_boxplot.png"), height = 18, width = 18, units = "cm", res = 200)
 boxplot(c(FC$Z, FC$auto),  ylab = "male - female log2 FC (mean normalised UMI +1)", names = c("Z chromosome genes", "autosomal genes"))
 graphics.off()
 
@@ -256,15 +257,15 @@ curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 # PCA
 norm.data.sexfilt <- RunPCA(object = norm.data.sexfilt, verbose = FALSE)
 
-pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
+png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
 DimHeatmap(norm.data.sexfilt, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 
-pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
+png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
 print(ElbowPlot(norm.data.sexfilt, ndims = 40))
 graphics.off()
 
-pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
+png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
 PCA.level.comparison(norm.data.sexfilt, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 
@@ -273,20 +274,20 @@ norm.data.sexfilt <- FindNeighbors(norm.data.sexfilt, dims = 1:15, verbose = FAL
 norm.data.sexfilt <- RunUMAP(norm.data.sexfilt, dims = 1:15, verbose = FALSE)
 
 # Find optimal cluster resolution
-pdf(paste0(curr.plot.path, "clustree.pdf"), width= 25, height= 15, onefile = F)
-clust.res(seurat.obj = norm.data.sexfilt, by = 0.2)
+png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
+clust.res(seurat.obj = norm.data, by = 0.2)
 graphics.off()
 
 # Use clustering resolution = 1.4 for subsequent filtering of poor quality clusters this increases the stringency of poor quality clusters, removing the least data possible
 norm.data.sexfilt <- FindClusters(norm.data.sexfilt, resolution = 1.4, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
-pdf(paste0(curr.plot.path, "UMAP.pdf"), width=10, height=5)
+png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 clust.stage.plot(norm.data.sexfilt)
 graphics.off()
 
 # Plot QC for each cluster
-pdf(paste0(curr.plot.path, "cluster.QC.pdf"), height = 7, width = 18)
+png(paste0(curr.plot.path, "cluster.QC.png"), width=36, height=14, units = 'cm', res = 200)
 QC.plot(norm.data.sexfilt)
 graphics.off()
 
@@ -294,7 +295,7 @@ graphics.off()
 markers <- FindAllMarkers(norm.data.sexfilt, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
 
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=100, height=75, units = "cm", res = 200)
+png(paste0(curr.plot.path, "HM.top15.DE.post-sexfilt.png"), width=100, height=75, units = "cm", res = 200)
 tenx.pheatmap(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), main = "")
 graphics.off()
 
@@ -311,13 +312,13 @@ dir.create(curr.plot.path)
 genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
 
 ncol = 3
-pdf(paste0(curr.plot.path, "UMAP_GOI.pdf"), width = ncol*4, height = 5*ceiling(length(genes)/ncol))
+png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 12*ceiling(length(genes)/ncol), units = "cm", res = 200)
 multi.feature.plot(seurat.obj = norm.data.sexfilt, gene.list = genes, plot.clusters = T,
                    plot.stage = T, label = "", cluster.col = "RNA_snn_res.1.4", n.col = ncol)
 graphics.off()
 
 # Dotplot for identifying PGCs, Early mesoderm and Late mesoderm
-pdf(paste0(curr.plot.path, "dotplot.GOI.pdf"), height = 8, width = 10)
+png(paste0(curr.plot.path, "dotplot.GOI.png"), width = 20, height = 12, units = "cm", res = 200)
 DotPlot(norm.data.sexfilt, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SIX1",  "PITX2", "DAZL"))
 graphics.off()
 
@@ -347,15 +348,15 @@ saveRDS(norm.data.clustfilt, paste0(rds.path, "norm.data.clustfilt.RDS"))
 # PCA
 norm.data.clustfilt <- RunPCA(object = norm.data.clustfilt, verbose = FALSE)
 
-pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
+png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
 DimHeatmap(norm.data.clustfilt, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 
-pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
+png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
 print(ElbowPlot(norm.data.clustfilt, ndims = 40))
 graphics.off()
 
-pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
+png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
 PCA.level.comparison(norm.data.clustfilt, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 
@@ -364,7 +365,7 @@ norm.data.clustfilt <- FindNeighbors(norm.data.clustfilt, dims = 1:15, verbose =
 norm.data.clustfilt <- RunUMAP(norm.data.clustfilt, dims = 1:15, verbose = FALSE)
 
 # Find optimal cluster resolution
-pdf(paste0(curr.plot.path, "clustree.pdf"), width= 25, height= 15, onefile = F)
+png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
 clust.res(seurat.obj = norm.data.clustfilt, by = 0.2)
 graphics.off()
 
@@ -372,7 +373,7 @@ graphics.off()
 norm.data.clustfilt <- FindClusters(norm.data.clustfilt, resolution = 0.8)
 
 # Plot UMAP for clusters and developmental stage
-pdf(paste0(curr.plot.path, "UMAP.pdf"), width=10, height=5)
+png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 clust.stage.plot(norm.data.clustfilt)
 graphics.off()
 
@@ -401,15 +402,15 @@ saveRDS(norm.data.clustfilt.cc, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
 # PCA
 norm.data.clustfilt.cc <- RunPCA(object = norm.data.clustfilt.cc, verbose = FALSE)
 
-pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
+png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
 DimHeatmap(norm.data.clustfilt.cc, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 
-pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
+png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
 print(ElbowPlot(norm.data.clustfilt.cc, ndims = 40))
 graphics.off()
 
-pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
+png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
 PCA.level.comparison(norm.data.clustfilt.cc, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 
@@ -418,7 +419,7 @@ norm.data.clustfilt.cc <- FindNeighbors(norm.data.clustfilt.cc, dims = 1:15, ver
 norm.data.clustfilt.cc <- RunUMAP(norm.data.clustfilt.cc, dims = 1:15, verbose = FALSE)
 
 # Find optimal cluster resolution
-pdf(paste0(curr.plot.path, "clustree.pdf"), width= 25, height= 15, onefile = F)
+png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
 clust.res(seurat.obj = norm.data.clustfilt.cc, by = 0.2)
 graphics.off()
 
@@ -426,19 +427,19 @@ graphics.off()
 norm.data.clustfilt.cc <- FindClusters(norm.data.clustfilt.cc, resolution = 1.2)
 
 # UMAP of cell cycle before and after regressing out
-pdf(paste0(curr.plot.path, "cell.cycle.pdf"), width = 14, height = 7)
+png(paste0(curr.plot.path, "cell.cycle.png"), width=40, height=20, units = 'cm', res = 200)
 pre.plot <- DimPlot(pre.cell.cycle.dat, group.by = "Phase", reduction = "umap")
 post.plot <- DimPlot(norm.data.clustfilt.cc, group.by = "Phase", reduction = "umap")
 print(gridExtra::grid.arrange(pre.plot, post.plot, ncol = 2))
 graphics.off()
 
 # Plot UMAP for clusters and developmental stage
-pdf(paste0(curr.plot.path, "UMAP.pdf"), width=10, height=5)
+png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 clust.stage.plot(norm.data.clustfilt.cc)
 graphics.off()
 
 # Plot QC for each cluster
-pdf(paste0(curr.plot.path, "cluster.QC.pdf"), height = 7, width = 18)
+png(paste0(curr.plot.path, "cluster.QC.png"), width=36, height=14, units = 'cm', res = 200)
 QC.plot(norm.data.clustfilt.cc)
 graphics.off()
 
@@ -480,15 +481,15 @@ saveRDS(seurat_stage, paste0(rds.path, "seurat_stage.RDS"))
 seurat_stage <- lapply(seurat_stage, function(x) RunPCA(object = x, verbose = FALSE))
 
 for(stage in names(seurat_stage)){
-  pdf(paste0(curr.plot.path, "dimHM.", stage, ".pdf"),width=15,height=25)
+  png(paste0(curr.plot.path, "dimHM.",stage,".png"), width=30, height=50, units = 'cm', res = 200)
   DimHeatmap(seurat_stage[[stage]], dims = 1:30, balanced = TRUE, cells = 500)
   graphics.off()
   
-  pdf(paste0(curr.plot.path, "elbowplot.", stage, ".pdf"),width=12,height=10)
+  png(paste0(curr.plot.path, "elbowplot.", stage, ".png"), width=24, height=20, units = 'cm', res = 200)
   print(ElbowPlot(seurat_stage[[stage]], ndims = 40))
   graphics.off()
   
-  pdf(paste0(curr.plot.path, "UMAP_PCA_comparison.", stage, ".pdf"), width= 20, height= 15)
+  png(paste0(curr.plot.path, "UMAP_PCA_comparison.", stage, ".png"), width=40, height=30, units = 'cm', res = 200)
   PCA.level.comparison(seurat_stage[[stage]], PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
   graphics.off()
 }
@@ -499,7 +500,7 @@ seurat_stage <- lapply(seurat_stage, function(x) RunUMAP(x, dims = 1:15, verbose
 
 # Find optimal cluster resolution
 for(stage in names(seurat_stage)){
-  pdf(paste0(curr.plot.path, "clustree.", stage, ".pdf"), width= 25, height= 15, onefile = F)
+  png(paste0(curr.plot.path, "clustree.", stage, ".png"), width=70, height=35, units = 'cm', res = 200)
   clust.res(seurat.obj = seurat_stage[[stage]], by = 0.1)
   graphics.off()
 }
@@ -511,7 +512,7 @@ names(seurat_stage) = names(res)
 
 # Plot UMAP for clusters and developmental stage
 for(stage in names(seurat_stage)){
-  pdf(paste0(curr.plot.path, "UMAP.", stage, ".pdf"), width=10, height=5)
+  png(paste0(curr.plot.path, "UMAP.", stage, ".png"), width=20, height=10, units = 'cm', res = 200)
   clust.stage.plot(seurat_stage[[stage]])
   graphics.off()
 }
@@ -523,7 +524,7 @@ GOI = list("hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "S
 
 for(stage in names(GOI)){
   ncol = 3
-  pdf(paste0(curr.plot.path, "UMAP_GOI.", stage, ".pdf"), width = ncol*4, height = 5*ceiling(length(unlist(GOI[names(GOI) %in% stage]))/ncol))
+  png(paste0(curr.plot.path, "UMAP_GOI.", stage, ".png"), width = ncol*10, height = 12*ceiling(length(unlist(GOI[names(GOI) %in% stage]))/ncol), units = "cm", res = 200)
   print(multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage])))
   graphics.off()
 }
@@ -536,7 +537,7 @@ for(stage in names(levels)){
 
 # Plot dotplot to identify clusters
 for(stage in names(GOI)){
-  pdf(paste0(curr.plot.path, "dotplot.", stage, ".pdf"), width = 15, height = 6)
+  png(paste0(curr.plot.path, "dotplot.", stage, ".png"), width = 30, height = 12, units = "cm", res = 200)
   print(DotPlot(seurat_stage[[stage]], group.by = "seurat_clusters", features = unlist(GOI[names(GOI) %in% stage])) +
           theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
   graphics.off()
@@ -571,15 +572,15 @@ saveRDS(neural.seurat, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
 # PCA
 neural.seurat <- RunPCA(object = neural.seurat, verbose = FALSE)
 
-pdf(paste0(curr.plot.path, "dimHM.pdf"),width=15,height=25)
+png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
 DimHeatmap(neural.seurat, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 
-pdf(paste0(curr.plot.path, "elbowplot.pdf"),width=12,height=10)
+png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
 print(ElbowPlot(neural.seurat, ndims = 40))
 graphics.off()
 
-pdf(paste0(curr.plot.path, 'UMAP_PCA_comparison.pdf'), width= 20, height= 15)
+png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
 PCA.level.comparison(neural.seurat, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 
@@ -588,7 +589,7 @@ neural.seurat <- FindNeighbors(neural.seurat, dims = 1:20, verbose = FALSE)
 neural.seurat <- RunUMAP(neural.seurat, dims = 1:20, verbose = FALSE)
 
 # Find optimal cluster resolution
-pdf(paste0(curr.plot.path, "clustree.pdf"), width= 25, height= 15, onefile = F)
+png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
 clust.res(seurat.obj = neural.seurat, by = 0.2)
 graphics.off()
 
@@ -596,12 +597,12 @@ graphics.off()
 neural.seurat <- FindClusters(neural.seurat, resolution = 1.2)
 
 # Plot UMAP for clusters and developmental stage
-pdf(paste0(curr.plot.path, "UMAP.pdf"), width=10, height=5)
+png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 clust.stage.plot(neural.seurat)
 graphics.off()
 
 # Plot QC for each cluster
-pdf(paste0(curr.plot.path, "cluster.QC.pdf"), height = 7, width = 18)
+png(paste0(curr.plot.path, "cluster.QC.png"), width=36, height=14, units = 'cm', res = 200)
 QC.plot(neural.seurat)
 graphics.off()
 
