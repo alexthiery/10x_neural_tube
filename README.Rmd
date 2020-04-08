@@ -949,9 +949,6 @@ for(stage in names(GOI)){
 }
 ```
 
-###### HH4
-![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/UMAP_GOI.hh4.png)
-
 ###### HH6
 ![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/UMAP_GOI.hh6.png)
 
@@ -983,9 +980,6 @@ for(stage in names(GOI)){
   graphics.off()
 }
 ```
-
-###### HH4
-![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/dotplot.hh4.png)
 
 ###### HH6
 ![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/dotplot.hh6.png)
