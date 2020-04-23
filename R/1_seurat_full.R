@@ -146,8 +146,9 @@ graphics.off()
 markers <- FindAllMarkers(norm.data, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
 
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=75, height=50, units = "cm", res = 200)
-tenx.pheatmap(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), main = "")
+png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 50, width = 75, units = 'cm', res = 200)
+tenx.pheatmap2(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters", secondary_ordering = "orig.ident",
+               selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
 #####################################################################################################
@@ -159,10 +160,10 @@ curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 dir.create(curr.plot.path)
 
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are hh4 clusters. Clustering is driven by sex genes
-png(paste0(curr.plot.path, "HM.top15.DE.pre-sexfilt.png"), width=70, height=40, units = "cm", res = 200)
-tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
-              metadata = c("orig.ident", "seurat_clusters"), used.genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)),
-              main = "", hclust_rows = T)
+png(paste0(curr.plot.path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 200)
+tenx.pheatmap2(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
+               metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters", secondary_ordering = "orig.ident",
+               selected_genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)), hclust_rows = T)
 graphics.off()
 
 # Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
@@ -295,8 +296,9 @@ graphics.off()
 markers <- FindAllMarkers(norm.data.sexfilt, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
 
-png(paste0(curr.plot.path, "HM.top15.DE.post-sexfilt.png"), width=100, height=75, units = "cm", res = 200)
-tenx.pheatmap(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), main = "")
+png(paste0(curr.plot.path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 200)
+tenx.pheatmap2(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
+               secondary_ordering = "orig.ident", selected_genes = unique(top15$gene))
 graphics.off()
 
 #####################################################################################################
@@ -448,10 +450,13 @@ markers <- FindAllMarkers(norm.data.clustfilt.cc, only.pos = T, logfc.threshold 
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = c(1,2,11,7,0,6,4,8,9,10,3,5,12,13,14)))
 
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=100, height=75, units = "cm", res = 200)
-tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene),
-              main = "", order.by = "seurat_clusters", custom_order = c(1,2,11,7,0,6,4,8,9,10,3,5,12,13,14))
+png(paste0(curr.plot.path, 'temp.png'), height = 75, width = 100, units = 'cm', res = 200)
+tenx.pheatmap2(data = norm.data.clustfilt.cc, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
+               secondary_ordering = "orig.ident", custom_order_column = "seurat_clusters", custom_order = c(1,2,11,7,0,6,4,8,9,10,3,5,12,13,14),
+               selected_genes = unique(top15$gene), show_rownames = T, gaps_col = T)
 graphics.off()
+
+
 
 #####################################################################################################
 #                                        Cell type identification                                   #
@@ -611,10 +616,13 @@ markers <- FindAllMarkers(neural.seurat, only.pos = T, logfc.threshold = 0.25)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
 
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=100, height=75, units = "cm", res = 200)
-tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene),
-              main = "", order.by = "seurat_clusters")
+png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 200)
+tenx.pheatmap2(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters", secondary_ordering = "orig.ident",
+               selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
+
+
+
 
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
 
