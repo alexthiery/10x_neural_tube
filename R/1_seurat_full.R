@@ -57,7 +57,7 @@ library(clustree)
 library(gridExtra)
 library(grid)
 library(pheatmap)
-
+library(RColorBrewer)
 
 # Make Seurat objects for each of the different samples.
 for(i in 1:nrow(sample.paths["path"])){
@@ -521,6 +521,20 @@ for(stage in names(seurat_stage)){
   clust.stage.plot(seurat_stage[[stage]])
   graphics.off()
 }
+
+# Find differentially expressed genes and plot heatmap of top DE genes for each cluster at each stage
+
+# lower FC threshold as some clusters have no DE genes
+markers <- lapply(seurat_stage, function(x) FindAllMarkers(x, only.pos = T, logfc.threshold = 0.1))
+top15 <- lapply(markers, function(x) x %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC))
+
+for(stage in names(seurat_stage)){
+  png(paste0(curr.plot.path, "HM.top15.DE.", stage, ".png"), height = 75, width = 100, units = 'cm', res = 200)
+  tenx.pheatmap2(data = seurat_stage[[stage]], metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
+                 secondary_ordering = "orig.ident", selected_genes = unique(top15[[stage]]$gene))
+  graphics.off()
+}
+
 
 # Plot features listed below at each stage
 GOI = list("hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
