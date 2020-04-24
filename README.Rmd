@@ -74,6 +74,7 @@ library(clustree)
 library(gridExtra)
 library(grid)
 library(pheatmap)
+library(RColorBrewer)
 ```
 
 Make Seurat objects for each of the different samples.
@@ -929,6 +930,35 @@ for(stage in names(seurat_stage)){
 
 ###### 8ss
 ![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/UMAP.ss8.png)
+
+##### {-}
+
+##### DE heatmap {.tabset .tabset-fade .tabset-pills}
+Find differentially expressed genes and plot heatmap of top DE genes for each cluster at each stage
+```{r eval = FALSE}
+# lower FC threshold as some clusters have no DE genes
+markers <- lapply(seurat_stage, function(x) FindAllMarkers(x, only.pos = T, logfc.threshold = 0.1))
+top15 <- lapply(markers, function(x) x %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC))
+
+for(stage in names(seurat_stage)){
+  png(paste0(curr.plot.path, "HM.top15.DE.", stage, ".png"), height = 75, width = 100, units = 'cm', res = 200)
+  tenx.pheatmap2(data = seurat_stage[[stage]], metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
+                 secondary_ordering = "orig.ident", selected_genes = unique(top15[[stage]]$gene))
+  graphics.off()
+}
+```
+
+###### HH4
+![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/HM.top15.DE.hh4.png)
+
+###### HH6
+![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/HM.top15.DE.hh6.png)
+
+###### ss4
+![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/HM.top15.DE.ss4.png)
+
+###### ss8
+![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/4_stage_split/HM.top15.DE.ss8.png)
 
 ##### {-}
 
