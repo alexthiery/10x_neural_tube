@@ -997,7 +997,7 @@ for(stage in names(GOI)){
 
 Make list of clusters to subset
 ```{r eval = FALSE}
-clust.sub = list("hh6" = c(2,1,4), "ss4" = c(0,1,4), "ss8" = c(0,1,4))
+clust.sub = list("hh6" = c(0,3), "ss4" = c(0,1), "ss8" = c(0,1,4))
 ```
 
 <br />
