@@ -603,7 +603,7 @@ png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, unit
 PCA.level.comparison(neural.seurat, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 
-# Use PCA=15 as elbow plot is relatively stable across stages
+# Use PCA=20 as elbow plot is relatively stable across stages
 neural.seurat <- FindNeighbors(neural.seurat, dims = 1:20, verbose = FALSE)
 neural.seurat <- RunUMAP(neural.seurat, dims = 1:20, verbose = FALSE)
 
@@ -628,15 +628,15 @@ graphics.off()
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(neural.seurat, only.pos = T, logfc.threshold = 0.25)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
-top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = c(3,5,1,0,9,2,4,6,7,8,10)))
 
 png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 200)
 tenx.pheatmap2(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters", secondary_ordering = "orig.ident",
-               selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
+               custom_order = c(3,5,1,0,9,2,4,6,7,8,10), custom_order_column = "seurat_clusters", selected_genes = unique(top15$gene),
+               gaps_col = "seurat_clusters")
 graphics.off()
 
 
-
-
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
+
 
