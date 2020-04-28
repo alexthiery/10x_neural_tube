@@ -222,8 +222,9 @@ Find differentially expressed genes and plot heatmap of top 15 DE genes for each
 markers <- FindAllMarkers(norm.data, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
 
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=75, height=50, units = "cm", res = 200)
-tenx.pheatmap(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), main = "")
+png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 50, width = 75, units = 'cm', res = 200)
+tenx.pheatmap2(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters", secondary_ordering = "orig.ident",
+               selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 ```
 
@@ -246,10 +247,10 @@ dir.create(curr.plot.path)
 
 There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are hh4 clusters. Clustering is driven by sex genes
 ```{r eval = FALSE}
-png(paste0(curr.plot.path, "HM.top15.DE.pre-sexfilt.png"), width=70, height=40, units = "cm", res = 200)
-tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
-              metadata = c("orig.ident", "seurat_clusters"), used.genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)),
-              main = "", hclust_rows = T)
+png(paste0(curr.plot.path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 200)
+tenx.pheatmap2(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
+               metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters", secondary_ordering = "orig.ident",
+               selected_genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)), hclust_rows = T)
 graphics.off()
 ```
 
@@ -466,8 +467,9 @@ Find differentially expressed genes and plot heatmap of top 15 DE genes for each
 markers <- FindAllMarkers(norm.data.sexfilt, only.pos = T, logfc.threshold = 0.25)
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
 
-png(paste0(curr.plot.path, "HM.top15.DE.post-sexfilt.png"), width=100, height=75, units = "cm", res = 200)
-tenx.pheatmap(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), main = "")
+png(paste0(curr.plot.path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 200)
+tenx.pheatmap2(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
+               secondary_ordering = "orig.ident", selected_genes = unique(top15$gene))
 graphics.off()
 ```
 
@@ -1102,7 +1104,7 @@ graphics.off()
 
 #### Clustering and UMAP {.tabset .tabset-fade .tabset-pills}
 
-Use PCA=15 as elbow plot is relatively stable across stages
+Use PCA=20 as elbow plot is relatively stable across stages
 ```{r eval = FALSE}
 neural.seurat <- FindNeighbors(neural.seurat, dims = 1:20, verbose = FALSE)
 neural.seurat <- RunUMAP(neural.seurat, dims = 1:20, verbose = FALSE)
@@ -1146,12 +1148,14 @@ Find differentially expressed genes and plot heatmap of top DE genes for each cl
 ```{r eval = FALSE}
 markers <- FindAllMarkers(neural.seurat, only.pos = T, logfc.threshold = 0.25)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
-top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = c(3,5,1,0,9,2,4,6,7,8,10)))
 
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=100, height=75, units = "cm", res = 200)
-tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene),
-              main = "", order.by = "seurat_clusters")
+png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 200)
+tenx.pheatmap2(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters", secondary_ordering = "orig.ident",
+               custom_order = c(3,5,1,0,9,2,4,6,7,8,10), custom_order_column = "seurat_clusters", selected_genes = unique(top15$gene),
+               gaps_col = "seurat_clusters")
 graphics.off()
+
 
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
 ```
