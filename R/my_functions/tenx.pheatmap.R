@@ -1,15 +1,15 @@
 # function for plotting gene module heatmap
-tenx.pheatmap2 <- function(data, metadata, primary_ordering = metadata[1], secondary_ordering = NULL, tertiary_ordering = NULL,
+tenx.pheatmap <- function(data, metadata, primary_ordering = metadata[1], secondary_ordering = NULL, tertiary_ordering = NULL,
                            custom_order = NULL, custom_order_column = primary_ordering, assay = "RNA", slot = "scale.data",
-                           selected_genes, colour_scheme = c("PRGn", "RdYlBu", "Greys"),
+                           selected_genes,
                            main = '', hide_annotation = NULL, show_rownames = TRUE, hclust_rows = FALSE, hclust_cols = FALSE, gaps_col = NULL,
-                           cell_subset = NULL, treeheight_row = 0, use_seurat_colours = TRUE){
+                           cell_subset = NULL, treeheight_row = 0, use_seurat_colours = TRUE,  colour_scheme = c("PRGn", "RdYlBu", "Greys")){
   
   if(!is.null(cell_subset)){
     data <- subset(data, cells = cell_subset)
   } else {}
   
-  HM.col <- dat@meta.data[, metadata]
+  HM.col <- data@meta.data[, metadata]
   
   if(!is.null(custom_order)){
     if(!all(as.factor(custom_order) %in% HM.col[[custom_order_column]])){
@@ -54,15 +54,13 @@ tenx.pheatmap2 <- function(data, metadata, primary_ordering = metadata[1], secon
                                                        unique(HM.col[,tic]))
     }
   } else {
-    # set colours for seurat_clusters using ggplot default colours, as in Seurat::DimPlot
+    # set colours ggplot default colours, as in Seurat::DimPlot
     ann_colours <- list()
-    ann_colours$seurat_clusters = setNames(ggplotColours(n = length(levels(data@meta.data$seurat_clusters))), levels(data@meta.data$seurat_clusters))
-    ann_colours$seurat_clusters = ann_colours$seurat_clusters[match(levels(HM.col$seurat_clusters), names(ann_colours$seurat_clusters))]
-    
-    HM.col.sub = HM.col[,!colnames(HM.col) %in% "seurat_clusters", drop = F]
-    for(tic in 1:ncol(HM.col.sub)){
-      ann_colours[[colnames(HM.col.sub[tic])]] <- setNames(colorRampPalette(brewer.pal(9, colour_scheme[tic])[2:9])(length(unique(HM.col.sub[,tic]))),
-                                                           unique(HM.col.sub[,tic]))
+    for(column in metadata){
+      ann_colours[[column]] <- setNames(ggplotColours(n = length(levels(data@meta.data[,column]))), levels(data@meta.data[,column]))
+      
+      # change levels of HM col so that heatmap annotations are in the same order as plotted
+      ann_colours[[column]] <- ann_colours[[column]][match(levels(HM.col[[column]]), names(ann_colours[[column]]))]
     }
   }
   
