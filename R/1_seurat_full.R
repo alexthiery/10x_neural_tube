@@ -36,7 +36,7 @@ if (opt$location == "local"){
   cat('data loaded from CAMP\n')
   
   
-  project.dir = "/camp/home/thierya/home/analysis/10x_neural_tube/"
+  project.dir = "/camp/home/thierya/working/analysis/10x_neural_tube/"
   
   sapply(list.files(paste0(project.dir, 'repo/scripts/my_functions/'), full.names = T), source)
   
@@ -49,10 +49,10 @@ if (opt$location == "local"){
   
   ###### load data ##########
   sample.paths<-data.frame(tissue = c("hh4", "hh6", "ss4", "ss8"),
-                           path = c('/camp/home/thierya/home/analysis/10x_neural_tube/cellranger_ouput/hh4_filtered_feature_bc_matrix_chr_edit/',
-                                    '/camp/home/thierya/home/analysis/10x_neural_tube/cellranger_ouput/hh6_filtered_feature_bc_matrix_chr_edit/',
-                                    '/camp/home/thierya/home/analysis/10x_neural_tube/cellranger_ouput/4ss_filtered_feature_bc_matrix_chr_edit/',
-                                    '/camp/home/thierya/home/analysis/10x_neural_tube/cellranger_ouput/8ss_filtered_feature_bc_matrix_chr_edit/'))
+                           path = c('/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/hh4_filtered_feature_bc_matrix_chr_edit/',
+                                    '/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/hh6_filtered_feature_bc_matrix_chr_edit/',
+                                    '/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/4ss_filtered_feature_bc_matrix_chr_edit/',
+                                    '/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/8ss_filtered_feature_bc_matrix_chr_edit/'))
   
   # set number of cores to use for parallelisation
   if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
