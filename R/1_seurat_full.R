@@ -103,6 +103,11 @@ norm.data <- NormalizeData(merged.data, normalization.method = "LogNormalize", s
 norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures = 2000)
 
 # Scale data and regress out MT content
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 
 # Save RDS after scaling as this step takes time
@@ -263,6 +268,11 @@ norm.data.sexfilt <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.da
 
 # Re-run findvariablefeatures and scaling
 norm.data.sexfilt <- FindVariableFeatures(norm.data.sexfilt, selection.method = "vst", nfeatures = 2000)
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 norm.data.sexfilt <- ScaleData(norm.data.sexfilt, features = rownames(norm.data.sexfilt), vars.to.regress = c("percent.mt", "sex"))
 
 # Save RDS
@@ -363,6 +373,11 @@ norm.data.clustfilt <- subset(norm.data.sexfilt, cells = norm.data.clustfilt, in
 
 # Re-run findvariablefeatures and scaling
 norm.data.clustfilt <- FindVariableFeatures(norm.data.clustfilt, selection.method = "vst", nfeatures = 2000)
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 norm.data.clustfilt <- ScaleData(norm.data.clustfilt, features = rownames(norm.data.clustfilt), vars.to.regress = c("percent.mt", "sex"))
 
 saveRDS(norm.data.clustfilt, paste0(rds.path, "norm.data.clustfilt.RDS"))
@@ -417,6 +432,11 @@ pre.cell.cycle.dat <- CellCycleScoring(norm.data.clustfilt, s.features = s.genes
 
 # Re-run findvariablefeatures and scaling
 norm.data.clustfilt.cc <- FindVariableFeatures(pre.cell.cycle.dat, selection.method = "vst", nfeatures = 2000)
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 norm.data.clustfilt.cc <- ScaleData(norm.data.clustfilt.cc, features = rownames(norm.data.clustfilt.cc), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 saveRDS(norm.data.clustfilt.cc, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
@@ -497,6 +517,11 @@ names(seurat_stage) = c('hh4', 'hh6', 'ss4', 'ss8')
 
 # Re-run findvariablefeatures and scaling
 seurat_stage <- lapply(seurat_stage, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 seurat_stage <- lapply(seurat_stage, function(x) ScaleData(x, features = rownames(norm.data.clustfilt.cc),
                                                            vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score")))
 
@@ -603,6 +628,12 @@ neural.seurat <- subset(norm.data.clustfilt.cc, cells = cell.sub)
 
 # Re-run findvariablefeatures and scaling
 neural.seurat <- FindVariableFeatures(neural.seurat, selection.method = "vst", nfeatures = 2000)
+
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 neural.seurat <- ScaleData(neural.seurat, features = rownames(neural.seurat), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.RDS"))
