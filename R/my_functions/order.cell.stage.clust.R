@@ -3,7 +3,7 @@
 # shared between stages ordered in between those stages
 
 # col.to.sort (seurat_clusters) is the metadata column which needs to be re-arranged based on the levels in sort.by (orig.ident)
-
+# only rearrange cluster if at least 10% of cells in cluster are from a different identity
 
 
 order.cell.stage.clust = function(seurat_object, col.to.sort, sort.by){
@@ -21,7 +21,8 @@ order.cell.stage.clust = function(seurat_object, col.to.sort, sort.by){
   
   top2 <- dat %>%
     top_n(n = 2) %>%
-    arrange(!! enquo_sort.by, desc(n))
+    arrange(!! enquo_sort.by, desc(n)) %>%
+    filter(n > 0.1)
   
   
   top1 <- dat %>%
