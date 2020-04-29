@@ -9,7 +9,7 @@ tenx.pheatmap <- function(data, metadata, primary_ordering = metadata[1], second
     data <- subset(data, cells = cell_subset)
   } else {}
   
-  HM.col <- data@meta.data[, metadata]
+  HM.col <- droplevels(data@meta.data[, metadata])
   
   if(!is.null(custom_order)){
     if(!all(as.factor(custom_order) %in% HM.col[[custom_order_column]])){
@@ -17,6 +17,7 @@ tenx.pheatmap <- function(data, metadata, primary_ordering = metadata[1], second
     } else {}
     HM.col[[custom_order_column]] <-  factor(HM.col[[custom_order_column]], levels = custom_order)
     HM.col <- HM.col[order(HM.col[[custom_order_column]]),,drop = FALSE]
+    
     if(!all(custom_order %in% HM.col[[primary_ordering]]) & custom_order_column == primary_ordering){
       stop("custom_order_column needs to be specified")
     } else {}
