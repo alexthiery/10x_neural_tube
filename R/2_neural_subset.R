@@ -1,10 +1,20 @@
-# In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
-
 #!/usr/bin/env Rscript
-args = commandArgs(trailingOnly=TRUE)
 
-if (length(args)==0) {
-  cat('no arguments provided\n')
+# In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
+library('getopt')
+
+# set arguments for Rscript
+spec = matrix(c(
+  'location', 'l', 2, "character",
+  'cores'   , 'c', 2, "integer"
+), byrow=TRUE, ncol=4)
+opt = getopt(spec)
+
+# set default location
+if(is.null(opt$location)){opt$location = "local"}
+
+if (opt$location == "local"){
+  cat('Script running locally\n')
   
   sapply(list.files('/Users/alex/dev/repos/10x_neural_tube/R/my_functions/', full.names = T), source)
   
@@ -15,23 +25,25 @@ if (length(args)==0) {
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
-} else if (length(args)==1) {
-  if (args[1] == "CAMP") {
-    cat('data loaded from CAMP\n')
+} else if (opt$location == "CAMP"){
+  cat('data loaded from CAMP\n')
     
-    project.dir = "~/working/alexthiery/analysis/10x_neural_tube/"
-    
-    sapply(list.files(paste0(project.dir, 'repo/scripts/my_functions/'), full.names = T), source)
-    prev.rds.path = paste0(project.dir, "output/RDS.files/1_seurat_full/")
-    
-    plot.path = paste0(project.dir, "output/plots/2_neural_subset/")
-    rds.path = paste0(project.dir, "output/plots/2_neural_subset/")
-    dir.create(plot.path, recursive = T)
-    dir.create(rds.path, recursive = T)
-    
+  project.dir = "/camp/home/thierya/working/analysis/10x_neural_tube/"
+  
+  sapply(list.files(paste0(project.dir, 'repo/scripts/my_functions/'), full.names = T), source)
+  prev.rds.path = paste0(project.dir, "output/RDS.files/1_seurat_full/")
+  
+  plot.path = paste0(project.dir, "output/plots/2_neural_subset/")
+  rds.path = paste0(project.dir, "output/plots/2_neural_subset/")
+  dir.create(plot.path, recursive = T)
+  dir.create(rds.path, recursive = T)
+  
+  # set number of cores to use for parallelisation
+  if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
+  
+  cat(paste0("script ran with ", ncores, " cores\n"))
 
-  } else {stop("Only CAMP can be supplied as arguments")}
-} else {stop("only one argument can be supplied")}
+} else {stop("Script can only be ran locally or on CAMP")}
 
 
 # Load packages - packages are stored within renv in the repository
