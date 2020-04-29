@@ -61,7 +61,7 @@ order.cell.stage.clust = function(seurat_object, col.to.sort, sort.by){
   top1 = top1 %>%
     arrange(!! enquo_sort.by, desc(n))
   
-  return(top1)
+  return(top1[[col.to.sort]])
 }
 
 
