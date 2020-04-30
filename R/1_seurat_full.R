@@ -609,6 +609,12 @@ for(stage in names(GOI)){
   graphics.off()
 }
 
+# save stage data after clustering
+saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
+
+# Read in RDS data if needed
+# seurat_stage <- readRDS(paste0(rds.path, "seurat_stage_out.RDS"))
+
 # Make list of clusters to subset
 clust.sub = list("hh6" = c(0,3), "ss4" = c(0,1), "ss8" = c(0,1,4))
 
