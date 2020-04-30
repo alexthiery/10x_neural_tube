@@ -9,7 +9,7 @@ tenx.pheatmap <- function(data, metadata, primary_ordering = metadata[1], second
     data <- subset(data, cells = cell_subset)
   } else {}
   
-  HM.col <- droplevels(data@meta.data[, metadata])
+  HM.col <- droplevels(data@meta.data[, metadata, drop=FALSE])
   
   if(!is.null(custom_order)){
     if(!all(as.factor(custom_order) %in% HM.col[[custom_order_column]])){
@@ -76,6 +76,6 @@ tenx.pheatmap <- function(data, metadata, primary_ordering = metadata[1], second
   
   print(pheatmap(t(new.dat), color = PurpleAndYellow(),
                  cluster_rows = hclust_rows, cluster_cols = hclust_cols, show_colnames = F,
-                 annotation_col = HM.col[,rev(metadata)], fontsize = 22, fontsize_row = 12, gaps_col = gaps_col,
+                 annotation_col = HM.col[,rev(metadata), drop = FALSE], fontsize = 22, fontsize_row = 12, gaps_col = gaps_col,
                  main = main, show_rownames = show_rownames, annotation_colors = ann_colours, treeheight_row = treeheight_row))
 }

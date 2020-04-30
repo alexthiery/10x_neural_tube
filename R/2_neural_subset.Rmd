@@ -110,6 +110,16 @@ plot.genes.zip(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs
 plot.genes.zip(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/"))
 ```
 
+Plot heatmap of hh4 genes in hh4 subset to try and identify 'neural' clusters at this stage
+```{r eval = FALSE}
+png(paste0(plot.path, "seurat_stage_hh4_hh4genes.HM.png"), width=75, height=100, units = "cm", res = 200)
+tenx.pheatmap(data = seurat_stage$hh4, metadata = "seurat_clusters", selected_genes = hh4_genes[hh4_genes %in% rownames(seurat_stage$hh4)],
+              main = "", hclust_rows = T, gaps_col = "seurat_clusters")
+graphics.off()
+```
+
+![](/Users/alex/dev/output/10x_neural_tube/plots/2_neural_subset/seurat_stage_hh4_hh4genes.HM.png)
+
 <br />
 ***
 #### Plot heatmap for hh4 genes in neural subset
