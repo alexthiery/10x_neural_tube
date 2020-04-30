@@ -1,6 +1,6 @@
 
 #### cluster at different resolutions and plot clustree
-clust.res <- function(seurat.obj, stage = NULL, by = 0.1, starting_res = 0){
+clust.res <- function(seurat.obj, by = 0.1, starting_res = 0){
   plots <- list()
   resolutions <- c(seq(starting_res, starting_res+9*by, by=by))
   if(length(seurat.obj@reductions) == 0){

@@ -1,12 +1,20 @@
-
+#!/usr/bin/env Rscript
 
 # In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
+library('getopt')
 
-#!/usr/bin/env Rscript
-args = commandArgs(trailingOnly=TRUE)
+# set arguments for Rscript
+spec = matrix(c(
+  'location', 'l', 2, "character",
+  'cores'   , 'c', 2, "integer"
+), byrow=TRUE, ncol=4)
+opt = getopt(spec)
 
-if (length(args)==0) {
-  cat('no arguments provided\n')
+# set default location
+if(is.null(opt$location)){opt$location = "local"}
+
+if (opt$location == "local"){
+  cat('Script running locally\n')
   
   sapply(list.files('/Users/alex/dev/repos/10x_neural_tube/R/my_functions/', full.names = T), source)
   
@@ -21,34 +29,38 @@ if (length(args)==0) {
                                     "/Users/alex/dev/data/10x/cellranger_output/cellranger_count_hh6/outs/filtered_feature_bc_matrix_chr_edit/",
                                     "/Users/alex/dev/data/10x/cellranger_output/cellranger_count_4ss/outs/filtered_feature_bc_matrix_chr_edit/",
                                     "/Users/alex/dev/data/10x/cellranger_output/cellranger_count_8ss/outs/filtered_feature_bc_matrix_chr_edit/"))
-} else if (length(args)==1) {
-  if (args[1] == "CAMP") {
-    cat('data loaded from CAMP\n')
-    
-    project.dir = "~/working/alexthiery/analysis/10x_scRNAseq_2019/"
-    
-    sapply(list.files(paste0(project.dir, 'repo/scripts/my_functions/'), full.names = T), source)
-
-    plot.path = paste0(project.dir, "output/plots/1_seurat_full/")
-    rds.path = paste0(project.dir, "output/RDS.files/1_seurat_full/")
-    dir.create(plot.path, recursive = T)
-    dir.create(rds.path, recursive = T)
-
-    input.dat = paste0(project.dir, "cellranger_output/")
-
-    ###### load data ##########
-    sample.paths<-data.frame(tissue = c("hh4", "hh6", "ss4", "ss8"),
-                             path = c('~/working/alexthiery/analysis/10x_scRNAseq_2019/cellranger_ouput/hh4_filtered_feature_bc_matrix_chr_edit/',
-                                      '~/working/alexthiery/analysis/10x_scRNAseq_2019/cellranger_ouput/hh6_filtered_feature_bc_matrix_chr_edit/',
-                                      '~/working/alexthiery/analysis/10x_scRNAseq_2019/cellranger_ouput/4ss_filtered_feature_bc_matrix_chr_edit/',
-                                      '~/working/alexthiery/analysis/10x_scRNAseq_2019/cellranger_ouput/8ss_filtered_feature_bc_matrix_chr_edit/'))
-
-  } else {stop("Only CAMP can be supplied as arguments")}
-} else {stop("only one argument can be supplied")}
-
+  
+} else if (opt$location == "CAMP"){
+  cat('data loaded from CAMP\n')
+  
+  
+  project.dir = "/camp/home/thierya/working/analysis/10x_neural_tube/"
+  
+  sapply(list.files(paste0(project.dir, 'repo/scripts/my_functions/'), full.names = T), source)
+  
+  plot.path = paste0(project.dir, "output/plots/1_seurat_full/")
+  rds.path = paste0(project.dir, "output/RDS.files/1_seurat_full/")
+  dir.create(plot.path, recursive = T)
+  dir.create(rds.path, recursive = T)
+  
+  input.dat = paste0(project.dir, "cellranger_output/")
+  
+  ###### load data ##########
+  sample.paths<-data.frame(tissue = c("hh4", "hh6", "ss4", "ss8"),
+                           path = c('/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/hh4_filtered_feature_bc_matrix_chr_edit/',
+                                    '/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/hh6_filtered_feature_bc_matrix_chr_edit/',
+                                    '/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/4ss_filtered_feature_bc_matrix_chr_edit/',
+                                    '/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/8ss_filtered_feature_bc_matrix_chr_edit/'))
+  
+  # set number of cores to use for parallelisation
+  if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
+  
+  cat(paste0("script ran with ", ncores, " cores\n"))
+  
+} else {stop("Script can only be ran locally or on CAMP")}
 
 # Load packages - packages are stored within renv in the repository
-
+library(future)
 library(dplyr)
 library(Antler)
 library(Seurat)
@@ -57,7 +69,7 @@ library(clustree)
 library(gridExtra)
 library(grid)
 library(pheatmap)
-
+library(RColorBrewer)
 
 # Make Seurat objects for each of the different samples.
 for(i in 1:nrow(sample.paths["path"])){
@@ -88,6 +100,11 @@ norm.data <- NormalizeData(merged.data, normalization.method = "LogNormalize", s
 norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures = 2000)
 
 # Scale data and regress out MT content
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 
 # Save RDS after scaling as this step takes time
@@ -144,14 +161,19 @@ graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(norm.data, only.pos = T, logfc.threshold = 0.25)
-top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
+# get automated cluster order based on percentage of cells in adjacent stages
+cluster.order = order.cell.stage.clust(seurat_object = norm.data, col.to.sort = seurat_clusters, sort.by = orig.ident)
+# Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=75, height=50, units = "cm", res = 200)
-tenx.pheatmap(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), main = "")
+png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 50, width = 75, units = 'cm', res = 200)
+tenx.pheatmap(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
+               secondary_ordering = "orig.ident", custom_order_column = "seurat_clusters", custom_order = cluster.order,
+               selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
 #####################################################################################################
-#           Heatmap clearly shows clusters segregate by sex - check this and remove sex genes                                       #
+#           Heatmap clearly shows clusters segregate by sex - check this and remove sex genes       #
 #####################################################################################################
 
 # Change plot path
@@ -159,10 +181,10 @@ curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 dir.create(curr.plot.path)
 
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are hh4 clusters. Clustering is driven by sex genes
-png(paste0(curr.plot.path, "HM.top15.DE.pre-sexfilt.png"), width=70, height=40, units = "cm", res = 200)
+png(paste0(curr.plot.path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 200)
 tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
-              metadata = c("orig.ident", "seurat_clusters"), used.genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)),
-              main = "", hclust_rows = T)
+               metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters", secondary_ordering = "orig.ident",
+               selected_genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)), hclust_rows = T)
 graphics.off()
 
 # Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
@@ -243,6 +265,11 @@ norm.data.sexfilt <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.da
 
 # Re-run findvariablefeatures and scaling
 norm.data.sexfilt <- FindVariableFeatures(norm.data.sexfilt, selection.method = "vst", nfeatures = 2000)
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 norm.data.sexfilt <- ScaleData(norm.data.sexfilt, features = rownames(norm.data.sexfilt), vars.to.regress = c("percent.mt", "sex"))
 
 # Save RDS
@@ -293,10 +320,15 @@ graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(norm.data.sexfilt, only.pos = T, logfc.threshold = 0.25)
-top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
+# get automated cluster order based on percentage of cells in adjacent stages
+cluster.order = order.cell.stage.clust(seurat_object = norm.data.sexfilt, col.to.sort = seurat_clusters, sort.by = orig.ident)
+# Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
-png(paste0(curr.plot.path, "HM.top15.DE.post-sexfilt.png"), width=100, height=75, units = "cm", res = 200)
-tenx.pheatmap(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene), main = "")
+png(paste0(curr.plot.path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 200)
+tenx.pheatmap(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
+              secondary_ordering = "orig.ident", custom_order_column = "seurat_clusters", custom_order = cluster.order,
+              selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
 #####################################################################################################
@@ -312,7 +344,7 @@ dir.create(curr.plot.path)
 genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
 
 ncol = 3
-png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 12*ceiling(length(genes)/ncol), units = "cm", res = 200)
+png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 10*ceiling((length(genes)+1)/ncol), units = "cm", res = 200)
 multi.feature.plot(seurat.obj = norm.data.sexfilt, gene.list = genes, plot.clusters = T,
                    plot.stage = T, label = "", cluster.col = "RNA_snn_res.1.4", n.col = ncol)
 graphics.off()
@@ -338,6 +370,12 @@ norm.data.clustfilt <- subset(norm.data.sexfilt, cells = norm.data.clustfilt, in
 
 # Re-run findvariablefeatures and scaling
 norm.data.clustfilt <- FindVariableFeatures(norm.data.clustfilt, selection.method = "vst", nfeatures = 2000)
+
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 norm.data.clustfilt <- ScaleData(norm.data.clustfilt, features = rownames(norm.data.clustfilt), vars.to.regress = c("percent.mt", "sex"))
 
 saveRDS(norm.data.clustfilt, paste0(rds.path, "norm.data.clustfilt.RDS"))
@@ -392,6 +430,11 @@ pre.cell.cycle.dat <- CellCycleScoring(norm.data.clustfilt, s.features = s.genes
 
 # Re-run findvariablefeatures and scaling
 norm.data.clustfilt.cc <- FindVariableFeatures(pre.cell.cycle.dat, selection.method = "vst", nfeatures = 2000)
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 norm.data.clustfilt.cc <- ScaleData(norm.data.clustfilt.cc, features = rownames(norm.data.clustfilt.cc), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 saveRDS(norm.data.clustfilt.cc, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
@@ -445,12 +488,15 @@ graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(norm.data.clustfilt.cc, only.pos = T, logfc.threshold = 0.25)
+# get automated cluster order based on percentage of cells in adjacent stages
+cluster.order = order.cell.stage.clust(seurat_object = norm.data.clustfilt.cc, col.to.sort = seurat_clusters, sort.by = orig.ident)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
-top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = c(1,2,11,7,0,6,4,8,9,10,3,5,12,13,14)))
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=100, height=75, units = "cm", res = 200)
-tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene),
-              main = "", order.by = "seurat_clusters", custom_order = c(1,2,11,7,0,6,4,8,9,10,3,5,12,13,14))
+png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 200)
+tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
+              secondary_ordering = "orig.ident", custom_order_column = "seurat_clusters", custom_order = cluster.order,
+              selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
 #####################################################################################################
@@ -469,6 +515,11 @@ names(seurat_stage) = c('hh4', 'hh6', 'ss4', 'ss8')
 
 # Re-run findvariablefeatures and scaling
 seurat_stage <- lapply(seurat_stage, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 seurat_stage <- lapply(seurat_stage, function(x) ScaleData(x, features = rownames(norm.data.clustfilt.cc),
                                                            vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score")))
 
@@ -517,6 +568,19 @@ for(stage in names(seurat_stage)){
   graphics.off()
 }
 
+# Find differentially expressed genes and plot heatmap of top DE genes for each cluster at each stage
+
+# lower FC threshold as some clusters have no DE genes
+markers <- lapply(seurat_stage, function(x) FindAllMarkers(x, only.pos = T, logfc.threshold = 0.1))
+top15 <- lapply(markers, function(x) x %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC))
+
+for(stage in names(seurat_stage)){
+  png(paste0(curr.plot.path, "HM.top15.DE.", stage, ".png"), height = 75, width = 100, units = 'cm', res = 200)
+  tenx.pheatmap(data = seurat_stage[[stage]], metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
+                 secondary_ordering = "orig.ident", selected_genes = unique(top15[[stage]]$gene))
+  graphics.off()
+}
+
 # Plot features listed below at each stage
 GOI = list("hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
             "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
@@ -524,7 +588,7 @@ GOI = list("hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "S
 
 for(stage in names(GOI)){
   ncol = 3
-  png(paste0(curr.plot.path, "UMAP_GOI.", stage, ".png"), width = ncol*10, height = 12*ceiling(length(unlist(GOI[names(GOI) %in% stage]))/ncol), units = "cm", res = 200)
+  png(paste0(curr.plot.path, "UMAP_GOI.", stage, ".png"), width = ncol*10, height = 10*ceiling((length(unlist(GOI[names(GOI) %in% stage]))+1)/ncol), units = "cm", res = 200)
   print(multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage])))
   graphics.off()
 }
@@ -542,6 +606,12 @@ for(stage in names(GOI)){
           theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
   graphics.off()
 }
+
+# Save stage data after clustering
+saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
+
+# Read in RDS data if needed
+# seurat_stage <- readRDS(paste0(rds.path, "seurat_stage_out.RDS"))
 
 # Make list of clusters to subset
 clust.sub = list("hh6" = c(0,3), "ss4" = c(0,1), "ss8" = c(0,1,4))
@@ -562,9 +632,15 @@ neural.seurat <- subset(norm.data.clustfilt.cc, cells = cell.sub)
 
 # Re-run findvariablefeatures and scaling
 neural.seurat <- FindVariableFeatures(neural.seurat, selection.method = "vst", nfeatures = 2000)
+
+# Enable parallelisation on camp
+if (opt$location == "CAMP") {
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 2000 * 1024^2)
+} else {}
 neural.seurat <- ScaleData(neural.seurat, features = rownames(neural.seurat), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
-saveRDS(neural.seurat, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
+saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.RDS"))
 
 # Read in RDS data if needed
 # neural.seurat <- readRDS(paste0(rds.path, "neural.seurat.RDS"))
@@ -584,7 +660,7 @@ png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, unit
 PCA.level.comparison(neural.seurat, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 
-# Use PCA=15 as elbow plot is relatively stable across stages
+# Use PCA=20 as elbow plot is relatively stable across stages
 neural.seurat <- FindNeighbors(neural.seurat, dims = 1:20, verbose = FALSE)
 neural.seurat <- RunUMAP(neural.seurat, dims = 1:20, verbose = FALSE)
 
@@ -608,13 +684,20 @@ graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(neural.seurat, only.pos = T, logfc.threshold = 0.25)
+# get automated cluster order based on percentage of cells in adjacent stages
+cluster.order = order.cell.stage.clust(seurat_object = neural.seurat, col.to.sort = seurat_clusters, sort.by = orig.ident)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
-top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC)
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
-png(paste0(curr.plot.path, "HM.top15.DE.png"), width=100, height=75, units = "cm", res = 200)
-tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), used.genes = unique(top15$gene),
-              main = "", order.by = "seurat_clusters")
+png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 200)
+tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters", secondary_ordering = "orig.ident",
+               custom_order = cluster.order, custom_order_column = "seurat_clusters", selected_genes = unique(top15$gene),
+               gaps_col = "seurat_clusters")
 graphics.off()
 
+
+
+
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
+
 
