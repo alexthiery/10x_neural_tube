@@ -1,5 +1,3 @@
-
-
 #!/usr/bin/env Rscript
 
 # In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
@@ -62,7 +60,6 @@ if (opt$location == "local"){
 } else {stop("Script can only be ran locally or on CAMP")}
 
 # Load packages - packages are stored within renv in the repository
-
 library(future)
 library(dplyr)
 library(Antler)
@@ -373,6 +370,7 @@ norm.data.clustfilt <- subset(norm.data.sexfilt, cells = norm.data.clustfilt, in
 
 # Re-run findvariablefeatures and scaling
 norm.data.clustfilt <- FindVariableFeatures(norm.data.clustfilt, selection.method = "vst", nfeatures = 2000)
+
 # Enable parallelisation on camp
 if (opt$location == "CAMP") {
   plan("multiprocess", workers = ncores)
@@ -609,7 +607,7 @@ for(stage in names(GOI)){
   graphics.off()
 }
 
-# save stage data after clustering
+# Save stage data after clustering
 saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
 
 # Read in RDS data if needed
