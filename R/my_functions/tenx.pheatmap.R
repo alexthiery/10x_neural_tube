@@ -25,7 +25,7 @@ tenx.pheatmap <- function(data, metadata, col_order = metadata, custom_order = N
   HM.col <- droplevels(data@meta.data[, metadata, drop=FALSE])
   
   # order HM metadata based on col_order variable
-  HM.col <- HM.col[do.call('order', c(HM.col[col_order], list(decreasing=FALSE))),]
+  HM.col <- HM.col[do.call('order', c(HM.col[col_order], list(decreasing=FALSE))), , drop = FALSE]
   
   # order HM metadata based on custom order
   if(!is.null(custom_order)){
