@@ -1,35 +1,42 @@
-# function for plotting gene module heatmap
-tenx.pheatmap <- function(data, metadata, primary_ordering = metadata[1], secondary_ordering = NULL, tertiary_ordering = NULL,
-                           custom_order = NULL, custom_order_column = primary_ordering, assay = "RNA", slot = "scale.data",
-                           selected_genes,
-                           main = '', hide_annotation = NULL, show_rownames = TRUE, hclust_rows = FALSE, hclust_cols = FALSE, gaps_col = NULL,
-                           cell_subset = NULL, treeheight_row = 0, use_seurat_colours = TRUE,  colour_scheme = c("PRGn", "RdYlBu", "Greys")){
+# Function for plotting heatmap from seurat 10x object
+
+# col_order is a single element or a vector element. By default cells are ordered by the first element of the metadata variable.
+# User can specify col_order as a vector, with cell order prioritised based on the order of the col_order variable.
+
+# A custom_order can be provided, however if so the custom_order_column must also be specified.
+
+# By default cells are coloured based on the default ggplot colours (to match seurat cluster colours).
+# This behaviour can be changed by changing use_seurat_colours and colour_scheme (RColourBrewer)
+
+# col_ann_order can be specified to change the order in which the column annotations appear on the heatmap
+
+tenx.pheatmap <- function(data, metadata, col_order = metadata, custom_order = NULL, custom_order_column = NULL, 
+                          assay = "RNA", slot = "scale.data", selected_genes,
+                          main = '', hide_annotation = NULL, show_rownames = TRUE, hclust_rows = FALSE, hclust_cols = FALSE, gaps_col = NULL,
+                          cell_subset = NULL, treeheight_row = 0, use_seurat_colours = TRUE,  colour_scheme = c("PRGn", "RdYlBu", "Greys"),
+                          col_ann_order = rev(metadata)){
   
   if(!is.null(cell_subset)){
     data <- subset(data, cells = cell_subset)
   } else {}
   
+  
+  # initialise heatmap metadata
   HM.col <- droplevels(data@meta.data[, metadata, drop=FALSE])
   
+  # order HM metadata based on col_order variable
+  HM.col <- HM.col[do.call('order', c(HM.col[col_order], list(decreasing=FALSE))),]
+  
+  # order HM metadata based on custom order
   if(!is.null(custom_order)){
-    if(!all(as.factor(custom_order) %in% HM.col[[custom_order_column]])){
-      stop("custom_order factors not all found in custom_order_column")
+    if(is.null(custom_order_column)){
+      "custom_order column must be specified \n"
+    } else {}
+    if(!setequal(custom_order, unique(HM.col[[custom_order_column]]))){
+      stop("custom_order factors missing from custom_order_column \n\n")
     } else {}
     HM.col[[custom_order_column]] <-  factor(HM.col[[custom_order_column]], levels = custom_order)
-    HM.col <- HM.col[order(HM.col[[custom_order_column]]),,drop = FALSE]
-    
-    if(!all(custom_order %in% HM.col[[primary_ordering]]) & custom_order_column == primary_ordering){
-      stop("custom_order_column needs to be specified")
-    } else {}
-  }
-  
-  # three ordering levels possible, primary, secondary and tertiary
-  if(!is.null(tertiary_ordering)){
-    HM.col <- HM.col[order(HM.col[,primary_ordering], HM.col[,secondary_ordering], HM.col[,tertiary_ordering]),,drop = FALSE]
-  } else if(!is.null(secondary_ordering)){
-    HM.col <- HM.col[order(HM.col[,primary_ordering], HM.col[,secondary_ordering]),,drop = FALSE]
-  } else {
-    HM.col <- HM.col[order(HM.col[[primary_ordering]]),,drop = FALSE]
+    HM.col <- HM.col[order(HM.col[[custom_order_column]]),,drop = FALSE]  
   }
   
   # gaps_col specifies a metadata column which column gaps are calculated from
@@ -76,6 +83,6 @@ tenx.pheatmap <- function(data, metadata, primary_ordering = metadata[1], second
   
   print(pheatmap(t(new.dat), color = PurpleAndYellow(),
                  cluster_rows = hclust_rows, cluster_cols = hclust_cols, show_colnames = F,
-                 annotation_col = HM.col[,rev(metadata), drop = FALSE], fontsize = 22, fontsize_row = 12, gaps_col = gaps_col,
+                 annotation_col = HM.col[,rev(col_ann_order), drop = FALSE], fontsize = 22, fontsize_row = 12, gaps_col = gaps_col,
                  main = main, show_rownames = show_rownames, annotation_colors = ann_colours, treeheight_row = treeheight_row))
 }
