@@ -27,7 +27,8 @@ order.cell.stage.clust = function(seurat_object, col.to.sort, sort.by){
   
   top1 <- dat %>%
     top_n(n = 1) %>%
-    arrange(!! enquo_sort.by, desc(n))
+    arrange(!! enquo_sort.by, desc(n)) %>%
+    distinct(!! enquo_col.to.sort, .keep_all = TRUE)
   
   sort.by = as.character(substitute(sort.by))
   col.to.sort = as.character(substitute(col.to.sort))

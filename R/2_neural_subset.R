@@ -72,19 +72,10 @@ lapply(names(seurat_stage), function(x) plot.genes.zip(seurat_stage[[x]], hh4_ge
 lapply(names(seurat_stage), function(x) plot.genes.zip(seurat_stage[[x]], hh6_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/", x, "/")))
 
 
-# Plot UMAPs of favourite genes at neurak subset
+# Plot UMAPs of favourite genes at neural subset
 neural.seurat <- readRDS(paste0(prev.rds.path, "neural.seurat.out.RDS"))
 curr.plot.path = paste0(plot.path, "UMAPs_neural_subset/")
 dir.create(curr.plot.path)
-
-
-# Plot heatmap of hh4 genes in hh4 subset to try and identify 'neural' clusters at this stage
-png(paste0(plot.path, "seurat_stage_hh4_hh4genes.HM.png"), width=75, height=100, units = "cm", res = 200)
-tenx.pheatmap(data = seurat_stage$hh4, metadata = "seurat_clusters", selected_genes = hh4_genes[hh4_genes %in% rownames(seurat_stage$hh4)],
-              main = "", hclust_rows = T, gaps_col = "seurat_clusters")
-graphics.off()
-
-
 
 # plot genes from hh4 gene list in neural subset and zip
 plot.genes.zip(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/"))
@@ -92,13 +83,18 @@ plot.genes.zip(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs
 plot.genes.zip(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/"))
 
 
+# Plot heatmap of hh4 genes in hh4 subset to try and identify 'neural' clusters at this stage
+png(paste0(plot.path, "seurat_stage_hh4_hh4genes.HM.png"), width=75, height=100, units = "cm", res = 200)
+tenx.pheatmap(data = seurat_stage$hh4, metadata = "seurat_clusters", selected_genes = hh4_genes[hh4_genes %in% rownames(seurat_stage$hh4)],
+              hclust_rows = T, gaps_col = "seurat_clusters")
+graphics.off()
+
 # Plot heatmap for hh4 genes in neural subset
 cluster.order = order.cell.stage.clust(neural.seurat, col.to.sort = seurat_clusters, sort.by = orig.ident)
 
 png(paste0(plot.path, "neural.seurat_hh4genes.HM.png"), width=75, height=100, units = "cm", res = 200)
 tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh4_genes[hh4_genes %in% rownames(neural.seurat)],
-              primary_ordering = "orig.ident", secondary_ordering = "seurat_clusters",
-              main = "", hclust_rows = T, gaps_col = "orig.ident")
+              hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
 
 # Plot heatmap for hh6 genes in neural subset
@@ -106,8 +102,7 @@ cluster.order = order.cell.stage.clust(neural.seurat, col.to.sort = seurat_clust
 
 png(paste0(plot.path, "neural.seurat_hh6genes.HM.png"), width=75, height=100, units = "cm", res = 200)
 tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh6_genes[hh6_genes %in% rownames(neural.seurat)],
-              primary_ordering = "orig.ident", secondary_ordering = "seurat_clusters",
-              main = "", hclust_rows = T, gaps_col = "orig.ident")
+              hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
 
 

@@ -167,9 +167,8 @@ cluster.order = order.cell.stage.clust(seurat_object = norm.data, col.to.sort = 
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
 png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 50, width = 75, units = 'cm', res = 200)
-tenx.pheatmap(data = norm.data, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
-               secondary_ordering = "orig.ident", custom_order_column = "seurat_clusters", custom_order = cluster.order,
-               selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
+tenx.pheatmap(data = norm.data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
 #####################################################################################################
@@ -180,11 +179,11 @@ graphics.off()
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 dir.create(curr.plot.path)
 
-# There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are hh4 clusters. Clustering is driven by sex genes
+# There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are preodominantly hh4 clusters. Clustering is driven by sex genes
 png(paste0(curr.plot.path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 200)
 tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
-               metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters", secondary_ordering = "orig.ident",
-               selected_genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)), hclust_rows = T)
+              metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)),
+              hclust_rows = T, gaps_col = "seurat_clusters")
 graphics.off()
 
 # Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
@@ -326,9 +325,8 @@ cluster.order = order.cell.stage.clust(seurat_object = norm.data.sexfilt, col.to
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
 png(paste0(curr.plot.path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 200)
-tenx.pheatmap(data = norm.data.sexfilt, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
-              secondary_ordering = "orig.ident", custom_order_column = "seurat_clusters", custom_order = cluster.order,
-              selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
+tenx.pheatmap(data = norm.data.sexfilt, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
 #####################################################################################################
@@ -494,9 +492,8 @@ cluster.order = order.cell.stage.clust(seurat_object = norm.data.clustfilt.cc, c
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
 png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 200)
-tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
-              secondary_ordering = "orig.ident", custom_order_column = "seurat_clusters", custom_order = cluster.order,
-              selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
+tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
 #####################################################################################################
@@ -576,8 +573,8 @@ top15 <- lapply(markers, function(x) x %>% group_by(cluster) %>% top_n(n = 15, w
 
 for(stage in names(seurat_stage)){
   png(paste0(curr.plot.path, "HM.top15.DE.", stage, ".png"), height = 75, width = 100, units = 'cm', res = 200)
-  tenx.pheatmap(data = seurat_stage[[stage]], metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters",
-                 secondary_ordering = "orig.ident", selected_genes = unique(top15[[stage]]$gene))
+  tenx.pheatmap(data = seurat_stage[[stage]], metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+                custom_order = cluster.order, selected_genes = unique(top15[[stage]]$gene), gaps_col = "seurat_clusters")
   graphics.off()
 }
 
@@ -690,12 +687,9 @@ cluster.order = order.cell.stage.clust(seurat_object = neural.seurat, col.to.sor
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
 png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 200)
-tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), primary_ordering = "seurat_clusters", secondary_ordering = "orig.ident",
-               custom_order = cluster.order, custom_order_column = "seurat_clusters", selected_genes = unique(top15$gene),
-               gaps_col = "seurat_clusters")
+tenx.pheatmap(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
-
-
 
 
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
