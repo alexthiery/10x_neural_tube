@@ -87,6 +87,6 @@ tenx.pheatmap <- function(data, metadata, col_order = metadata, custom_order = N
   
   print(pheatmap(t(new.dat), color = PurpleAndYellow(),
                  cluster_rows = hclust_rows, cluster_cols = hclust_cols, show_colnames = F,
-                 annotation_col = HM.col[,rev(col_ann_order), drop = FALSE], fontsize = 22, fontsize_row = 12, gaps_col = gaps_col,
+                 annotation_col = HM.col[, rev(col_ann_order), drop = FALSE], fontsize = 22, fontsize_row = 12, gaps_col = gaps_col,
                  main = main, show_rownames = show_rownames, annotation_colors = ann_colours, treeheight_row = treeheight_row))
 }
