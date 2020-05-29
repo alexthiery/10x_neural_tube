@@ -579,7 +579,10 @@ for(stage in names(seurat_stage)){
 }
 
 # Plot features listed below at each stage
-GOI = list("hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
+GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
+                     "YEATS4", "AATF", "LIN28B", "SETD2", "ING5", "MAFA",
+                     "TBXT", "EOMES", "ADMP"),
+           "hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
             "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
             "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
 
@@ -591,7 +594,7 @@ for(stage in names(GOI)){
 }
 
 # Change order or clusters for plotting dotplots
-levels = list("hh6" = c(2,1,3,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,1,4,0))
+levels = list("hh4" = c(3,1,0,2), "hh6" = c(2,1,3,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,1,4,0))
 for(stage in names(levels)){
   seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
 }
@@ -611,7 +614,7 @@ saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
 # seurat_stage <- readRDS(paste0(rds.path, "seurat_stage_out.RDS"))
 
 # Make list of clusters to subset
-clust.sub = list("hh6" = c(0,3), "ss4" = c(0,1), "ss8" = c(0,1,4))
+clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,3), "ss4" = c(0,1), "ss8" = c(0,1,4))
 
 ########## Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
 
