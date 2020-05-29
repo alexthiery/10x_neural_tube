@@ -20,6 +20,10 @@ tenx.pheatmap <- function(data, metadata, col_order = metadata, custom_order = N
     data <- subset(data, cells = cell_subset)
   } else {}
   
+  # reset levels in seurat_clusters metadata to default numerical order as default
+  if("seurat_clusters" %in% metadata){
+    data@meta.data[,"seurat_clusters"] <-  factor(data@meta.data[,"seurat_clusters"], levels = sort(unique(as.numeric(as.character(data@meta.data[,"seurat_clusters"])))))
+  } else {}
   
   # initialise heatmap metadata
   HM.col <- droplevels(data@meta.data[, metadata, drop=FALSE])
