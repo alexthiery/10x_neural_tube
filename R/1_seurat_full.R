@@ -567,14 +567,19 @@ for(stage in names(seurat_stage)){
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster at each stage
 
-# lower FC threshold as some clusters have no DE genes
-markers <- lapply(seurat_stage, function(x) FindAllMarkers(x, only.pos = T, logfc.threshold = 0.1))
-top15 <- lapply(markers, function(x) x %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC))
-
 for(stage in names(seurat_stage)){
+  # lower FC threshold as some clusters have no DE genes
+  markers <- FindAllMarkers(seurat_stage[[stage]], only.pos = T, logfc.threshold = 0.1)
+  
+  # get automated cluster order based on percentage of cells in adjacent stages
+  cluster.order = order.cell.stage.clust(seurat_object = seurat_stage[[stage]], col.to.sort = seurat_clusters, sort.by = orig.ident)
+  
+  # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+  top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
+  
   png(paste0(curr.plot.path, "HM.top15.DE.", stage, ".png"), height = 75, width = 100, units = 'cm', res = 200)
   tenx.pheatmap(data = seurat_stage[[stage]], metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
-                custom_order = cluster.order, selected_genes = unique(top15[[stage]]$gene), gaps_col = "seurat_clusters")
+                custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
   graphics.off()
 }
 
