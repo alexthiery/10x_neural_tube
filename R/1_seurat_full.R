@@ -140,7 +140,7 @@ graphics.off()
 
 # Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
 png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCA.level.comparison(norm.data, PCA = c(7, 10, 15, 20), cluster_res = 0.5)
+PCA.level.comparison(norm.data, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 
 # Use PCA=15 as elbow plot is relatively stable across stages
@@ -341,7 +341,7 @@ dir.create(curr.plot.path)
 # UMAP plots GOI
 genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
 
-ncol = 3
+ncol = 4
 png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 10*ceiling((length(genes)+1)/ncol), units = "cm", res = 200)
 multi.feature.plot(seurat.obj = norm.data.sexfilt, gene.list = genes, plot.clusters = T,
                    plot.stage = T, label = "", cluster.col = "RNA_snn_res.1.4", n.col = ncol)
@@ -506,7 +506,7 @@ dir.create(curr.plot.path)
 
 # Split dataset into different stages
 seurat_stage <- lapply(c('hh4', 'hh6', 'ss4', 'ss8'),
-       function(x) subset(norm.data.clustfilt.cc, cells = rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.cc$orig.ident == x]))
+                       function(x) subset(norm.data.clustfilt.cc, cells = rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.cc$orig.ident == x]))
 names(seurat_stage) = c('hh4', 'hh6', 'ss4', 'ss8')
 
 
@@ -582,20 +582,20 @@ GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
                      "YEATS4", "AATF", "LIN28B", "SETD2", "ING5", "MAFA",
                      "TBXT", "EOMES", "ADMP"),
            "hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
-            "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
-            "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
+           "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
+           "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
 
 for(stage in names(GOI)){
-  ncol = 4
+  ncol = 3
   png(paste0(curr.plot.path, "UMAP_GOI.", stage, ".png"), width = ncol*10, height = 10*ceiling((length(unlist(GOI[names(GOI) %in% stage]))+1)/ncol), units = "cm", res = 200)
   print(multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage])))
   graphics.off()
 }
 
 # Change order or clusters for plotting dotplots
- = list("hh4" = c(3,1,0,2), "hh6" = c(2,1,3,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,1,4,0))
-for(stage in names()){
-  seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters,  = unlist([names() %in% stage]))
+levels = list("hh4" = c(3,1,0,2), "hh6" = c(2,1,3,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,1,4,0))
+for(stage in names(levels)){
+  seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
 }
 
 # Plot dotplot to identify clusters
