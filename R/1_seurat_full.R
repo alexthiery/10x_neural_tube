@@ -579,7 +579,7 @@ for(stage in names(seurat_stage)){
 
 # Plot features listed below at each stage
 GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
-                     "YEATS4", "AATF", "LIN28B", "SETD2", "ING5", "MAFA",
+                     "AATF", "MAFA", "ING5", "SETD2", "LIN28B", "YEATS4",
                      "TBXT", "EOMES", "ADMP"),
            "hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
            "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
@@ -659,9 +659,9 @@ png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, unit
 PCA.level.comparison(neural.seurat, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 
-# Use PCA=20 as elbow plot is relatively stable across stages
-neural.seurat <- FindNeighbors(neural.seurat, dims = 1:20, verbose = FALSE)
-neural.seurat <- RunUMAP(neural.seurat, dims = 1:20, verbose = FALSE)
+# Use PCA=15 as elbow plot is relatively stable across stages
+neural.seurat <- FindNeighbors(neural.seurat, dims = 1:15, verbose = FALSE)
+neural.seurat <- RunUMAP(neural.seurat, dims = 1:15, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
