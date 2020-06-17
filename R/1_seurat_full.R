@@ -62,7 +62,6 @@ if (opt$location == "local"){
 # Load packages - packages are stored within renv in the repository
 library(future)
 library(dplyr)
-library(Antler)
 library(Seurat)
 library(cowplot)
 library(clustree)
