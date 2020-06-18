@@ -22,10 +22,10 @@ processed_data <- "processed_data/"
 dir.create(processed_data, recursive = T)
 
 # set number of cores to use for parallelisation
-ncores = args[3]
+ncores = as.numeric(args[3])
 cat(paste0("script ran with ", ncores, " cores\n"))
 
-# Load packages - packages are stored within renv in the repository
+# Load packages
 reticulate::use_python('/usr/bin/python3.7')
 library(Seurat)
 
