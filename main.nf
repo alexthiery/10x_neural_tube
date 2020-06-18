@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-//'./bin/R/test.R'
-//'./bin/R/my_functions'
+params.inputfile = './bin/R/test.R'
+params.myFunc = './bin/R/my_functions'
 
 rFile_ch = Channel.fromPath(params.inputfile)
 customFunctions_ch = Channel.fromPath(params.myFunc)
