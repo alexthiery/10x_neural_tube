@@ -18,8 +18,8 @@ if (opt$location == "local"){
   
   sapply(list.files('/Users/alex/dev/repos/10x_neural_tube/R/my_functions/', full.names = T), source)
   
-  plot.path = "/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/"
-  rds.path = "/Users/alex/dev/output/10x_neural_tube/RDS.files/1_seurat_full/"
+  plot.path = "/Users/alex/dev/repos/10x_neural_tube/output/plots/1_seurat_full/"
+  rds.path = "/Users/alex/dev/repos/10x_neural_tube/output/RDS.files/1_seurat_full/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
@@ -60,9 +60,11 @@ if (opt$location == "local"){
 } else {stop("Script can only be ran locally or on CAMP")}
 
 # Load packages - packages are stored within renv in the repository
+reticulate::use_python('/usr/bin/python3.7')
+library(Seurat)
+
 library(future)
 library(dplyr)
-library(Seurat)
 library(cowplot)
 library(clustree)
 library(gridExtra)
