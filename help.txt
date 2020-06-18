@@ -1,0 +1,16 @@
+to run analysis through nextflow and docker
+
+nextflow run alexthiery/10x_neural_tube -r keep_sex_genes -hub github -profile docker
+
+
+
+to clear nextflow files
+
+rm -rf .nextflow* results work
+
+
+
+to run RStudio interactively in docker container
+
+docker run -e PASSWORD=password --rm -p 8787:8787 -v ~/dev/repos/10x_neural_tube:/home/rstudio alexthiery/10x_neural_tube:dev
+

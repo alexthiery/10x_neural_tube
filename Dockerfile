@@ -25,8 +25,3 @@ RUN R -e "devtools::install_version('gridExtra', version = '2.3', dependencies=T
 RUN R -e "devtools::install_version('getopt', version = '1.20.3', dependencies=T)"
 RUN R -e "devtools::install_version('pheatmap', version = '1.0.12', dependencies=T)"
 
-
-
-# docker run -e PASSWORD=password --rm -p 8787:8787 -v ~/dev/repos/10x_neural_tube:/home/rstudio alexthiery/10x_neural_tube:dev
-
-
