@@ -8,7 +8,6 @@ ARG WHEN
 # Install apt packages
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
- apt-get install python3.6 \
  git=1:2.20.1-2+deb10u3 \
  apt-utils=1.8.2 \
  unzip=6.0-23+deb10u1 \
