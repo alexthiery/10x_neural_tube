@@ -8,7 +8,7 @@ sample_ch = Channel.fromPath(params.sampleDir)
 
 process run_1_seurat_full {
     
-    cpus 16
+    task.cpus = 16
 
     publishDir "${params.outDir}/${params.runName}",
         mode: "copy", overwrite: true
@@ -21,7 +21,7 @@ process run_1_seurat_full {
         path("processed_data")
 
     """
-    Rscript ${params.rFile} ${params.customFunctions} ${samples} ${params.ncores}
+    Rscript ${params.rFile} --myfuncs ${params.customFunctions} --samples ${samples} --cores ${params.ncores} --location CAMP
     """
 }
 
