@@ -7,6 +7,8 @@ params.customFunctions = "$baseDir/bin/R/my_functions"
 sample_ch = Channel.fromPath(params.sampleDir)
 
 process run_1_seurat_full {
+    
+    cpus 16
 
     publishDir "${params.outDir}/${params.runName}",
         mode: "copy", overwrite: true
