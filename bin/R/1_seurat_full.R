@@ -1,9 +1,17 @@
 #!/usr/bin/env Rscript
 
+#!/usr/bin/env Rscript
+args <- commandArgs(TRUE)
+
+cat("R script is running")
+
+sapply(list.files(args[1], full.names = T), source)
+
 plot_path <- "plots/"
 dir.create(plot_path, recursive = T)
 processed_data <- "processed_data/"
 dir.create(processed_data, recursive = T)
+
 
 
 # In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
