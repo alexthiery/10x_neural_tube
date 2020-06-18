@@ -43,9 +43,9 @@ if (opt$location == "docker"){
   sapply(list.files(opt$myfuncs, full.names = T), source)
   
   plot.path = "plots/"
-  dir.create(plot_path, recursive = T)
-  rds.path = "processed_data/"
-  dir.create(processed_data, recursive = T)
+  dir.create(plot.path, recursive = T)
+  rds.path = "rds.files/"
+  dir.create(rds.path, recursive = T)
   
   
   # read all files from folder and keep only those from chr_edit
