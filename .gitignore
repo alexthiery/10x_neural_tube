@@ -2,3 +2,10 @@
 .Rhistory
 .RData
 .Ruserdata
+.local
+.rstudio
+.conda
+output
+html_files
+.nextflow*
+work
