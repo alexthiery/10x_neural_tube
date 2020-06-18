@@ -20,8 +20,8 @@ if (opt$location == "local"){
   
   prev.rds.path = "/Users/alex/dev/repos/10x_neural_tube/RDS.files/1_seurat_full/"
   
-  plot.path = "/Users/alex/dev/repos/10x_neural_tube/plots/2_neural_subset/"
-  rds.path = "/Users/alex/dev/repos/10x_neural_tube/RDS.files/2_neural_subset/"
+  plot.path = "/Users/alex/dev/repos/10x_neural_tube/output/plots/2_neural_subset/"
+  rds.path = "/Users/alex/dev/repos/10x_neural_tube/output/RDS.files/2_neural_subset/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
