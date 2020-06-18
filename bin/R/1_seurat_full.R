@@ -1,31 +1,73 @@
 #!/usr/bin/env Rscript
-args <- commandArgs(TRUE)
 
-# read all files from folder and keep only those from chr_edit
-files <- Filter(function(x) grepl("chr_edit", x), list.files(args[2], recursive = T, full.names = T)
-)
+# In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
+library('getopt')
 
-# remove file suffix
-file.path <- dirname(files)[!duplicated(dirname(files))]
+# set arguments for Rscript
+spec = matrix(c(
+  'location', 'l', 2, "character",
+  'cores'   , 'c', 2, "integer",
+  'samples' , 's', 2, "character",
+  'myfuncs', 's', 2, "character"
+), byrow=TRUE, ncol=4)
+opt = getopt(spec)
 
-# make dataframe with tissue matching directory
-tissue = c("hh4", "hh6", "4ss", "8ss")
-matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
-sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
-sample.paths$tissue = c("hh4", "hh6", "ss4", "ss8")
+# set default location
+if(is.null(opt$location)){opt$location = "docker"}
 
-sapply(list.files(args[1], full.names = T), source)
+if (opt$location == "docker"){
+  cat('Script running in Rstudio on docker\n')
+  
+  sapply(list.files('./R/my_functions/', full.names = T), source)
+  
+  plot.path = "./results/plots/1_seurat_full/"
+  rds.path = "./results/RDS.files/1_seurat_full/"
+  dir.create(plot.path, recursive = T)
+  dir.create(rds.path, recursive = T)
+  
+  # read all files from folder and keep only those from chr_edit
+  files <- Filter(function(x) grepl("chr_edit", x), list.files("./data/cellranger_output", recursive = T, full.names = T))
+  
+  # remove file suffix
+  file.path <- dirname(files)[!duplicated(dirname(files))]
+  
+  # make dataframe with tissue matching directory
+  tissue = c("hh4", "hh6", "4ss", "8ss")
+  matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
+  sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
+  sample.paths$tissue = c("hh4", "hh6", "ss4", "ss8")
+  
+} else if (opt$location == "CAMP"){
+  cat('data loaded from CAMP\n')
+  
+  sapply(list.files(opt$myfuncs, full.names = T), source)
+  
+  plot_path <- "plots/"
+  dir.create(plot_path, recursive = T)
+  processed_data <- "processed_data/"
+  dir.create(processed_data, recursive = T)
+  
+  
+  # read all files from folder and keep only those from chr_edit
+  files <- Filter(function(x) grepl("chr_edit", x), list.files(opt$samples, recursive = T, full.names = T))
+  
+  # remove file suffix
+  file.path <- dirname(files)[!duplicated(dirname(files))]
+  
+  # make dataframe with tissue matching directory
+  tissue = c("hh4", "hh6", "4ss", "8ss")
+  matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
+  sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
+  sample.paths$tissue = c("hh4", "hh6", "ss4", "ss8")
+  
+  # set number of cores to use for parallelisation
+  if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
+  
+  cat(paste0("script ran with ", ncores, " cores\n"))
+  
+} else {stop("Script can only be ran locally or on CAMP")}
 
-plot_path <- "plots/"
-dir.create(plot_path, recursive = T)
-processed_data <- "processed_data/"
-dir.create(processed_data, recursive = T)
-
-# set number of cores to use for parallelisation
-ncores = as.numeric(args[3])
-cat(paste0("script ran with ", ncores, " cores\n"))
-
-# Load packages
+# Load packages - packages are stored within renv in the repository
 reticulate::use_python('/usr/bin/python3.7')
 library(Seurat)
 

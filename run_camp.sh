@@ -1,9 +1,5 @@
 #!/bin/bash
-#SBATCH -t 2:00:00
-#SBATCH --mem=64gb
-#SBATCH --cpus-per-task=16
-#SBATCH -N 1
-#SBATCH --partition=cpu
+
 #SBATCH --job-name=10x_neural_tube
 #SBATCH --mail-type=ALL,ARRAY_TASKS
 #SBATCH --mail-user=alex.thiery@crick.ac.uk
