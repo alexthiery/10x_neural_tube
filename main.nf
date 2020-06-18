@@ -3,14 +3,13 @@ params.runName = '1_seurat_full'
 
 params.rFile = "$baseDir/bin/R/1_seurat_full.R"
 params.customFunctions = "$baseDir/bin/R/my_functions"
-params.ncores = 4
 
 sample_ch = Channel.fromPath(params.sampleDir)
 
 process run_1_seurat_full {
 
     publishDir "${params.outDir}/${params.runName}",
-        mode: "copy", overwrite: false
+        mode: "copy", overwrite: true
 
     input:
         path samples from sample_ch
