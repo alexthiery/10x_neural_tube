@@ -18,7 +18,7 @@ process run_1_seurat_full {
 
     output:
         path("plots")
-        path("processed_data")
+        path("rds.files")
 
     """
     Rscript ${params.rFile} --myfuncs ${params.customFunctions} --samples ${samples} --cores ${task.cpus} --location CAMP
