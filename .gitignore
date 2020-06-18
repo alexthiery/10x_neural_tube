@@ -9,3 +9,4 @@ output
 html_files
 .nextflow*
 work
+data
