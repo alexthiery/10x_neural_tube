@@ -1,12 +1,8 @@
 #!/usr/bin/env nextflow
-
-params.inputfile = './bin/R/test.R'
-params.myFunc = './bin/R/my_functions'
-
-rFile_ch = Channel.fromPath(params.inputfile)
-customFunctions_ch = Channel.fromPath(params.myFunc)
-
 params.runName = '1_seurat_full'
+
+params.rFile = "$baseDir/bin/R/test.R"
+params.customFunctions = "$baseDir/bin/R/my_functions"
 
 process run_1_seurat_full {
 
@@ -14,19 +10,15 @@ process run_1_seurat_full {
         mode: "copy", overwrite: false
 
     input:
-        //path samples from sample_ch
-        path rFile from rFile_ch
-        path customFunctions from customFunctions_ch
 
     output:
         path("plots")
         path("processed_data")
 
     """
-    Rscript ${rFile} ${customFunctions}
+    Rscript ${params.rFile} ${params.customFunctions}
     """
 }
-
 
 // params.runName = '2_seurat_full'
 
