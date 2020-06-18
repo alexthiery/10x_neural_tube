@@ -14,7 +14,7 @@ process run_1_seurat_full {
         mode: "copy", overwrite: false
 
     input:
-        path rFile from params.rFilePath
+        file rFile from params.rFilePath
         path customFunctions from params.customFunctionsPath
 
     output:
