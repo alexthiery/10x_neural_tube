@@ -1,9 +1,18 @@
 #!/usr/bin/env Rscript
-
-#!/usr/bin/env Rscript
 args <- commandArgs(TRUE)
 
-cat("R script is running")
+# read all files from folder and keep only those from chr_edit
+files <- Filter(function(x) grepl("chr_edit", x), list.files(args[2], recursive = T, full.names = T)
+)
+
+# remove file suffix
+file.path <- dirname(files)[!duplicated(dirname(files))]
+
+# make dataframe with tissue matching directory
+tissue = c("hh4", "hh6", "4ss", "8ss")
+matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
+sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
+sample.paths$tissue = c("hh4", "hh6", "ss4", "ss8")
 
 sapply(list.files(args[1], full.names = T), source)
 
@@ -12,66 +21,9 @@ dir.create(plot_path, recursive = T)
 processed_data <- "processed_data/"
 dir.create(processed_data, recursive = T)
 
-
-
-# In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
-library('getopt')
-
-# set arguments for Rscript
-spec = matrix(c(
-  'location', 'l', 2, "character",
-  'cores'   , 'c', 2, "integer"
-), byrow=TRUE, ncol=4)
-opt = getopt(spec)
-
-# set default location
-if(is.null(opt$location)){opt$location = "local"}
-
-if (opt$location == "local"){
-  cat('Script running locally\n')
-  
-  sapply(list.files('./R/my_functions/', full.names = T), source)
-  
-  plot.path = "./output/plots/1_seurat_full/"
-  rds.path = "./output/RDS.files/1_seurat_full/"
-  dir.create(plot.path, recursive = T)
-  dir.create(rds.path, recursive = T)
-  
-  ###### load data ##########
-  sample.paths<-data.frame(tissue = c("hh4", "hh6", "ss4", "ss8"),
-                           path = c("/Users/alex/dev/data/10x/cellranger_output/cellranger_count_hh4/outs/filtered_feature_bc_matrix_chr_edit/",
-                                    "/Users/alex/dev/data/10x/cellranger_output/cellranger_count_hh6/outs/filtered_feature_bc_matrix_chr_edit/",
-                                    "/Users/alex/dev/data/10x/cellranger_output/cellranger_count_4ss/outs/filtered_feature_bc_matrix_chr_edit/",
-                                    "/Users/alex/dev/data/10x/cellranger_output/cellranger_count_8ss/outs/filtered_feature_bc_matrix_chr_edit/"))
-  
-} else if (opt$location == "CAMP"){
-  cat('data loaded from CAMP\n')
-  
-  
-  project.dir = "/camp/home/thierya/working/analysis/10x_neural_tube/"
-  
-  sapply(list.files(paste0(project.dir, 'repo/scripts/my_functions/'), full.names = T), source)
-  
-  plot.path = paste0(project.dir, "output/plots/1_seurat_full/")
-  rds.path = paste0(project.dir, "output/RDS.files/1_seurat_full/")
-  dir.create(plot.path, recursive = T)
-  dir.create(rds.path, recursive = T)
-  
-  input.dat = paste0(project.dir, "cellranger_output/")
-  
-  ###### load data ##########
-  sample.paths<-data.frame(tissue = c("hh4", "hh6", "ss4", "ss8"),
-                           path = c('/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/hh4_filtered_feature_bc_matrix_chr_edit/',
-                                    '/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/hh6_filtered_feature_bc_matrix_chr_edit/',
-                                    '/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/4ss_filtered_feature_bc_matrix_chr_edit/',
-                                    '/camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput/8ss_filtered_feature_bc_matrix_chr_edit/'))
-  
-  # set number of cores to use for parallelisation
-  if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
-  
-  cat(paste0("script ran with ", ncores, " cores\n"))
-  
-} else {stop("Script can only be ran locally or on CAMP")}
+# set number of cores to use for parallelisation
+ncores = args[3]
+cat(paste0("script ran with ", ncores, " cores\n"))
 
 # Load packages - packages are stored within renv in the repository
 reticulate::use_python('/usr/bin/python3.7')
@@ -115,11 +67,10 @@ norm.data <- NormalizeData(merged.data, normalization.method = "LogNormalize", s
 norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures = 2000)
 
 # Scale data and regress out MT content
-# Enable parallelisation on camp
-if (opt$location == "CAMP") {
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 2000 * 1024^2)
-} else {}
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 
 # Save RDS after scaling as this step takes time
@@ -280,11 +231,10 @@ norm.data.nosexfilt <- norm.data
 
 # Re-run findvariablefeatures and scaling
 norm.data.nosexfilt <- FindVariableFeatures(norm.data.nosexfilt, selection.method = "vst", nfeatures = 2000)
-# Enable parallelisation on camp
-if (opt$location == "CAMP") {
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 2000 * 1024^2)
-} else {}
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
 norm.data.nosexfilt <- ScaleData(norm.data.manorm.data.nosexfiltlefilt, features = rownames(norm.data.nosexfilt), vars.to.regress = c("percent.mt", "sex"))
 
 # Save RDS
@@ -298,11 +248,10 @@ norm.data.malefilt <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.d
 
 # Re-run findvariablefeatures and scaling
 norm.data.malefilt <- FindVariableFeatures(norm.data.malefilt, selection.method = "vst", nfeatures = 2000)
-# Enable parallelisation on camp
-if (opt$location == "CAMP") {
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 2000 * 1024^2)
-} else {}
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
 norm.data.malefilt <- ScaleData(norm.data.malefilt, features = rownames(norm.data.malefilt), vars.to.regress = c("percent.mt", "sex"))
 
 # Save RDS
@@ -318,11 +267,10 @@ norm.data.sexfilt <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.da
 
 # Re-run findvariablefeatures and scaling
 norm.data.sexfilt <- FindVariableFeatures(norm.data.sexfilt, selection.method = "vst", nfeatures = 2000)
-# Enable parallelisation on camp
-if (opt$location == "CAMP") {
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 2000 * 1024^2)
-} else {}
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
 norm.data.sexfilt <- ScaleData(norm.data.sexfilt, features = rownames(norm.data.sexfilt), vars.to.regress = c("percent.mt", "sex"))
 
 # Save RDS
@@ -423,11 +371,10 @@ norm.data.clustfilt <- subset(norm.data.sexfilt, cells = norm.data.clustfilt, in
 # Re-run findvariablefeatures and scaling
 norm.data.clustfilt <- FindVariableFeatures(norm.data.clustfilt, selection.method = "vst", nfeatures = 2000)
 
-# Enable parallelisation on camp
-if (opt$location == "CAMP") {
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 2000 * 1024^2)
-} else {}
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
 norm.data.clustfilt <- ScaleData(norm.data.clustfilt, features = rownames(norm.data.clustfilt), vars.to.regress = c("percent.mt", "sex"))
 
 saveRDS(norm.data.clustfilt, paste0(rds.path, "norm.data.clustfilt.RDS"))
@@ -482,11 +429,10 @@ pre.cell.cycle.dat <- CellCycleScoring(norm.data.clustfilt, s.features = s.genes
 
 # Re-run findvariablefeatures and scaling
 norm.data.clustfilt.cc <- FindVariableFeatures(pre.cell.cycle.dat, selection.method = "vst", nfeatures = 2000)
-# Enable parallelisation on camp
-if (opt$location == "CAMP") {
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 2000 * 1024^2)
-} else {}
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
 norm.data.clustfilt.cc <- ScaleData(norm.data.clustfilt.cc, features = rownames(norm.data.clustfilt.cc), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 saveRDS(norm.data.clustfilt.cc, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
@@ -567,10 +513,10 @@ names(seurat_stage) = c('hh4', 'hh6', 'ss4', 'ss8')
 # Re-run findvariablefeatures and scaling
 seurat_stage <- lapply(seurat_stage, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
 # Enable parallelisation on camp
-if (opt$location == "CAMP") {
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 2000 * 1024^2)
-} else {}
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
 seurat_stage <- lapply(seurat_stage, function(x) ScaleData(x, features = rownames(norm.data.clustfilt.cc),
                                                            vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score")))
 
@@ -686,11 +632,10 @@ neural.seurat <- subset(norm.data.clustfilt.cc, cells = cell.sub)
 # Re-run findvariablefeatures and scaling
 neural.seurat <- FindVariableFeatures(neural.seurat, selection.method = "vst", nfeatures = 2000)
 
-# Enable parallelisation on camp
-if (opt$location == "CAMP") {
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 2000 * 1024^2)
-} else {}
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
 neural.seurat <- ScaleData(neural.seurat, features = rownames(neural.seurat), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.RDS"))
