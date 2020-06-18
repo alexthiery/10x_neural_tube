@@ -8,7 +8,7 @@ spec = matrix(c(
   'location', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
   'samples' , 's', 2, "character",
-  'myfuncs', 's', 2, "character"
+  'myfuncs', 'm', 2, "character"
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
