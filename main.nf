@@ -8,7 +8,7 @@ sample_ch = Channel.fromPath(params.sampleDir)
 
 process run_1_seurat_full {
     
-   // cpus 8
+    cpus 8
 
     publishDir "${params.outDir}/${params.runName}",
         mode: "copy", overwrite: true
