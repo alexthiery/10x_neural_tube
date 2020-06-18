@@ -1,10 +1,10 @@
 #!/usr/bin/env nextflow
 
-params.rFile_ch = path('$baseDir/bin/R/test.R')
-params.customFunctions_ch = path('$baseDir/bin/R/my_functions')
+params.inputfile = '$baseDir/bin/R/test.R'
+params.myFunc = '$baseDir/bin/R/my_functions'
 
-//rFile_ch = Channel.fromPath(params.inputfile)
-//customFunctions_ch = Channel.fromPath(params.myFunc)
+rFile_ch = Channel.fromPath(params.inputfile)
+customFunctions_ch = Channel.fromPath(params.myFunc)
 
 params.runName = '1_seurat_full'
 
