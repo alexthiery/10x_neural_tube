@@ -277,7 +277,7 @@ norm.data.nosexfilt <- FindVariableFeatures(norm.data.nosexfilt, selection.metho
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
-norm.data.nosexfilt <- ScaleData(norm.data.manorm.data.nosexfiltlefilt, features = rownames(norm.data.nosexfilt), vars.to.regress = c("percent.mt", "sex"))
+norm.data.nosexfilt <- ScaleData(norm.data.nosexfilt, features = rownames(norm.data.nosexfilt), vars.to.regress = c("percent.mt", "sex"))
 
 # Save RDS
 saveRDS(norm.data.nosexfilt, paste0(rds.path, "norm.data.nosexfilt.RDS"))
