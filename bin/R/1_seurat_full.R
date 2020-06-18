@@ -42,9 +42,9 @@ if (opt$location == "docker"){
   
   sapply(list.files(opt$myfuncs, full.names = T), source)
   
-  plot_path <- "plots/"
+  plot.path = "plots/"
   dir.create(plot_path, recursive = T)
-  processed_data <- "processed_data/"
+  rds.path = "processed_data/"
   dir.create(processed_data, recursive = T)
   
   
