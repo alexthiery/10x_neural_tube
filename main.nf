@@ -12,7 +12,7 @@ process run_1_seurat_full {
 
     input:
         //path samples from sample_ch
-        path rFile from rFile_ch
+        file rFile from rFile_ch
        // path customFunctions from customFunctions_ch
 
     output:
@@ -20,7 +20,7 @@ process run_1_seurat_full {
         path("processed_data")
 
     """
-    Rscript ${rFile}
+    Rscript $rFile
     """
 }
 
