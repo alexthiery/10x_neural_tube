@@ -2,8 +2,7 @@
 params.runName = '1_seurat_full'
 
 params.rFile = "$baseDir/bin/R/test.R"
-
-//customFunctions_ch = Channel.fromPath('$baseDir/bin/R/my_functions')
+params.customFunctions = "$baseDir/bin/R/my_functions"
 
 process run_1_seurat_full {
 
@@ -11,16 +10,13 @@ process run_1_seurat_full {
         mode: "copy", overwrite: false
 
     input:
-        //path samples from sample_ch
-        //file rFile2 from params.rFile
-       // path customFunctions from customFunctions_ch
 
     output:
         path("plots")
         path("processed_data")
 
     """
-    Rscript ${params.rFile}
+    Rscript ${params.rFile} ${params.customFunctions}
     """
 }
 
