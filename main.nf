@@ -12,7 +12,7 @@ process run_1_seurat_full {
 
     input:
         //path samples from sample_ch
-        path rFile2 from params.rFile
+        file rFile2 from params.rFile
        // path customFunctions from customFunctions_ch
 
     output:
