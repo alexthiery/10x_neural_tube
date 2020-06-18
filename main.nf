@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-params.rFilePath = file('$baseDir/bin/R/test.R')
-params.customFunctionsPath = path('$baseDir/bin/R/my_functions')
+params.rFilePath = '$baseDir/bin/R/test.R'
+params.customFunctionsPath = '$baseDir/bin/R/my_functions'
 
 //rFile_ch = Channel.fromPath(params.inputfile)
 //customFunctions_ch = Channel.fromPath(params.myFunc)
