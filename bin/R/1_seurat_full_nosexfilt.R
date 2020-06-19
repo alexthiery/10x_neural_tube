@@ -8,7 +8,8 @@ spec = matrix(c(
   'location', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
   'samples' , 's', 2, "character",
-  'myfuncs', 'm', 2, "character"
+  'myfuncs', 'm', 2, "character",
+  'extraData', 'd', 2, "character"
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
@@ -47,7 +48,6 @@ if (opt$location == "docker"){
   rds.path = "RDS.files/"
   dir.create(rds.path, recursive = T)
   
-  
   # read all files from folder and keep only those from chr_edit
   files <- Filter(function(x) grepl("chr_edit", x), list.files(opt$samples, recursive = T, full.names = T))
   
@@ -60,6 +60,14 @@ if (opt$location == "docker"){
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
   sample.paths$tissue = c("hh4", "hh6", "ss4", "ss8")
   
+
+  # Read in favourite genes
+
+  network_genes <- list.files(opt$extraData, full.names = T)
+  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
+  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+
+
   # set number of cores to use for parallelisation
   if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
   
@@ -606,6 +614,11 @@ for(stage in names(GOI)){
   graphics.off()
 }
 
+# plot genes from hh4 gene list at each stage and zip
+lapply(names(seurat_stage), function(x) plot.genes.zip(seurat_stage[[x]], hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/", x, "/")))
+# plot genes from hh6 gene list at each stage and zip
+lapply(names(seurat_stage), function(x) plot.genes.zip(seurat_stage[[x]], hh6_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/", x, "/")))
+
 # Save stage data after clustering
 saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
 
@@ -692,7 +705,21 @@ tenx.pheatmap(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
-
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
 
+# plot genes from hh4 gene list in neural subset and zip
+plot.genes.zip(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/"))
+# plot genes from hh6 gene list in neural subset and zip
+plot.genes.zip(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/"))
 
+# Plot heatmap for hh4 genes in neural subset
+png(paste0(curr.plot.path, "neural.seurat_hh4genes.HM.png"), width=75, height=100, units = "cm", res = 200)
+tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh4_genes[hh4_genes %in% rownames(neural.seurat)],
+              hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
+graphics.off()
+
+# Plot heatmap for hh6 genes in neural subset
+png(paste0(curr.plot.path, "neural.seurat_hh6genes.HM.png"), width=75, height=100, units = "cm", res = 200)
+tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh6_genes[hh6_genes %in% rownames(neural.seurat)],
+              hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
+graphics.off()

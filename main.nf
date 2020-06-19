@@ -4,6 +4,7 @@ params.rFile = "$baseDir/bin/R/1_seurat_full_nosexfilt.R"
 params.customFunctions = "$baseDir/bin/R/my_functions"
 
 sample_ch = Channel.fromPath(params.sampleDir)
+extraData_ch = Channel.fromPath(params.extraData)
 
 process run_1_seurat_full_nosexfilt {
     
@@ -18,12 +19,13 @@ process run_1_seurat_full_nosexfilt {
 
     input:
         path samples from sample_ch
+        path extraDat from extraData_ch
 
     output:
         path("plots")
         path("RDS.files")
 
     """
-    Rscript ${params.rFile} --myfuncs ${params.customFunctions} --samples ${samples} --cores ${task.cpus} --location CAMP
+    Rscript ${params.rFile} --myfuncs ${params.customFunctions} --extraData ${extraDat} --samples ${samples} --cores ${task.cpus} --location CAMP
     """
 }
