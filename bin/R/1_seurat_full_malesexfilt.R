@@ -267,19 +267,20 @@ graphics.off()
 # Following subsetting of cells and/or genes, the same pipeline as above is repeated i.e.
 # Find variable features -> Scale data/regress out confounding variables -> PCA -> Find neighbours -> Run UMAP -> Find Clusters -> Cluster QC -> Find top DE genes
 
+
 # Remove sex genes
-norm.data.sexfilt <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.data)) & !grepl("Z-", rownames(norm.data))], ]
+norm.data.malefilt <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.data))], ]
 
 # Re-run findvariablefeatures and scaling
-norm.data.sexfilt <- FindVariableFeatures(norm.data.sexfilt, selection.method = "vst", nfeatures = 2000)
+norm.data.malefilt <- FindVariableFeatures(norm.data.malefilt, selection.method = "vst", nfeatures = 2000)
 # Enable parallelisation
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
-norm.data.sexfilt <- ScaleData(norm.data.sexfilt, features = rownames(norm.data.sexfilt), vars.to.regress = c("percent.mt", "sex"))
+norm.data.malefilt <- ScaleData(norm.data.malefilt, features = rownames(norm.data.malefilt), vars.to.regress = c("percent.mt", "sex"))
 
 # Save RDS
-saveRDS(norm.data.sexfilt, paste0(rds.path, "norm.data.sexfilt.RDS"))
+saveRDS(norm.data.malefilt, paste0(rds.path, "norm.data.malefilt.RDS"))
 
 # Read in RDS data if needed
 # norm.data.sexfilt <- readRDS(paste0(rds.path, "norm.data.sexfilt.RDS"))
@@ -288,7 +289,7 @@ saveRDS(norm.data.sexfilt, paste0(rds.path, "norm.data.sexfilt.RDS"))
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 
 # PCA
-norm.data.sexfilt <- RunPCA(object = norm.data.sexfilt, verbose = FALSE)
+norm.data.sexfilt <- RunPCA(object = norm.data.malefilt, verbose = FALSE)
 
 png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
 DimHeatmap(norm.data.sexfilt, dims = 1:30, balanced = TRUE, cells = 500)

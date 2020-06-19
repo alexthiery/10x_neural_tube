@@ -8,7 +8,7 @@ sample_ch = Channel.fromPath(params.sampleDir)
 
 process run_1_seurat_full {
     
-    cpus 8
+    cpus 10
 
     publishDir "${params.outDir}/${params.runName}",
         mode: "copy", overwrite: true
@@ -18,12 +18,63 @@ process run_1_seurat_full {
 
     output:
         path("plots")
-        path("rds.files")
+        path("RDS.files")
 
     """
     Rscript ${params.rFile} --myfuncs ${params.customFunctions} --samples ${samples} --cores ${task.cpus} --location CAMP
     """
 }
+
+
+params.runName = '1_seurat_full_malesexfilt'
+
+params.rFile = "$baseDir/bin/R/1_seurat_full_malesexfilt.R"
+
+process run_1_seurat_full_malesexfilt {
+    
+    cpus 10
+
+    publishDir "${params.outDir}/${params.runName}",
+        mode: "copy", overwrite: true
+
+    input:
+        path samples from sample_ch
+
+    output:
+        path("plots")
+        path("RDS.files")
+
+    """
+    Rscript ${params.rFile} --myfuncs ${params.customFunctions} --samples ${samples} --cores ${task.cpus} --location CAMP
+    """
+}
+
+
+
+
+params.runName = '1_seurat_full_nosexfilt'
+
+params.rFile = "$baseDir/bin/R/1_seurat_full_nosexfilt.R"
+
+process run_1_seurat_full_nosexfilt {
+    
+    cpus 10
+
+    publishDir "${params.outDir}/${params.runName}",
+        mode: "copy", overwrite: true
+
+    input:
+        path samples from sample_ch
+
+    output:
+        path("plots")
+        path("RDS.files")
+
+    """
+    Rscript ${params.rFile} --myfuncs ${params.customFunctions} --samples ${samples} --cores ${task.cpus} --location CAMP
+    """
+}
+
 
 // params.runName = '2_seurat_full'
 
