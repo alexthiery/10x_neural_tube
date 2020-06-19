@@ -311,7 +311,7 @@ norm.data.sexfilt <- RunUMAP(norm.data.sexfilt, dims = 1:15, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = norm.data, by = 0.2)
+clust.res(seurat.obj = norm.data.sexfilt, by = 0.2)
 graphics.off()
 
 # Use clustering resolution = 1.4 for subsequent filtering of poor quality clusters this increases the stringency of poor quality clusters, removing the least data possible
@@ -363,16 +363,15 @@ DotPlot(norm.data.sexfilt, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SIX
 graphics.off()
 
 ############################### Remove contaminating cells from clusters ########################################
-# Clust 12, 14, 17 = poor quality cells
-# Clust 18 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
-# Clust 20 = Late mesoderm - expresses twist1, six1, eya2
-# Clust 21 = PGC's - expresses dazl very highly
-norm.data.clustfilt <- rownames(norm.data.sexfilt@meta.data)[norm.data.sexfilt@meta.data$seurat_clusters == 12 |
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 14 |
+# Clust 8, 15 = poor quality cells
+# Clust 16 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
+# Clust 17 = Late mesoderm - expresses twist1, six1, eya2
+# Clust 18 = PGC's - expresses dazl very highly
+norm.data.clustfilt <- rownames(norm.data.sexfilt@meta.data)[norm.data.sexfilt@meta.data$seurat_clusters ==  8|
+                                                               norm.data.sexfilt@meta.data$seurat_clusters == 15 |
+                                                               norm.data.sexfilt@meta.data$seurat_clusters == 16 |
                                                                norm.data.sexfilt@meta.data$seurat_clusters == 17 |
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 18 |
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 20 |
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 21]
+                                                               norm.data.sexfilt@meta.data$seurat_clusters == 18]
 
 norm.data.clustfilt <- subset(norm.data.sexfilt, cells = norm.data.clustfilt, invert = T)
 

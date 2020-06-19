@@ -185,7 +185,7 @@ graphics.off()
 
 # Change plot path
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
-dir.create(curr.plot.path)
+dir.create(curr.plot.path, recursive = T)
 
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are preodominantly hh4 clusters. Clustering is driven by sex genes
 png(paste0(curr.plot.path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 200)
@@ -283,10 +283,11 @@ norm.data.malefilt <- ScaleData(norm.data.malefilt, features = rownames(norm.dat
 saveRDS(norm.data.malefilt, paste0(rds.path, "norm.data.malefilt.RDS"))
 
 # Read in RDS data if needed
-# norm.data.sexfilt <- readRDS(paste0(rds.path, "norm.data.sexfilt.RDS"))
+# norm.data.malefilt <- readRDS(paste0(rds.path, "norm.data.malefilt.RDS"))
 
 # Set plot path
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
+dir.create(curr.plot.path, recursive = T)
 
 # PCA
 norm.data.sexfilt <- RunPCA(object = norm.data.malefilt, verbose = FALSE)
@@ -361,10 +362,10 @@ DotPlot(norm.data.sexfilt, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SIX
 graphics.off()
 
 ############################### Remove contaminating cells from clusters ########################################
-# Clust 12, 14, 17 = poor quality cells
-# Clust 18 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
-# Clust 20 = Late mesoderm - expresses twist1, six1, eya2
-# Clust 21 = PGC's - expresses dazl very highly
+# Clust 9, 14, 17 = poor quality cells
+# Clust 16 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
+# Clust 18 = Late mesoderm - expresses twist1, six1, eya2
+# Clust 19 = PGC's - expresses dazl very highly
 norm.data.clustfilt <- rownames(norm.data.sexfilt@meta.data)[norm.data.sexfilt@meta.data$seurat_clusters == 12 |
                                                                norm.data.sexfilt@meta.data$seurat_clusters == 14 |
                                                                norm.data.sexfilt@meta.data$seurat_clusters == 17 |
