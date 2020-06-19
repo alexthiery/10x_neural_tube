@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-params.rFile = "$baseDir/bin/R/1_seurat_full_nosexfilt.R"
+params.rFile = "$baseDir/bin/R/seurat_full.R"
 params.customFunctions = "$baseDir/bin/R/my_functions"
 
 sample_ch = Channel.fromPath(params.sampleDir)
