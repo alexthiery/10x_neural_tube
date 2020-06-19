@@ -18,4 +18,4 @@ nextflow run alexthiery/10x_neural_tube -r keep_sex_genes \
 -profile crick \
 --sampleDir /camp/home/thierya/working/analysis/10x_neural_tube/cellranger_ouput \
 -with-report report.html \
---email alex.thiery@crick.ac.uk
+-N alex.thiery@crick.ac.uk

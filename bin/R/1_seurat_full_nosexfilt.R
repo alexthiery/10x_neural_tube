@@ -180,7 +180,7 @@ tenx.pheatmap(data = norm.data, metadata = c("seurat_clusters", "orig.ident"), c
 graphics.off()
 
 #####################################################################################################
-#           Heatmap clearly shows clusters segregate by sex - check this and remove sex genes       #
+#     Heatmap clearly shows clusters segregate by sex - check this and regress out the sex effect   #
 #####################################################################################################
 
 # Change plot path
@@ -258,84 +258,77 @@ boxplot(c(FC$Z, FC$auto),  ylab = "male - female log2 FC (mean normalised UMI +1
 graphics.off()
 
 # Z genes are upregulated within male genes relative to female genes whereas autosomal genes have a normal distribution of logFCs
-# therefore Z genes should be filtered out - this could be done on a gene by gene basis, but can also be done through removing all Z genes
 
 #####################################################################################################
-#                                       Filter sex genes                                            #
+#                                     Regress sex effect                                            #
 #####################################################################################################
 
-# Following subsetting of cells and/or genes, the same pipeline as above is repeated i.e.
-# Find variable features -> Scale data/regress out confounding variables -> PCA -> Find neighbours -> Run UMAP -> Find Clusters -> Cluster QC -> Find top DE genes
-
-
-# Remove sex genes
-norm.data.nosexfilt <- norm.data
+# Init sexscale object 
+norm.data.sexscale <- norm.data
 
 # Re-run findvariablefeatures and scaling
-norm.data.nosexfilt <- FindVariableFeatures(norm.data.nosexfilt, selection.method = "vst", nfeatures = 2000)
+norm.data.sexscale <- FindVariableFeatures(norm.data.sexscale, selection.method = "vst", nfeatures = 2000)
 # Enable parallelisation
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
-norm.data.nosexfilt <- ScaleData(norm.data.nosexfilt, features = rownames(norm.data.nosexfilt), vars.to.regress = c("percent.mt", "sex"))
+norm.data.sexscale <- ScaleData(norm.data.sexscale, features = rownames(norm.data.sexscale), vars.to.regress = c("percent.mt", "sex"))
 
 # Save RDS
-saveRDS(norm.data.nosexfilt, paste0(rds.path, "norm.data.nosexfilt.RDS"))
-
+saveRDS(norm.data.sexscale, paste0(rds.path, "norm.data.sexscale.RDS"))
 
 # Read in RDS data if needed
-# norm.data.nosexfilt <- readRDS(paste0(rds.path, "norm.data.nosexfilt.RDS"))
-
+# norm.data.sexscale <- readRDS(paste0(rds.path, "norm.data.sexscale.RDS"))
 
 # Set plot path
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
-dir.create(curr.plot.path, recursive = T)
+
 # PCA
-norm.data.sexfilt <- RunPCA(object = norm.data.nosexfilt, verbose = FALSE)
+norm.data.sexscale <- RunPCA(object = norm.data.nosexfilt, verbose = FALSE)
 
 png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
-DimHeatmap(norm.data.sexfilt, dims = 1:30, balanced = TRUE, cells = 500)
+DimHeatmap(norm.data.sexscale, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 
 png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
-print(ElbowPlot(norm.data.sexfilt, ndims = 40))
+print(ElbowPlot(norm.data.sexscale, ndims = 40))
 graphics.off()
 
 png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCA.level.comparison(norm.data.sexfilt, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+PCA.level.comparison(norm.data.sexscale, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 
 # Use PCA=15 as elbow plot is relatively stable across stages
-norm.data.sexfilt <- FindNeighbors(norm.data.sexfilt, dims = 1:15, verbose = FALSE)
-norm.data.sexfilt <- RunUMAP(norm.data.sexfilt, dims = 1:15, verbose = FALSE)
+norm.data.sexscale <- FindNeighbors(norm.data.sexscale, dims = 1:15, verbose = FALSE)
+norm.data.sexscale <- RunUMAP(norm.data.sexscale, dims = 1:15, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = norm.data.sexfilt, by = 0.2)
+clust.res(seurat.obj = norm.data.sexscale, by = 0.2)
 graphics.off()
 
 # Use clustering resolution = 1.4 for subsequent filtering of poor quality clusters this increases the stringency of poor quality clusters, removing the least data possible
-norm.data.sexfilt <- FindClusters(norm.data.sexfilt, resolution = 1.4, verbose = FALSE)
+norm.data.sexscale <- FindClusters(norm.data.sexscale, resolution = 1.4, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(norm.data.sexfilt)
+clust.stage.plot(norm.data.sexscale)
 graphics.off()
 
 # Plot QC for each cluster
 png(paste0(curr.plot.path, "cluster.QC.png"), width=36, height=14, units = 'cm', res = 200)
-QC.plot(norm.data.sexfilt)
+QC.plot(norm.data.sexscale)
 graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
-markers <- FindAllMarkers(norm.data.sexfilt, only.pos = T, logfc.threshold = 0.25)
+markers <- FindAllMarkers(norm.data.sexscale, only.pos = T, logfc.threshold = 0.25)
 # get automated cluster order based on percentage of cells in adjacent stages
-cluster.order = order.cell.stage.clust(seurat_object = norm.data.sexfilt, col.to.sort = seurat_clusters, sort.by = orig.ident)
+cluster.order = order.cell.stage.clust(seurat_object = norm.data.sexscale, col.to.sort = seurat_clusters, sort.by = orig.ident)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
 png(paste0(curr.plot.path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 200)
-tenx.pheatmap(data = norm.data.sexfilt, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+tenx.pheatmap(data = norm.data.sexscale, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
@@ -353,13 +346,13 @@ genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
 
 ncol = 4
 png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 10*ceiling((length(genes)+1)/ncol), units = "cm", res = 200)
-multi.feature.plot(seurat.obj = norm.data.sexfilt, gene.list = genes, plot.clusters = T,
+multi.feature.plot(seurat.obj = norm.data.sexscale, gene.list = genes, plot.clusters = T,
                    plot.stage = T, label = "", cluster.col = "RNA_snn_res.1.4", n.col = ncol)
 graphics.off()
 
 # Dotplot for identifying PGCs, Early mesoderm and Late mesoderm
 png(paste0(curr.plot.path, "dotplot.GOI.png"), width = 20, height = 12, units = "cm", res = 200)
-DotPlot(norm.data.sexfilt, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SIX1",  "PITX2", "DAZL"))
+DotPlot(norm.data.sexscale, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SIX1",  "PITX2", "DAZL"))
 graphics.off()
 
 ############################### Remove contaminating cells from clusters ########################################
@@ -367,13 +360,13 @@ graphics.off()
 # Clust 16 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
 # Clust 17 = Late mesoderm - expresses twist1, six1, eya2
 # Clust 18 = PGC's - expresses dazl very highly
-norm.data.clustfilt <- rownames(norm.data.sexfilt@meta.data)[norm.data.sexfilt@meta.data$seurat_clusters ==  8|
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 15 |
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 16 |
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 17 |
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 18]
+norm.data.clustfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  8|
+                                                               norm.data.sexscale@meta.data$seurat_clusters == 15 |
+                                                               norm.data.sexscale@meta.data$seurat_clusters == 16 |
+                                                               norm.data.sexscale@meta.data$seurat_clusters == 17 |
+                                                               norm.data.sexscale@meta.data$seurat_clusters == 18]
 
-norm.data.clustfilt <- subset(norm.data.sexfilt, cells = norm.data.clustfilt, invert = T)
+norm.data.clustfilt <- subset(norm.data.sexscale, cells = norm.data.clustfilt, invert = T)
 
 # Re-run findvariablefeatures and scaling
 norm.data.clustfilt <- FindVariableFeatures(norm.data.clustfilt, selection.method = "vst", nfeatures = 2000)
@@ -519,7 +512,7 @@ names(seurat_stage) = c('hh4', 'hh6', 'ss4', 'ss8')
 
 # Re-run findvariablefeatures and scaling
 seurat_stage <- lapply(seurat_stage, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
-# Enable parallelisation on camp
+
 # Enable parallelisation
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
@@ -561,7 +554,7 @@ for(stage in names(seurat_stage)){
 }
 
 # Use custom clustering resolution for each stage
-res = c("hh4" = 0.5, "hh6" = 0.5, "ss4" = 0.3, "ss8" = 0.3)
+res = c("hh4" = 0.5, "hh6" = 0.4, "ss4" = 0.4, "ss8" = 0.3)
 seurat_stage <- lapply(names(res), function(x) FindClusters(seurat_stage[[x]], resolution = res[names(res) %in% x]))
 names(seurat_stage) = names(res)
 
@@ -600,7 +593,7 @@ for(stage in names(GOI)){
 }
 
 # Change order or clusters for plotting dotplots
-levels = list("hh4" = c(3,1,0,2), "hh6" = c(2,1,3,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,1,4,0))
+levels = list("hh4" = c(3,0,1,2), "hh6" = c(3,1,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,1,4,0))
 for(stage in names(levels)){
   seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
 }
@@ -620,7 +613,7 @@ saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
 # seurat_stage <- readRDS(paste0(rds.path, "seurat_stage_out.RDS"))
 
 # Make list of clusters to subset
-clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,3), "ss4" = c(0,1), "ss8" = c(0,1,4))
+clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,2), "ss4" = c(0,1), "ss8" = c(0,1,4))
 
 ########## Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
 
