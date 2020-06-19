@@ -284,7 +284,7 @@ saveRDS(norm.data.sexscale, paste0(rds.path, "norm.data.sexscale.RDS"))
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 
 # PCA
-norm.data.sexscale <- RunPCA(object = norm.data.nosexfilt, verbose = FALSE)
+norm.data.sexscale <- RunPCA(object = norm.data.sexscale, verbose = FALSE)
 
 png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
 DimHeatmap(norm.data.sexscale, dims = 1:30, balanced = TRUE, cells = 500)
