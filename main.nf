@@ -6,7 +6,7 @@ params.customFunctions = "$baseDir/bin/R/my_functions"
 sample_ch = Channel.fromPath(params.sampleDir)
 extraData_ch = Channel.fromPath(params.extraData)
 
-process run_1_seurat_full_nosexfilt {
+process run_seurat_full {
     
     // cpus determined by params in profile configs
     cpus 30
