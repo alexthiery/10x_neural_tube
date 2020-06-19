@@ -44,7 +44,7 @@ if (opt$location == "docker"){
   
   plot.path = "plots/"
   dir.create(plot.path, recursive = T)
-  rds.path = "rds.files/"
+  rds.path = "RDS.files/"
   dir.create(rds.path, recursive = T)
   
   
