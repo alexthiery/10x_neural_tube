@@ -8,7 +8,7 @@ sample_ch = Channel.fromPath(params.sampleDir)
 process run_1_seurat_full_nosexfilt {
     
     // cpus determined by params in profile configs
-    cpus 10
+    cpus 30
 
     // split params.rFile and keep only the extension as name for outDir
     bits = params.rFile.take(params.rFile.lastIndexOf('.')).split("/")
