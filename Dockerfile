@@ -5,6 +5,19 @@ LABEL authors="alex.thiery@crick.ac.uk" \
 
 ARG WHEN
 
+
+# Install cellranger
+RUN cd /tmp/ && \
+	wget -O cellranger-3.0.2.tar.gz "http://cf.10xgenomics.com/releases/cell-exp/cellranger-3.0.2.tar.gz?Expires=1592638197&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cDovL2NmLjEweGdlbm9taWNzLmNvbS9yZWxlYXNlcy9jZWxsLWV4cC9jZWxscmFuZ2VyLTMuMC4yLnRhci5neiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTU5MjYzODE5N319fV19&Signature=KZ5nfy4MGXjmkBoLVHdGaEy8qycVmDS6m6jBNTjsoQ3R3wZkaGIVGbtXOznjPQW~DD4IrcNtLvmkM9pZi53UBgMZq3rjtSY80Rk~H8e49Hr1PrZrmEurySz1L1T4BG~Hjv8xfsM78eFUWNQQ70Yol4pRuQz6ggv8k2ixjcBNld-mmBpQLCgdgq6wSkVjRCHUqCVRj~pLr6DAvXIdD69~4uO2hk4OcHr1AnyN~RTRQ8O6cAlK0h3hhxQ0Cig5sQu0ZJPO-LFe6Ju-S90UuAx5w3-scN~ZGXdTIknKcw9L2zi1NmCzNTnjeOUKYAojMoIscBqL3Uz6J4ku7h9vAj~oQw__&Key-Pair-Id=APKAI7S6A5RYOXBWRPDA" && \	
+	mv cellranger-3.0.2.tar.gz /opt/ && \
+	cd /opt/ && \
+	tar -xzvf cellranger-3.0.2.tar.gz && \
+	rm -f cellranger-3.0.2.tar.gz
+
+# Set path
+export PATH=/opt/cellranger-3.1.0:$PATH
+
+
 # Install apt packages
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
