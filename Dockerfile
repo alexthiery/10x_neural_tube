@@ -15,7 +15,7 @@ RUN cd /tmp/ && \
 	rm -f cellranger-3.0.2.tar.gz
 
 # Set path
-export PATH=/opt/cellranger-3.1.0:$PATH
+ENV PATH /opt/cellranger-3.0.2:$PATH
 
 
 # Install apt packages
