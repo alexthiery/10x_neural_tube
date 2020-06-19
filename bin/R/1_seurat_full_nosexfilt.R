@@ -26,6 +26,11 @@ if (opt$location == "docker"){
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
+  # Read in favourite genes
+  network_genes <- list.files("./data/network_genes/", full.names = T)
+  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
+  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+  
   # read all files from folder and keep only those from chr_edit
   files <- Filter(function(x) grepl("chr_edit", x), list.files("./data/cellranger_output", recursive = T, full.names = T))
   
@@ -613,6 +618,12 @@ for(stage in names(GOI)){
           theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
   graphics.off()
 }
+
+
+# change target gene names if they are from Z and W chromosomes
+hh4_genes <- unlist(lapply(hh4_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
+hh6_genes <- unlist(lapply(hh6_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
+
 
 # plot genes from hh4 gene list at each stage and zip
 lapply(names(seurat_stage), function(x) plot.genes.zip(seurat_stage[[x]], hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/", x, "/")))
