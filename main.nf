@@ -30,6 +30,8 @@ params.runName = '1_seurat_full_malesexfilt'
 
 params.rFile = "$baseDir/bin/R/1_seurat_full_malesexfilt.R"
 
+sample_ch = Channel.fromPath(params.sampleDir)
+
 process run_1_seurat_full_malesexfilt {
     
     cpus 10
@@ -55,6 +57,8 @@ process run_1_seurat_full_malesexfilt {
 params.runName = '1_seurat_full_nosexfilt'
 
 params.rFile = "$baseDir/bin/R/1_seurat_full_nosexfilt.R"
+
+sample_ch = Channel.fromPath(params.sampleDir)
 
 process run_1_seurat_full_nosexfilt {
     
