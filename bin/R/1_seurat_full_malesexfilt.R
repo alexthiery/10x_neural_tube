@@ -366,12 +366,12 @@ graphics.off()
 # Clust 16 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
 # Clust 18 = Late mesoderm - expresses twist1, six1, eya2
 # Clust 19 = PGC's - expresses dazl very highly
-norm.data.clustfilt <- rownames(norm.data.sexfilt@meta.data)[norm.data.sexfilt@meta.data$seurat_clusters == 12 |
+norm.data.clustfilt <- rownames(norm.data.sexfilt@meta.data)[norm.data.sexfilt@meta.data$seurat_clusters == 9 |
                                                                norm.data.sexfilt@meta.data$seurat_clusters == 14 |
                                                                norm.data.sexfilt@meta.data$seurat_clusters == 17 |
+                                                               norm.data.sexfilt@meta.data$seurat_clusters == 16 |
                                                                norm.data.sexfilt@meta.data$seurat_clusters == 18 |
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 20 |
-                                                               norm.data.sexfilt@meta.data$seurat_clusters == 21]
+                                                               norm.data.sexfilt@meta.data$seurat_clusters == 19]
 
 norm.data.clustfilt <- subset(norm.data.sexfilt, cells = norm.data.clustfilt, invert = T)
 
