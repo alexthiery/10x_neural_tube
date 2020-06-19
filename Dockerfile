@@ -24,4 +24,4 @@ RUN R -e "devtools::install_version('clustree', version = '0.4.2', dependencies=
 RUN R -e "devtools::install_version('gridExtra', version = '2.3', dependencies=T)"
 RUN R -e "devtools::install_version('getopt', version = '1.20.3', dependencies=T)"
 RUN R -e "devtools::install_version('pheatmap', version = '1.0.12', dependencies=T)"
-
+RUN R -e "BiocManager::install('limma')"
