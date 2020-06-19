@@ -10,8 +10,8 @@ process run_1_seurat_full_nosexfilt {
     // cpus determined by params in profile configs
     cpus 10
 
-    // split params.rFile1 and keep only the extension as name for outDir
-    bits = params.rFile1.take(params.rFile1.lastIndexOf('.')).split("/")
+    // split params.rFile and keep only the extension as name for outDir
+    bits = params.rFile.take(params.rFile.lastIndexOf('.')).split("/")
 
     publishDir "${params.outDir}/${bits[bits.length-1]}",
         mode: "copy", overwrite: true
