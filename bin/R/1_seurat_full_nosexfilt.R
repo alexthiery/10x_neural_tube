@@ -284,11 +284,12 @@ saveRDS(norm.data.nosexfilt, paste0(rds.path, "norm.data.nosexfilt.RDS"))
 
 
 # Read in RDS data if needed
-# norm.data.sexfilt <- readRDS(paste0(rds.path, "norm.data.sexfilt.RDS"))
+# norm.data.nosexfilt <- readRDS(paste0(rds.path, "norm.data.nosexfilt.RDS"))
+
 
 # Set plot path
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
-
+dir.create(curr.plot.path, recursive = T)
 # PCA
 norm.data.sexfilt <- RunPCA(object = norm.data.nosexfilt, verbose = FALSE)
 
