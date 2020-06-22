@@ -1,5 +1,5 @@
-# plot feature plots for a list of genes and then zip the folder
-plot.genes.zip <- function(data, gene.list, plot.path){
+# plot feature plots for a list of genes
+umap.gene.list <- function(data, gene.list, plot.path){
   plot.path = plot.path
   dir.create(plot.path, recursive = TRUE)
   
@@ -19,6 +19,6 @@ plot.genes.zip <- function(data, gene.list, plot.path){
     }
   }
   cat('\nFollowing genes not expressed in dataset:', missing.genes, '\n\n')
-  system(paste0("zip -rj ", dirname(plot.path), "/", basename(plot.path), ".zip ", plot.path))
-  unlink(plot.path, recursive=TRUE, force=TRUE)
+  # system(paste0("zip -rj ", dirname(plot.path), "/", basename(plot.path), ".zip ", plot.path))
+  # unlink(plot.path, recursive=TRUE, force=TRUE)
 }

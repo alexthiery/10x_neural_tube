@@ -625,10 +625,10 @@ hh4_genes <- unlist(lapply(hh4_genes, function(g) ifelse(paste0("Z-", g) %in% ro
 hh6_genes <- unlist(lapply(hh6_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
 
 
-# plot genes from hh4 gene list at each stage and zip
-lapply(names(seurat_stage), function(x) plot.genes.zip(seurat_stage[[x]], hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/", x, "/")))
-# plot genes from hh6 gene list at each stage and zip
-lapply(names(seurat_stage), function(x) plot.genes.zip(seurat_stage[[x]], hh6_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/", x, "/")))
+# plot genes from hh4 gene list at each stage
+lapply(names(seurat_stage), function(x) umap.gene.list(seurat_stage[[x]], hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/", x, "/")))
+# plot genes from hh6 gene list at each stage
+lapply(names(seurat_stage), function(x) umap.gene.list(seurat_stage[[x]], hh6_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/", x, "/")))
 
 # Save stage data after clustering
 saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
@@ -718,10 +718,10 @@ graphics.off()
 
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
 
-# plot genes from hh4 gene list in neural subset and zip
-plot.genes.zip(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/"))
-# plot genes from hh6 gene list in neural subset and zip
-plot.genes.zip(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/"))
+# plot genes from hh4 gene list in neural subset
+umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/"))
+# plot genes from hh6 gene list in neural subset
+umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/"))
 
 # Plot heatmap for hh4 genes in neural subset
 png(paste0(curr.plot.path, "neural.seurat_hh4genes.HM.png"), width=75, height=100, units = "cm", res = 200)
