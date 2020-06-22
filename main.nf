@@ -1,31 +1,51 @@
-#!/usr/bin/env nextflow
+//params.gtf = "~/dev/genomes/galgal6/Gallus_gallus.GRCg6a.97.gtf "
+//params.fa = "galgal6/Gallus_gallus.GRCg6a.dna.toplevel.fa"
 
-params.rFile = "$baseDir/bin/R/seurat_full.R"
-params.customFunctions = "$baseDir/bin/R/my_functions"
+params.outgenomename = "galgal6_filtered_ref_genome"
+params.outdir = "./temp_out"
 
-sample_ch = Channel.fromPath(params.sampleDir)
-extraData_ch = Channel.fromPath(params.extraData)
+gtf_ch = Channel.fromPath(params.gtf)
 
-process run_seurat_full {
-    
-    // cpus determined by params in profile configs
-    cpus 30
+process filterGTF {
 
-    // split params.rFile and keep only the extension as name for outDir
-    bits = params.rFile.take(params.rFile.lastIndexOf('.')).split("/")
+    input:
+        path gtf from gtf_ch
+    output:
+        file 'filtered_genome.gtf' into filtered_genome
 
-    publishDir "${params.outDir}/${bits[bits.length-1]}",
+    """
+    #!/bin/bash
+
+    # this step filters out genes based on the gene biotypes listed in attributes.
+    cellranger mkgtf ${gtf} filtered_genome.gtf \
+    --attribute=gene_biotype:protein_coding \
+    --attribute=gene_biotype:lncRNA \
+    """
+}
+
+fa_ch = Channel.fromPath(params.fa)
+
+process makeRef {
+    cpus = params.threads
+
+    publishDir "${params.outdir}",
         mode: "copy", overwrite: true
 
     input:
-        path samples from sample_ch
-        path extraDat from extraData_ch
+        file filt_genome from filtered_genome
+        path fa from fa_ch
 
     output:
-        path("plots")
-        path("RDS.files")
+        path("${params.outgenomename}")
 
     """
-    Rscript ${params.rFile} --myfuncs ${params.customFunctions} --extraData ${extraDat} --samples ${samples} --cores ${task.cpus} --location CAMP
+    #!/bin/bash
+
+    # make reference
+    cellranger mkref --genome=${params.outgenomename} \
+    --fasta= ${fa} \
+    --genes=${filt_genome} \
+    --nthreads=${params.threads} \
+    --memgb=${params.mem}
     """
 }
