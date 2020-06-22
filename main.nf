@@ -36,13 +36,14 @@ process makeRef {
         path fa from fa_ch
 
     output:
-        path("${params.outgenomename}")
+        path("galgal6_filtered_reference_genome")
 
     """
     #!/bin/bash
 
     # make reference
-    cellranger mkref --genome=${params.outgenomename} \
+    cellranger mkref \
+    --genome=galgal6_filtered_reference_genome \
     --fasta= ${fa} \
     --genes=${filt_genome} \
     --nthreads=${params.threads} \
