@@ -46,11 +46,11 @@ log.info projectHeader()
 --------------------------------------------------------------------------------------*/
 
 Channel
-  .fromPath(params.gtf)
+  .from(params.gtf)
   .set {ch_gtf}
 
 Channel
-  .fromPath(params.fa)
+  .from(params.fa)
   .set {ch_fa}
 
 Channel
@@ -62,7 +62,7 @@ Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    filterGTF(params.gtf)
+    filterGTF(ch_gtf)
     makeRef(filterGTF.out, ch_fa)
     cellrangerCount(ch_test_fastq, makeRef.out)
 }
