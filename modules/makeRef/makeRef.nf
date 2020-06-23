@@ -9,8 +9,8 @@ process makeRef {
         mode: "copy", overwrite: true
 
     input:
-        path(filt_genome)
-        path(fasta)
+        path("$baseDir/"filt_genome)
+        path("$baseDir/"fasta)
 
     output:
         path("reference_genome")
@@ -20,8 +20,8 @@ process makeRef {
 
     # make reference
     cellranger mkref --genome=reference_genome \
-    --fasta=${fasta} \
     --genes=${filt_genome} \
+    --fasta=${fasta} \
     --nthreads=${task.cpus}
 
     """
