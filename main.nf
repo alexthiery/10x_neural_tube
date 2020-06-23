@@ -62,7 +62,7 @@ Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    filterGTF(ch_gtf)
+    filterGTF(params.gtf)
     makeRef(filterGTF.out, ch_fa)
     cellrangerCount(ch_test_fastq, makeRef.out)
 }

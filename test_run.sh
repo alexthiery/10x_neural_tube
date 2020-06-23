@@ -17,9 +17,8 @@ nextflow run alexthiery/10x_neural_tube -r nextflow \
 --gtf /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.97.gtf \
 --fa /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.dna.toplevel.fa \
 --cpus 16 \
---ram 64 \
+--ram 64
 #--testfile /camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190524_K00102_0343_AH7MYHBBXY/fastq/THI300A1 \
--N alex.thiery@crick.ac.uk
 
 
 
