@@ -18,7 +18,7 @@ Pipeline params
 params.outgenomename = "galgal6_filtered_ref_genome"
 params.outdir = "./temp_out"
 
-testFastq = [['THI300A1', 'cellranger_count_hh4', "$baseDir/testData/THI300A1"]]
+testFastq = [['THI300A1', 'cellranger_count_hh4', params.testfile]]
 
 // Check params
 if (!params.gtf) {
