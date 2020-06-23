@@ -22,8 +22,7 @@ process makeRef {
     cellranger mkref --genome=reference_genome \
     --fasta=${fasta} \
     --genes=${filt_genome} \
-    --nthreads=${params.cpus} \
-    --memgb=${params.ram}
+    --nthreads=${task.cpus}
 
     """
 }

@@ -14,20 +14,28 @@ def projectHeader() {
     c_purple = params.monochrome_logs ? '' : "\033[0;35m";
     c_cyan = params.monochrome_logs ? '' : "\033[0;36m";
     c_white = params.monochrome_logs ? '' : "\033[0;37m";
+    c_magenta = params.monochrome_logs ? '' : "\033[0;95m";
 
 return """  -${c_dim}-----------------------------------------------------------------${c_reset}-
-${c_blue}                      __   ___ ${c_reset}
-${c_blue}                     /_ | / _ \\ ${c_reset}
-${c_blue}                      | || | | |__  __ ${c_reset}
-${c_blue}                      | || | | |\\ \\/ / ${c_reset}
-${c_blue}  _______  _      _   | || |_| | >  <    ___    ___  ___    ___ ${c_reset}
-${c_blue} |__   __|| |    (_)  |_| \\___/ /_/\\_\\  |__ \\  / _ \\|__ \\  / _ \\ ${c_reset}
+${c_magenta}                      __   ___ ${c_reset}
+${c_magenta}                     /_ | / _ \\ ${c_reset}
+${c_magenta}                      | || | | |__  __ ${c_reset}
+${c_magenta}                      | || | | |\\ \\/ / ${c_reset}
+${c_blue}  _______  _    ${c_reset}${c_green}  _  ${c_reset}${c_magenta} | || |_| | >  < ${c_reset}${c_blue}   ___    ___  ___    ___ ${c_reset}
+${c_blue} |__   __|| |   ${c_reset}${c_green} (_)  ${c_reset}${c_magenta}|_| \\___/ /_/\\_\\ ${c_reset}${c_blue} |__ \\  / _ \\|__ \\  / _ \\ ${c_reset}
 ${c_blue}    | |   | |__   _   ___  _ __  _   _     ) || | | |  ) || | | | ${c_reset}
 ${c_blue}    | |   | '_ \\ | | / _ \\| '__|| | | |   / / | | | | / / | | | | ${c_reset}
 ${c_blue}    | |   | | | || ||  __/| |   | |_| |  / /_ | |_| |/ /_ | |_| | ${c_reset}
 ${c_blue}    |_|   |_| |_||_| \\___||_|    \\__, | |____| \\___/|____| \\___/ ${c_reset}
 ${c_blue}                                  __/ | ${c_reset}
 ${c_blue}                                 |___/ ${c_reset}
+${c_magenta}                        _       _ ${c_reset}
+${c_magenta}                       (_)     (_) ${c_reset}
+${c_magenta}                           / ${c_reset}
+${c_magenta}                          (___ ${c_reset}
+
+${c_magenta}                         \\_____/ ${c_reset}
+
 -${c_dim}---------------------------------------------------------------${c_reset}-
     """.stripIndent()
 }

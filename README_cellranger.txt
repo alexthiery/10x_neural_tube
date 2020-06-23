@@ -53,7 +53,7 @@ cellranger mkref --genome=galgal6_filtered_reference_genome \
 
 
 
-Now that the reference genome has been made we can move onto alligning reads from the sequencer to our genome and generating count matrices.
+Now that the reference genome has been made we can move onto aligning reads from the sequencer to our genome and generating count matrices.
 
 The first step of the pipeline is to run cellranger makefastq which demultiplexes the data. This has already been done by the crick, and the output is fastq files for each of the input samples. However, in the case of our sequencing, the samples were sequenced twice - once across two seperate flowcells. This means that the data from the two flowcells needs to be combined. This is done during the cellranger count step.
 
