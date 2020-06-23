@@ -46,15 +46,15 @@ log.info projectHeader()
 --------------------------------------------------------------------------------------*/
 
 Channel
-  .from(params.gtf)
+  .fromPath(params.gtf)
   .set {ch_gtf}
 
 Channel
-  .from(params.fa)
+  .fromPath(params.fa)
   .set {ch_fa}
 
 Channel
-  .from(testFastq)
+  .fromPath(testFastq)
   .set {ch_test_fastq}
 
 /*-----------------------------------------------------------------------------------------------------------------------------
