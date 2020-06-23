@@ -9,8 +9,8 @@ process makeRef {
         mode: "copy", overwrite: true
 
     input:
-        path("$baseDir/"filt_genome)
-        path("$baseDir/"fasta)
+        path(filt_genome)
+        path(fasta)
 
     output:
         path("reference_genome")
