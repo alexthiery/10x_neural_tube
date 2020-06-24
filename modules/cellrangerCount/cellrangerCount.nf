@@ -9,7 +9,7 @@ process cellrangerCount {
         mode: "copy", overwrite: true
 
     input:
-        tuple val(sample_id), val(sample_name), path(fastq1), path(fastq2)
+        tuple val(sample_id), val(sample_name), path(fastq1)
         path(reference_genome)
 
     output:
