@@ -55,9 +55,9 @@ names = names1
 
 def index = [
     ['THI300A1', 'cellranger_count_hh4'],
-    ['THI300A3', 'cellranger_count_hh4'],
-    ['THI300A4', 'cellranger_count_hh4'],
-    ['THI300A6', 'cellranger_count_hh4']
+    ['THI300A3', 'cellranger_count_ss4'],
+    ['THI300A4', 'cellranger_count_ss8'],
+    ['THI300A6', 'cellranger_count_hh6']
     ]
 
 def testFastq = []
