@@ -13,7 +13,7 @@ nextflow pull alexthiery/10x_neural_tube -r nextflow -hub github
 nextflow run alexthiery/10x_neural_tube -r nextflow \
 -hub github \
 -profile crick \
---folder1 /camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190524_K00102_0343_AH7MYHBBXY/fastq \
+--metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv
 --gtf /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.97.gtf \
 --fa /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.dna.toplevel.fa \
 --cpus 16 \

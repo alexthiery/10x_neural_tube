@@ -18,8 +18,6 @@ Pipeline params
 params.outgenomename = "galgal6_filtered_ref_genome"
 params.outdir = "./temp_out"
 
-testFastq = [['THI300A1', 'cellranger_count_hh4', params.testfile]]
-
 // Check params
 if (!params.gtf) {
     exit 1, "No gtf file provided"
@@ -35,36 +33,6 @@ if (!params.ram) {
 }
 
 
-
-/*-----------------------------------------------------------------------------------------------------------------------------
-temp
--------------------------------------------------------------------------------------------------------------------------------*/
-
-
-def names1 = []
-new File(params.folder1).eachDir() { file->
-    names1 << "$baseDir/" + params.folder1.split('/')[-1] + "/" + file.getName()   
-}
-
-// def names2 = []
-// new File(params.folder2).eachDir() { file->
-//     names2 << "$baseDir/" + params.folder2.split('/')[-1] + "/" + file.getName()  
-// }
-
-names = names1
-
-def index = [
-    ['THI300A1', 'cellranger_count_hh4'],
-    ['THI300A3', 'cellranger_count_ss4'],
-    ['THI300A4', 'cellranger_count_ss8'],
-    ['THI300A6', 'cellranger_count_hh6']
-    ]
-
-def testFastq = []
-for (item in index) {
-    testFastq << item + names.findAll{it -> it.contains(item[0])}
-}
-
 /*-----------------------------------------------------------------------------------------------------------------------------
 Init
 -------------------------------------------------------------------------------------------------------------------------------*/
@@ -77,24 +45,31 @@ log.info projectHeader()
 --------------------------------------------------------------------------------------*/
 
 Channel
-  .from(params.gtf)
-  .set {ch_gtf}
+    .from( params.gtf )
+    .set {ch_gtf}
 
 Channel
-  .from(params.fa)
-  .set {ch_fa}
+    .from( params.fa )
+    .set {ch_fa}
 
 Channel
-  .from(testFastq)
-  .set {ch_test_fastq}
+    .from( testFastq )
+    .set { ch_test_fastq }
+
+Channel
+    .fromPath( params.metadata )
+    .splitCsv(header: ['sample_id', 'sample_name', 'dir1', 'dir2'], skip: 1 )
+    .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
+    .set { ch_fastq }
+
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    filterGTF(ch_gtf)
-    makeRef(filterGTF.out, ch_fa)
-    cellrangerCount(ch_test_fastq, makeRef.out)
+    filterGTF( ch_gtf )
+    makeRef( filterGTF.out, ch_fa )
+    cellrangerCount( ch_fastq, makeRef.out )
 }
 

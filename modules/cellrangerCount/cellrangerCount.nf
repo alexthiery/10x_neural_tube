@@ -2,6 +2,7 @@
 
 nextflow.preview.dsl=2
 
+
 process cellrangerCount {
     cpus = params.cpus
 
@@ -9,7 +10,7 @@ process cellrangerCount {
         mode: "copy", overwrite: true
 
     input:
-        tuple val(sample_id), val(sample_name), path(fastq1)
+        tuple val(sample_id), val(sample_name), path('dir1/*'), path('dir2/*')
         path(reference_genome)
 
     output:
@@ -17,7 +18,7 @@ process cellrangerCount {
 
     """
     cellranger count --id=${sample_name} \
-    --fastqs=${fastq1}, ${fastq2} \
+    --fastqs=dir1/*,dir2/* \
     --sample=${sample_id} \
     --transcriptome=${reference_genome}
     """
