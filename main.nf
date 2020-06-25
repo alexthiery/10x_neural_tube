@@ -53,10 +53,6 @@ Channel
     .set {ch_fa}
 
 Channel
-    .from( testFastq )
-    .set { ch_test_fastq }
-
-Channel
     .fromPath( params.metadata )
     .splitCsv(header: ['sample_id', 'sample_name', 'dir1', 'dir2'], skip: 1 )
     .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
