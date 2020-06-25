@@ -18,7 +18,7 @@ process cellrangerCount {
 
     """
     cellranger count --id=${sample_name} \
-    --fastqs="$baseDir/dir1/${sample_id}","$baseDir/dir2/${sample_id}" \
+    --fastqs="dir1/${sample_id}","dir2/${sample_id}" \
     --sample=${sample_id} \
     --transcriptome=${reference_genome}
     """
