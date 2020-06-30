@@ -63,9 +63,6 @@ Channel
 Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
-reference_genome = params.ref
-
-
 workflow {
     filterGTF( ch_gtf )
     makeRef( filterGTF.out, ch_fa )
