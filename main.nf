@@ -10,7 +10,7 @@ include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
 include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
 include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
 include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
-
+// include renameFeatures from "$baseDir/renameFeatures.nf"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Pipeline params
@@ -58,6 +58,16 @@ Channel
     .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
     .set { ch_fastq }
 
+// Channel
+//     .fromPath( params.sampleDir )
+//     .set { ch_features }
+
+// Channel
+//     .fromPath(params.extraData)
+//     .set { ch_extraData }
+
+// params.rFile = "$baseDir/bin/R/seurat_full.R"
+// params.customFunctions = "$baseDir/bin/R/my_functions"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Main workflow
@@ -66,6 +76,7 @@ Main workflow
 workflow {
     filterGTF( ch_gtf )
     makeRef( filterGTF.out, ch_fa )
-    cellrangerCount( ch_fastq, makeRef.out )
+    cellrangerCount( ch_fastq.combine(makeRef.out) )
+    // renameFeatures( cellrangerCount.out, filterGTF.out )
+    // runR( ch_extraData, renameFeatures.out )
 }
-

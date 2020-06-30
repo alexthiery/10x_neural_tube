@@ -5,9 +5,6 @@ nextflow.preview.dsl=2
 process makeRef {
     label 'mid_memory'
 
-    publishDir "${params.outdir}",
-        mode: "copy", overwrite: true
-
     input:
         path(filt_genome)
         path(fasta)

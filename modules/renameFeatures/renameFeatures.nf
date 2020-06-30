@@ -2,27 +2,18 @@
 
 nextflow.preview.dsl=2
 
-Channel
-    .fromPath(params.featuresFile)
-    .set {ch_feat}
-
-Channel
-    .fromPath(params.gtf)
-    .set {ch_gtf}
-
 process renameFeatures {
 
     publishDir "${params.outdir}",
     mode: "copy", overwrite: true
 
     input:
-        path(featuresFile)
+        path(cellrangerOut)
         path(gtf)
 
     output:
-        path('filt_feat.tsv.gz')
+        path(cellrangerOut)
     
-
     """
     #!/usr/bin/env python
 
@@ -66,17 +57,9 @@ process renameFeatures {
                 new_feat += line
 
         # overwrite features file with edited MT- label features
-        with gzip.open('filt_feat.tsv.gz', 'wt') as zipfile:
+        with gzip.open(feat, 'wt') as zipfile:
             zipfile.write(new_feat)
 
-    matrix_edit(filt_gtf="${gtf}", feat="${featuresFile}")
+    matrix_edit(filt_gtf="${gtf}", feat="${cellrangerOut}/features.tsv.gz")
     """
 }
-
-
-
-workflow {
-    renameFeatures(ch_feat, ch_gtf)
-}
-
-
