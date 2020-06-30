@@ -6,11 +6,10 @@ params.rFile = "$baseDir/bin/R/seurat_full.R"
 params.extraData = "$baseDir/bin/network_genes"
 params.customFunctions = "$baseDir/bin/R/my_functions"
 
-
 Channel
     .fromPath(params.rFile)
     .set { ch_rFile }
 
 workflow {
-    runR( ch_rFile, params.customFunctions, params.extraData, params.samples )
+    runR( ch_rFil )
 }

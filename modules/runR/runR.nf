@@ -11,15 +11,12 @@ process runR {
 
     input:
         path(rFile)
-        path(customFunctions)
-        path(extraDat)
-        path(samples)
 
     output:
         path("plots")
         path("RDS.files")
 
     """
-    Rscript ${rFile} --myfuncs ${customFunctions} --extraData ${extraDat} --samples ${samples} --cores ${task.cpus} --location local
+    Rscript ${rFile} --myfuncs ${params.customFunctions} --extraData ${params.extraDat} --samples ${params.samples} --cores ${task.cpus} --location local
     """
 }
