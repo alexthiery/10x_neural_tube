@@ -17,12 +17,11 @@ process cellrangerCount {
         path("sample_name")
 
     """
+    hostname
+    ulimit
     cellranger count --id=${sample_name} \
     --fastqs="dir1/${sample_id}","dir2/${sample_id}" \
     --sample=${sample_id} \
-    --transcriptome=${reference_genome} \
-    --jobmode=local \
-    --localcores=${params.threads} \
-    --localmem=${params.mem}
+    --transcriptome=${reference_genome}
     """
 }
