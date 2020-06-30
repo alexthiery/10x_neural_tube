@@ -63,10 +63,13 @@ Channel
 Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
+reference_genome = params.ref
+
+
 workflow {
     // filterGTF( ch_gtf )
     // makeRef( filterGTF.out, ch_fa )
     // cellrangerCount( ch_fastq, makeRef.out )
-    cellrangerCount( ch_fastq, params.ref )
+    cellrangerCount( ch_fastq, reference_genome )
 }
 
