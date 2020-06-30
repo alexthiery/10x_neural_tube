@@ -4,8 +4,7 @@ nextflow.preview.dsl=2
 
 
 process cellrangerCount {
-    cpus = params.threads
-    memory = params.mem
+    label 'high_memory'
 
     publishDir "${params.outdir}",
         mode: "copy", overwrite: true
@@ -20,8 +19,6 @@ process cellrangerCount {
     """
     #!/bin/bash
     
-    hostname
-    ulimit
     cellranger count --id=${sample_name} \
     --fastqs="dir1/${sample_id}","dir2/${sample_id}" \
     --sample=${sample_id} \

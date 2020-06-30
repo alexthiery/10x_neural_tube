@@ -2,34 +2,45 @@
 
 nextflow.preview.dsl=2
 
+/*-----------------------------------------------------------------------------------------------------------------------------
+Include modules
+-------------------------------------------------------------------------------------------------------------------------------*/
 
-def names1 = []
-new File(params.folder1).eachDir() { file->
-    names1 << "$baseDir/" + params.folder1.split('/')[-1] + "/" + file.getName()   
+include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
+include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
+
+
+/*-----------------------------------------------------------------------------------------------------------------------------
+Pipeline params
+-------------------------------------------------------------------------------------------------------------------------------*/
+params.outgenomename = "galgal6_filtered_ref_genome"
+params.outdir = "./temp_out"
+
+
+/*-----------------------------------------------------------------------------------------------------------------------------
+Init
+-------------------------------------------------------------------------------------------------------------------------------*/
+// Show banner
+log.info projectHeader()
+
+
+/*------------------------------------------------------------------------------------*/
+/* Define input channels
+--------------------------------------------------------------------------------------*/
+
+Channel
+    .fromPath( params.metadata )
+    .splitCsv(header: ['sample_id', 'sample_name', 'dir1', 'dir2'], skip: 1 )
+    .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
+    .set { ch_fastq }
+
+
+/*-----------------------------------------------------------------------------------------------------------------------------
+Main workflow
+-------------------------------------------------------------------------------------------------------------------------------*/
+
+workflow {
+    cellrangerCount( ch_fastq, params.ref )
 }
-
-def names2 = []
-new File(params.folder2).eachDir() { file->
-    names2 << "$baseDir/" + params.folder2.split('/')[-1] + "/" + file.getName()  
-}
-
-names = names1 + names2
-
-def index = [
-    ['THI300A1', 'cellranger_count_hh4'],
-    ['THI300A3', 'cellranger_count_hh4'],
-    ['THI300A4', 'cellranger_count_hh4'],
-    ['THI300A6', 'cellranger_count_hh4']
-    ]
-
-def testFastq = []
-for (item in index) {
-    testFastq << item + names.findAll{it -> it.contains(item[0])}
-}
-
-print testFastq
-
-
-
 
 

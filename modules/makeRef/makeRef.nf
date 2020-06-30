@@ -3,7 +3,7 @@
 nextflow.preview.dsl=2
 
 process makeRef {
-    cpus = params.cpus
+    label 'mid_memory'
 
     publishDir "${params.outdir}",
         mode: "copy", overwrite: true

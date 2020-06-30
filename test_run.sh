@@ -1,6 +1,4 @@
 #!/bin/bash
-#SBATCH -t 12:00:00
-#SBATCH --ntasks=1 --cpus-per-task=16
 #SBATCH --job-name=10x
 #SBATCH --mail-type=ALL,ARRAY_TASKS
 #SBATCH --mail-user=alex.thiery@crick.ac.uk
@@ -21,18 +19,19 @@ nextflow run alexthiery/10x_neural_tube -r nextflow \
 --metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv \
 --gtf /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.97.gtf \
 --fa /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.dna.toplevel.fa \
---cpus 16 \
---ram 64 \
--with-report report.html \
 -N alex.thiery@crick.ac.uk
+
 
 # nextflow run alexthiery/10x_neural_tube -r nextflow \
 # -hub github \
-# -profile docker \
-# --folder1 /Users/alex/dev/repos/10x_neural_tube/nf-testData/cellrangerCount \
-# --folder2 /Users/alex/dev/repos/10x_neural_tube/nf-testData/cellrangerCount2 \
-# --gtf /Users/alex/dev/genomes/galgal6/Gallus_gallus.GRCg6a.97.gtf \
-# --fa /Users/alex/dev/genomes/galgal6//Gallus_gallus.GRCg6a.dna.toplevel.fa \
-# -with-report report.html \
+# -profile crick \
+# --metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv \
+# --ref /camp/svc/scratch/luscomben/thierya/10x_neural_tube/null/reference_genome \
 # -N alex.thiery@crick.ac.uk
 
+# nextflow run test.nf \
+# -with-docker alexthiery/10x_neural_tube:dev \
+# --metadata /Users/alex/dev/repos/10x_neural_tube/sampleInfo.csv \
+# --ref /Users/alex/dev/repos/10x_neural_tube/nf-testData/ \
+# --cpus 4 \
+# --ram 16

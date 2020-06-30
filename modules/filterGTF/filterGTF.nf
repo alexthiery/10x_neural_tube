@@ -3,6 +3,7 @@
 nextflow.preview.dsl=2
 
 process filterGTF {
+    label 'low_memory'
 
     input:
         path(gtf)
