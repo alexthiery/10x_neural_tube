@@ -7,8 +7,8 @@ Include modules
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
-include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
-include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
+// include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
+// include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
 include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
 
 
@@ -44,13 +44,13 @@ log.info projectHeader()
 /* Define input channels
 --------------------------------------------------------------------------------------*/
 
-Channel
-    .from( params.gtf )
-    .set {ch_gtf}
+// Channel
+//     .from( params.gtf )
+//     .set {ch_gtf}
 
-Channel
-    .from( params.fa )
-    .set {ch_fa}
+// Channel
+//     .from( params.fa )
+//     .set {ch_fa}
 
 Channel
     .fromPath( params.metadata )
@@ -64,9 +64,9 @@ Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    filterGTF( ch_gtf )
-    makeRef( filterGTF.out, ch_fa )
-    cellrangerCount( ch_fastq, makeRef.out )
-    // cellrangerCount( ch_fastq, params.ref )
+    // filterGTF( ch_gtf )
+    // makeRef( filterGTF.out, ch_fa )
+    // cellrangerCount( ch_fastq, makeRef.out )
+    cellrangerCount( ch_fastq, params.ref )
 }
 
