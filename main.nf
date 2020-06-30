@@ -7,8 +7,8 @@ Include modules
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
-include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
-include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
+// include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
+// include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
 include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
 
 
@@ -18,19 +18,19 @@ Pipeline params
 params.outgenomename = "galgal6_filtered_ref_genome"
 params.outdir = "./temp_out"
 
-// Check params
-if (!params.gtf) {
-    exit 1, "No gtf file provided"
-}
-if (!params.fa) {
-    exit 1, "No fa file provided"
-}
-if (!params.cpus) {
-    params.cpus = 2
-}
-if (!params.ram) {
-    params.ram = 4
-}
+// // Check params
+// if (!params.gtf) {
+//     exit 1, "No gtf file provided"
+// }
+// if (!params.fa) {
+//     exit 1, "No fa file provided"
+// }
+// if (!params.cpus) {
+//     params.cpus = 2
+// }
+// if (!params.ram) {
+//     params.ram = 4
+// }
 
 
 /*-----------------------------------------------------------------------------------------------------------------------------
@@ -44,13 +44,13 @@ log.info projectHeader()
 /* Define input channels
 --------------------------------------------------------------------------------------*/
 
-Channel
-    .from( params.gtf )
-    .set {ch_gtf}
+// Channel
+//     .from( params.gtf )
+//     .set {ch_gtf}
 
-Channel
-    .from( params.fa )
-    .set {ch_fa}
+// Channel
+//     .from( params.fa )
+//     .set {ch_fa}
 
 Channel
     .fromPath( params.metadata )
@@ -64,8 +64,9 @@ Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    filterGTF( ch_gtf )
-    makeRef( filterGTF.out, ch_fa )
-    cellrangerCount( ch_fastq, makeRef.out )
+    // filterGTF( ch_gtf )
+    // makeRef( filterGTF.out, ch_fa )
+    // cellrangerCount( ch_fastq, makeRef.out )
+    cellrangerCount( ch_fastq, params.ref )
 }
 
