@@ -5,6 +5,7 @@ nextflow.preview.dsl=2
 
 process cellrangerCount {
     cpus = params.threads
+    memory = params.mem
 
     publishDir "${params.outdir}",
         mode: "copy", overwrite: true
