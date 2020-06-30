@@ -1,4 +1,9 @@
-#!/bin/sh
+#!/bin/bash
+#SBATCH -t 12:00:00
+#SBATCH --ntasks=1 --cpus-per-task=16
+#SBATCH --job-name=10x
+#SBATCH --mail-type=ALL,ARRAY_TASKS
+#SBATCH --mail-user=alex.thiery@crick.ac.uk
 
 export TERM=xterm
 
@@ -13,7 +18,7 @@ nextflow pull alexthiery/10x_neural_tube -r nextflow -hub github
 nextflow run alexthiery/10x_neural_tube -r nextflow \
 -hub github \
 -profile crick \
---metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv
+--metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv \
 --gtf /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.97.gtf \
 --fa /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.dna.toplevel.fa \
 --cpus 16 \
