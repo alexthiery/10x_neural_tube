@@ -18,6 +18,8 @@ process cellrangerCount {
         path("sample_name")
 
     """
+    #!/bin/bash
+    
     hostname
     ulimit
     cellranger count --id=${sample_name} \
