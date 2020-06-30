@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-process run_seurat_full {
+process runR {
     label 'high_memory'
 
     // split params.rFile and keep only the extension as name for outDir
@@ -10,14 +10,16 @@ process run_seurat_full {
         mode: "copy", overwrite: true
 
     input:
-        path samples from sample_ch
-        path extraDat from extraData_ch
+        path(rFile)
+        path(customFunctions)
+        path(extraDat)
+        path(samples)
 
     output:
         path("plots")
         path("RDS.files")
 
     """
-    Rscript ${params.rFile} --myfuncs ${params.customFunctions} --extraData ${extraDat} --samples ${samples} --cores ${task.cpus} --location CAMP
+    Rscript ${rFile} --myfuncs ${customFunctions} --extraData ${extraDat} --samples ${samples} --cores ${task.cpus} --location local
     """
 }
