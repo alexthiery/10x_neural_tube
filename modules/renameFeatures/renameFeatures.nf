@@ -15,7 +15,7 @@ process renameFeatures {
     
     """
     #!/bin/bash
-    echo $cellrangerOut
+    head ${cellrangerOut}/outs/filtered_feature_bc_matrix/features.tsv.gz
     """
  
 }
