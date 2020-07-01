@@ -77,6 +77,6 @@ workflow {
     filterGTF( ch_gtf )
     makeRef( filterGTF.out, ch_fa )
     cellrangerCount( ch_fastq.combine(makeRef.out) )
-    renameFeatures( cellrangerCount.out, filterGTF.out )
+    renameFeatures( cellrangerCount.out.combine(filterGTF.out) )
     // runR( ch_extraData, renameFeatures.out )
 }
