@@ -11,5 +11,5 @@ Channel
     .set { ch_rFile }
 
 workflow {
-    runR( ch_rFil )
+    runR( ch_rFile, params.rFile, params.extraData, params.customFunctions )
 }
