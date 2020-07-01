@@ -60,6 +60,6 @@ process renameFeatures {
         with gzip.open(feat, 'wt') as zipfile:
             zipfile.write(new_feat)
 
-    matrix_edit(filt_gtf="${gtf}", feat="${cellrangerOut}/features.tsv.gz")
+    matrix_edit(filt_gtf="${gtf}", feat="${cellrangerOut}/outs/features.tsv.gz")
     """
 }
