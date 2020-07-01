@@ -13,7 +13,7 @@ process cellrangerCount {
         tuple val(sample_id), val(sample_name), path('dir1/*'), path('dir2/*'), path(reference_genome)
         
     output:
-        path("${sample_name[0]}/outs/filtered_feature_bc_matrix")
+        path("${sample_name}/outs/filtered_feature_bc_matrix")
 
     """
     #!/bin/bash
