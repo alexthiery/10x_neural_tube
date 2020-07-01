@@ -10,7 +10,7 @@ include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
 include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
 include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
 include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
-include renameFeatures from "$baseDir/renameFeatures.nf"
+include renameFeatures from "$baseDir/modules/renameFeatures/renameFeatures.nf"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Pipeline params
