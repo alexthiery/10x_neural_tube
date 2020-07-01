@@ -20,6 +20,7 @@ nextflow run alexthiery/10x_neural_tube -r nextflow \
 --metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv \
 --gtf /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.97.gtf \
 --fa /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.dna.toplevel.fa \
+-resume \
 -N alex.thiery@crick.ac.uk
 
 
