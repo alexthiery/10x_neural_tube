@@ -1,9 +1,10 @@
 #!/usr/bin/env nextflow
 
 nextflow.preview.dsl=2
+
 process renameFeatures {
 
-    publishDir "${params.outdir}/counts/${sample_name}",
+    publishDir "${params.outDir}/counts/${sample_name}",
     mode: "copy", overwrite: true
 
     input:
