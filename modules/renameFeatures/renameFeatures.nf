@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 nextflow.preview.dsl=2
-
+params.outdir = "./output2"
 process renameFeatures {
 
     publishDir "${params.outdir}",
@@ -15,6 +15,7 @@ process renameFeatures {
     
     """
     #!/usr/bin/env python
+    # -*- coding: utf-8 -*-
 
     import re
     import gzip
