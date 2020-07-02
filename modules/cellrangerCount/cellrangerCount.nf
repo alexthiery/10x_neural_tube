@@ -4,7 +4,8 @@ nextflow.preview.dsl=2
 
 
 process cellrangerCount {
-    publishDir "${params.outDir}/cellrangerCounts/${sample_name}",
+    publishDir "${params.outDir}/cellrangerCounts",
+    pattern: ".gz",
     mode: "copy", overwrite: true
 
     label 'high_memory'
