@@ -3,19 +3,11 @@
 nextflow.preview.dsl=2
 
 /*-----------------------------------------------------------------------------------------------------------------------------
-Include modules
--------------------------------------------------------------------------------------------------------------------------------*/
-
-include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
-include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
-include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
-include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
-include renameFeatures from "$baseDir/modules/renameFeatures/renameFeatures.nf"
-
-/*-----------------------------------------------------------------------------------------------------------------------------
 Pipeline params
 -------------------------------------------------------------------------------------------------------------------------------*/
-
+params.rFile = "$baseDir/bin/R/seurat_full.R"
+params.customFunctions = "$baseDir/bin/R/my_functions"
+params.extraData = "$baseDir/bin/network_genes"
 // // Check params
 // if (!params.gtf) {
 //     exit 1, "No gtf file provided"
@@ -30,13 +22,21 @@ Pipeline params
 //     params.ram = 4
 // }
 
+/*-----------------------------------------------------------------------------------------------------------------------------
+Include modules
+-------------------------------------------------------------------------------------------------------------------------------*/
+
+include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
+include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
+include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
+include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
+include renameFeatures from "$baseDir/modules/renameFeatures/renameFeatures.nf"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Init
 -------------------------------------------------------------------------------------------------------------------------------*/
 // Show banner
 log.info projectHeader()
-
 
 /*------------------------------------------------------------------------------------*/
 /* Define input channels
@@ -56,12 +56,9 @@ Channel
     .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
     .set { ch_fastq }
 
-// Channel
-//     .fromPath(params.extraData)
-//     .set { ch_extraData }
-
-// params.rFile = "$baseDir/bin/R/seurat_full.R"
-// params.customFunctions = "$baseDir/bin/R/my_functions"
+Channel
+    .fromPath(params.rFile)
+    .set { ch_rFile }
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Main workflow
@@ -72,5 +69,5 @@ workflow {
     makeRef( filterGTF.out, ch_fa )
     cellrangerCount( ch_fastq.combine(makeRef.out) )
     renameFeatures( cellrangerCount.out.sampleName.combine(filterGTF.out), cellrangerCount.out.countFiles )
-    // runR( ch_extraData, renameFeatures.out )
+    runR( renameFeatures.out.collect() )
 }
