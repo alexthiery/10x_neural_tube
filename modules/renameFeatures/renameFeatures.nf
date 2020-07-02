@@ -8,7 +8,8 @@ process renameFeatures {
     mode: "copy", overwrite: true
 
     input:
-        tuple val(sample_name), path(gtf), path(cellrangerOut)
+        tuple val(sample_name), path(gtf)
+        path(cellrangerOut)
 
     output:
         path("*.gz")
