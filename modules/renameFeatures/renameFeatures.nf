@@ -4,11 +4,11 @@ nextflow.preview.dsl=2
 params.outdir = "./output2"
 process renameFeatures {
 
-    publishDir "${params.outdir}",
+    publishDir "${params.outdir}/${sample_id}",
     mode: "copy", overwrite: true
 
     input:
-        tuple path(cellrangerOut), path(gtf)
+        tuple val(sample_id), path(cellrangerOut), path(gtf)
 
     output:
         path(cellrangerOut)
