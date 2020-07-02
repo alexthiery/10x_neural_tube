@@ -25,6 +25,8 @@ process cellrangerCount {
     --sample=${sample_id} \
     --transcriptome=${reference_genome}
 
-    mv cellrangerOut_${sample_name}/outs/filtered_feature_bc_matrix/*.gz ${sample_name}
+    mkdir "$baseDir/${sample_name}"
+
+    mv cellrangerOut_${sample_name}/outs/filtered_feature_bc_matrix/*.gz "$baseDir/${sample_name}"
     """
 }
