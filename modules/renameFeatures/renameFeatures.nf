@@ -5,6 +5,7 @@ params.outdir = "./output2"
 process renameFeatures {
 
     publishDir "${params.outdir}/${sample_id}",
+    saveAs: {"${file(it).getSimpleName()}"},
     mode: "copy", overwrite: true
 
     input:
