@@ -57,10 +57,6 @@ Channel
     .set { ch_fastq }
 
 // Channel
-//     .fromPath( params.sampleDir )
-//     .set { ch_features }
-
-// Channel
 //     .fromPath(params.extraData)
 //     .set { ch_extraData }
 
@@ -72,10 +68,6 @@ Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    // set workflow params
-    params.outdir = "./results"
-
-    // workflow
     filterGTF( ch_gtf )
     makeRef( filterGTF.out, ch_fa )
     cellrangerCount( ch_fastq.combine(makeRef.out) )

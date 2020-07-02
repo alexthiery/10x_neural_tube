@@ -4,7 +4,7 @@ nextflow.preview.dsl=2
 
 process renameFeatures {
 
-    publishDir "${params.outDir}/counts/${sample_name}",
+    publishDir "${params.outDir}/cellrangerCounts_renamed/${sample_name}",
     mode: "copy", overwrite: true
 
     input:
