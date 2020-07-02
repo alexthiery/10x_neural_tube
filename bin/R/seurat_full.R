@@ -14,37 +14,47 @@ spec = matrix(c(
 opt = getopt(spec)
 
 # set default location
-if(is.null(opt$location)){opt$location = "docker"}
+if(length(opt$ARGS) == 0){
+  cat('No command line arguments provided, user defaults paths are set for running interactively in Rstudio on docker')
+  opt$runtype = "user"
+} else {
+  if(tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
+    stop("runtype must be either 'user' or 'nextflow'")
+  }
+}
 
-if (opt$location == "docker"){
-  cat('Script running in Rstudio on docker\n')
-  
+####################################################################
+# user paths need to be defined here in order to run interactively #
+####################################################################
+if (opt$runtype == "user"){
   sapply(list.files('./bin/R/my_functions/', full.names = T), source)
   
-  plot.path = "./results/plots/1_seurat_full/"
-  rds.path = "./results/RDS.files/1_seurat_full/"
+  plot.path = "./results/R/plots/"
+  rds.path = "./results/R/RDS.files/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
-  # Read in favourite genes
-  network_genes <- list.files("./data/network_genes/", full.names = T)
-  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
-  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+  ##################################
+  # set path where data is located #
+  ##################################
+  data_path = "./results/cellrangerCounts"
   
-  # read all files from folder and keep only those from chr_edit
-  files <- Filter(function(x) grepl("chr_edit", x), list.files("./data/cellranger_output", recursive = T, full.names = T))
-  
+  # read all files from dir
+  files <- list.files(data_path, recursive = T, full.names = T)
   # remove file suffix
   file.path <- dirname(files)[!duplicated(dirname(files))]
-  
   # make dataframe with tissue matching directory
-  tissue = c("hh4", "hh6", "4ss", "8ss")
+  tissue = c("hh4", "hh6", "ss4", "ss8")
   matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
-  sample.paths$tissue = c("hh4", "hh6", "ss4", "ss8")
   
-} else if (opt$location == "CAMP"){
-  cat('data loaded from CAMP\n')
+  # Read in favourite genes
+  network_genes <- list.files("./bin/network_genes/", full.names = T)
+  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
+  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+
+} else if (opt$runtype == "nextflow"){
+  cat('pipeling running through nextflow\n')
   
   sapply(list.files(opt$myfuncs, full.names = T), source)
   
@@ -54,20 +64,15 @@ if (opt$location == "docker"){
   dir.create(rds.path, recursive = T)
   
   # read all files from folder and keep only those from chr_edit
-  files <- Filter(function(x) grepl("chr_edit", x), list.files(opt$samples, recursive = T, full.names = T))
-  
+  files <- list.files(opt$samples, recursive = T, full.names = T)
   # remove file suffix
   file.path <- dirname(files)[!duplicated(dirname(files))]
-  
   # make dataframe with tissue matching directory
-  tissue = c("hh4", "hh6", "4ss", "8ss")
+  tissue = c("hh4", "hh6", "ss4", "ss8")
   matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
-  sample.paths$tissue = c("hh4", "hh6", "ss4", "ss8")
   
-
   # Read in favourite genes
-
   network_genes <- list.files(opt$extraData, full.names = T)
   hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
   hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
@@ -78,7 +83,7 @@ if (opt$location == "docker"){
   
   cat(paste0("script ran with ", ncores, " cores\n"))
   
-} else {stop("Script can only be ran locally or on CAMP")}
+}
 
 # Load packages - packages are stored within renv in the repository
 reticulate::use_python('/usr/bin/python3.7')
