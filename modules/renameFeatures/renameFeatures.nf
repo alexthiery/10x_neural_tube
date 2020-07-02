@@ -4,15 +4,14 @@ nextflow.preview.dsl=2
 params.outdir = "./output2"
 process renameFeatures {
 
-    publishDir "${params.outdir}/${sample_id}",
-    saveAs: {"${file(it).getSimpleName()}"},
+    publishDir "${params.outdir}/${sample_name}",
     mode: "copy", overwrite: true
 
     input:
-        tuple val(sample_id), path(cellrangerOut), path(gtf)
+        tuple val(sample_name), path(gtf), path(cellrangerOut)
 
     output:
-        file(cellrangerOut)
+        path("*.gz")
     
     """
     #!/usr/bin/env python
@@ -61,7 +60,7 @@ process renameFeatures {
         with gzip.open(feat, 'wt') as zipfile:
             zipfile.write(new_feat)
 
-    matrix_edit(filt_gtf="${gtf}", feat="${cellrangerOut}/features.tsv.gz")
+    matrix_edit(filt_gtf="${gtf}", feat="features.tsv.gz")
     """
  
 }
