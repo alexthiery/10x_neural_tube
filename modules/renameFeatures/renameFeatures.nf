@@ -4,7 +4,7 @@ nextflow.preview.dsl=2
 
 process renameFeatures {
 
-    publishDir "${params.outDir}/cellrangerCounts_renamed/${sample_name}",
+    publishDir "${params.outDir}/cellrangerCounts_renamed",
     mode: "copy", overwrite: true
 
     input:
@@ -61,7 +61,7 @@ process renameFeatures {
         with gzip.open(feat, 'wt') as zipfile:
             zipfile.write(new_feat)
 
-    matrix_edit(filt_gtf="${gtf}", feat="features.tsv.gz")
+    matrix_edit(filt_gtf="${gtf}", feat="${cellrangerOut}/features.tsv.gz")
     """
  
 }
