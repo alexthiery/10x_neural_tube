@@ -15,8 +15,6 @@ include renameFeatures from "$baseDir/modules/renameFeatures/renameFeatures.nf"
 /*-----------------------------------------------------------------------------------------------------------------------------
 Pipeline params
 -------------------------------------------------------------------------------------------------------------------------------*/
-params.outgenomename = "galgal6_filtered_ref_genome"
-params.outdir = "./temp_out"
 
 // // Check params
 // if (!params.gtf) {
@@ -74,6 +72,10 @@ Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
+    // set workflow params
+    params.outdir = "./results"
+
+    // workflow
     filterGTF( ch_gtf )
     makeRef( filterGTF.out, ch_fa )
     cellrangerCount( ch_fastq.combine(makeRef.out) )
