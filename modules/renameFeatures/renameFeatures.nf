@@ -12,7 +12,7 @@ process renameFeatures {
         path(cellrangerOut)
 
     output:
-        path("*.gz")
+        path("$baseDir/*.gz"), includeInputs:true
     
     """
     #!/usr/bin/env python
