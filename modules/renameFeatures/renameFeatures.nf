@@ -11,7 +11,7 @@ process renameFeatures {
         tuple val(sample_id), path(cellrangerOut), path(gtf)
 
     output:
-        path("${cellrangerOut}/*")
+        file(cellrangerOut)
     
     """
     #!/usr/bin/env python
