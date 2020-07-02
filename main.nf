@@ -30,8 +30,8 @@ include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
 include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
 include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
 include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
-include renameFeatures from "$baseDir/modules/renameFeatures/renameFeatures.nf"
-include runR from "$baseDir/modules/runR/runR.nf"
+// include renameFeatures from "$baseDir/modules/renameFeatures/renameFeatures.nf"
+// include runR from "$baseDir/modules/runR/runR.nf"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Init
@@ -57,9 +57,9 @@ Channel
     .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
     .set { ch_fastq }
 
-Channel
-    .fromPath(params.rFile)
-    .set { ch_rFile }
+// Channel
+//     .fromPath(params.rFile)
+//     .set { ch_rFile }
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Main workflow
@@ -69,6 +69,6 @@ workflow {
     filterGTF( ch_gtf )
     makeRef( filterGTF.out, ch_fa )
     cellrangerCount( ch_fastq.combine(makeRef.out) )
-    renameFeatures( cellrangerCount.out.sampleName.combine(filterGTF.out), cellrangerCount.out.countFiles )
-    runR( ch_rFile, renameFeatures.out.collect() )
+    // renameFeatures( cellrangerCount.out.sampleName.combine(filterGTF.out), cellrangerCount.out.countFiles )
+    // runR( ch_rFile, renameFeatures.out.collect() )
 }

@@ -4,6 +4,10 @@ nextflow.preview.dsl=2
 
 
 process cellrangerCount {
+
+    publishDir "${params.outDir}/cellrangerCounts/${sample_name}",
+        mode: "copy", overwrite: true
+
     label 'high_memory'
 
     input:
@@ -11,14 +15,16 @@ process cellrangerCount {
 
     output:
         val sample_name, emit: sampleName
-        path "${sample_name}/outs/filtered_feature_bc_matrix/*.gz", emit: countFiles
+        path sample_name, emit: countFiles
 
     """
     #!/bin/bash
     
-    cellranger count --id=${sample_name} \
+    cellranger count --id="cellrangerOut_${sample_name}" \
     --fastqs="dir1/${sample_id}","dir2/${sample_id}" \
     --sample=${sample_id} \
     --transcriptome=${reference_genome}
+
+    mv temp/outs/filtered_feature_bc_matrix/*.gz ${sample_name}
     """
 }
