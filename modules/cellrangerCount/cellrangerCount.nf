@@ -5,7 +5,7 @@ nextflow.preview.dsl=2
 
 process cellrangerCount {
 
-    publishDir "${params.outDir}/cellrangerCounts",
+    publishDir "${params.outDir}/alignment/cellrangerCounts",
         mode: "copy", overwrite: true
 
     label 'high_memory'
