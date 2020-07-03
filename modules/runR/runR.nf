@@ -14,6 +14,6 @@ process runR {
         path("RDS.files")
 
     """
-    Rscript ${rFile} --customFuncs ${params.customFuncs} --networkGenes ${params.networkGenes} --countFiles ${cellrangerOut} --cores ${task.cpus} --runtype nextflow
+    Rscript ${rFile} --customFuncs ${params.customFuncs} --networkGenes ${params.networkGenes} --cores ${task.cpus} --runtype nextflow
     """
 }

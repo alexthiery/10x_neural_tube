@@ -7,7 +7,6 @@ library('getopt')
 spec = matrix(c(
   'runtype', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
-  'countFiles' , 's', 2, "character",
   'customFuncs', 'm', 2, "character",
   'networkGenes', 'd', 2, "character"
 ), byrow=TRUE, ncol=4)
@@ -20,9 +19,6 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 } else {
   if(tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
     stop("runtype must be either 'user' or 'nextflow'")
-  }
-  if(is.null(opt$countFiles)){
-    stop("path to countFiles must be specified")
   }
   if(is.null(opt$customFuncs)){
     stop("path to customFuncs must be specified")
