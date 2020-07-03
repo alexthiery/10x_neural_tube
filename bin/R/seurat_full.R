@@ -14,7 +14,7 @@ spec = matrix(c(
 opt = getopt(spec)
 
 # set default location
-if(length(opt$ARGS) == 0){
+if(length(commandArgs(trailingOnly = TRUE)) == 0){
   cat('No command line arguments provided, user defaults paths are set for running interactively in Rstudio on docker')
   opt$runtype = "user"
 } else {
