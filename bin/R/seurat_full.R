@@ -73,7 +73,7 @@ if (opt$runtype == "user"){
   dir.create(rds.path, recursive = T)
   
   # read all files from folder and keep only those from chr_edit
-  files <- list.files(opt$countFiles, recursive = T, full.names = T)
+  files <- list.files("./", recursive = T, full.names = T)
   # remove file suffix
   file.path <- dirname(files)[!duplicated(dirname(files))]
   # make dataframe with tissue matching directory
