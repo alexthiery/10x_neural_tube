@@ -33,4 +33,4 @@ workflow {
 
 
 
-// nextflow run ./modules/runR/test.nf -with-docker alexthiery/10x_neural_tube:dev --rFile ./bin/R/seurat_full.R --customFunctions ./bin/R/my_functions --extraData ./bin/network_genes --sampleDir ~/dev/repos/10x_neural_tube/results/cellrangerCounts
+// nextflow run ./modules/runR/test.nf -with-docker alexthiery/10x_neural_tube:dev --rFile ~/dev/repos/10x_neural_tube/bin/R/seurat_full.R --customFunctions ~/dev/repos/10x_neural_tube/bin/R/my_functions --extraDat ~/dev/repos/10x_neural_tube/bin/network_genes --sampleDir ~/dev/repos/10x_neural_tube/results/cellrangerCounts
