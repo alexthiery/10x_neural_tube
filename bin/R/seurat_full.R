@@ -5,9 +5,9 @@ library('getopt')
 
 # set arguments for Rscript
 spec = matrix(c(
-  'location', 'l', 2, "character",
+  'runtype', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
-  'samples' , 's', 2, "character",
+  'countFiles' , 's', 2, "character",
   'myfuncs', 'm', 2, "character",
   'extraData', 'd', 2, "character"
 ), byrow=TRUE, ncol=4)
@@ -64,7 +64,7 @@ if (opt$runtype == "user"){
   dir.create(rds.path, recursive = T)
   
   # read all files from folder and keep only those from chr_edit
-  files <- list.files(opt$samples, recursive = T, full.names = T)
+  files <- list.files(opt$countFiles, recursive = T, full.names = T)
   # remove file suffix
   file.path <- dirname(files)[!duplicated(dirname(files))]
   # make dataframe with tissue matching directory

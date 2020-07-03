@@ -11,13 +11,13 @@ process runR {
 
     input:
         path(rFile)
-        path(samples)
+        path(cellrangerOut)
 
     output:
         path("plots")
         path("RDS.files")
 
     """
-    Rscript ${rFile} --myfuncs ${params.customFunctions} --extraData ${params.extraDat} --samples ${samples} --cores ${task.cpus} --location local
+    Rscript ${rFile} --myfuncs ${params.customFunctions} --extraData ${params.extraDat} --countFiles ${cellrangerOut} --cores ${task.cpus} --runtype nextflow
     """
 }
