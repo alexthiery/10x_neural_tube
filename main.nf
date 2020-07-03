@@ -6,8 +6,8 @@ nextflow.preview.dsl=2
 Pipeline params
 -------------------------------------------------------------------------------------------------------------------------------*/
 params.rFile = "$baseDir/bin/R/seurat_full.R"
-params.customFunctions = "$baseDir/bin/R/my_functions"
-params.extraData = "$baseDir/bin/network_genes"
+params.customFuncs = "$baseDir/bin/R/custom_functions"
+params.networkGenes = "$baseDir/bin/network_genes"
 // // Check params
 // if (!params.gtf) {
 //     exit 1, "No gtf file provided"
@@ -31,7 +31,7 @@ include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
 include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
 include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
 include renameFeatures from "$baseDir/modules/renameFeatures/renameFeatures.nf"
-// include runR from "$baseDir/modules/runR/runR.nf"
+include runR from "$baseDir/modules/runR/runR.nf"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Init
@@ -57,9 +57,9 @@ Channel
     .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
     .set { ch_fastq }
 
-// Channel
-//     .fromPath(params.rFile)
-//     .set { ch_rFile }
+Channel
+    .fromPath(params.rFile)
+    .set { ch_rFile }
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Main workflow
