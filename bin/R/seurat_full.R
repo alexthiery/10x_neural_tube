@@ -8,8 +8,8 @@ spec = matrix(c(
   'runtype', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
   'countFiles' , 's', 2, "character",
-  'myfuncs', 'm', 2, "character",
-  'extraData', 'd', 2, "character"
+  'customFuncs', 'm', 2, "character",
+  'networkGenes', 'd', 2, "character"
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
@@ -21,13 +21,22 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   if(tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
     stop("runtype must be either 'user' or 'nextflow'")
   }
+  if(is.null(opt$countFiles)){
+    stop("path to countFiles must be specified")
+  }
+  if(is.null(opt$customFuncs)){
+    stop("path to customFuncs must be specified")
+  }
+  if(is.null(opt$networkGenes)){
+    stop("path to networkGenes must be specified")
+  }
 }
 
 ####################################################################
 # user paths need to be defined here in order to run interactively #
 ####################################################################
 if (opt$runtype == "user"){
-  sapply(list.files('./bin/R/my_functions/', full.names = T), source)
+  sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
   
   plot.path = "./results/R/plots/"
   rds.path = "./results/R/RDS.files/"
@@ -56,7 +65,7 @@ if (opt$runtype == "user"){
 } else if (opt$runtype == "nextflow"){
   cat('pipeling running through nextflow\n')
   
-  sapply(list.files(opt$myfuncs, full.names = T), source)
+  sapply(list.files(opt$customFuncs, full.names = T), source)
   
   plot.path = "plots/"
   dir.create(plot.path, recursive = T)
@@ -73,7 +82,7 @@ if (opt$runtype == "user"){
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
   
   # Read in favourite genes
-  network_genes <- list.files(opt$extraData, full.names = T)
+  network_genes <- list.files(opt$networkGenes, full.names = T)
   hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
   hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
 
