@@ -83,14 +83,11 @@ if (opt$runtype == "user"){
   network_genes <- list.files(opt$networkGenes, full.names = T)
   hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
   hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
-
-
-  # set number of cores to use for parallelisation
-  if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
-  
-  cat(paste0("script ran with ", ncores, " cores\n"))
-  
 }
+
+# set number of cores to use for parallelisation
+if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
+cat(paste0("script ran with ", ncores, " cores\n"))
 
 # Load packages - packages are stored within renv in the repository
 reticulate::use_python('/usr/bin/python3.7')
