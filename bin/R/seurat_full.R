@@ -470,9 +470,10 @@ graphics.off()
 
 ############################### Remove poor quality clusters ########################################
 
-norm.data.clustfilt <- rownames(norm.data.contamfilt@meta.data)[norm.data.contamfilt@meta.data$seurat_clusters ==  8 |
-                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 9 |
-                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 10]
+norm.data.clustfilt <- rownames(norm.data.contamfilt@meta.data)[norm.data.contamfilt@meta.data$seurat_clusters ==  12 |
+                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 16 |
+                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 17 |
+                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 19]
 
 norm.data.clustfilt <- subset(norm.data.contamfilt, cells = norm.data.clustfilt, invert = T)
 
