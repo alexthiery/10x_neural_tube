@@ -17,6 +17,13 @@ docker run -e PASSWORD=password --rm -p 8787:8787 -v ~/dev/repos/10x_neural_tube
 docker run --rm --volume /Users/alex/dev/repos/10x_neural_tube:/home --workdir /Users/alex/dev/repos/10x_neural_tube:/home -it alexthiery/10x_neural_tube:dev Rscript /home/bin/R/seurat_full.R
 
 
+singularity
+singularity build
+
+singularity pull docker://alexthiery/10x_neural_tube:dev
+singularity build ubuntu.img docker://ubuntu:latest
+singularity shell work/singularity/alexthiery-10x_neural_tube-dev.img 
+singularity run --bind /Users/alex/dev/repos/10x_neural_tube:/home
 
 
 to remove pipeline from local
