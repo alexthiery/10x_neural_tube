@@ -14,18 +14,21 @@ opt = getopt(spec)
 
 # set default location
 if(length(commandArgs(trailingOnly = TRUE)) == 0){
-  cat('No command line arguments provided, user defaults paths are set for running interactively in Rstudio on docker')
+  cat('No command line arguments provided, user defaults paths are set for running interactively in Rstudio on docker\n')
   opt$runtype = "user"
 } else {
+  if(is.null(opt$runtype)){
+    stop("--runtype must be either 'user', 'nextflow' or 'docker'")
+  }
   if(tolower(opt$runtype) != "docker" & tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
-    stop("runtype must be either 'user', 'nextflow' or 'docker'")
+    stop("--runtype must be either 'user', 'nextflow' or 'docker'")
   }
   if(tolower(opt$runtype) == "nextflow"){
     if(is.null(opt$customFuncs)){
-      stop("path to customFuncs must be specified")
+      stop("--customFuncs path must be specified")
     }
     if(is.null(opt$networkGenes)){
-      stop("path to networkGenes must be specified")
+      stop("--networkGenes path must be specified")
     }
   }
 }
