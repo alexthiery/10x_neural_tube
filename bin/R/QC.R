@@ -10,6 +10,8 @@ spec = matrix(c(
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
+list.files("./", recursive = T, full.names = T)
+
 # set default location
 if(length(commandArgs(trailingOnly = TRUE)) == 0){
   cat('No command line arguments provided, user defaults paths are set for running interactively in Rstudio on docker\n')
