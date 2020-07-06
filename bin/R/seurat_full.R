@@ -152,7 +152,7 @@ merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "p
 #####################################################################################################
 
 # Remove data which do not pass filter threshold
-merged.data <- subset(merged.data, subset = c(nFeature_RNA > 1500 & nFeature_RNA < 6000 & percent.mt < 15))
+merged.data <- subset(merged.data, subset = c(nFeature_RNA > 1250 & nFeature_RNA < 6000 & percent.mt < 15))
 
 # Log normalize data and find variable features
 norm.data <- NormalizeData(merged.data, normalization.method = "LogNormalize", scale.factor = 10000)
