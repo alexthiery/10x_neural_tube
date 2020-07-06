@@ -17,8 +17,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   cat('No command line arguments provided, user defaults paths are set for running interactively in Rstudio on docker')
   opt$runtype = "user"
 } else {
-  if(tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
-    stop("runtype must be either 'user' or 'nextflow'")
+  if(tolower(opt$runtype) != "docker" & tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
+    stop("runtype must be either 'user', 'nextflow' or 'docker'")
   }
   if(tolower(opt$runtype) == "nextflow"){
     if(is.null(opt$customFuncs)){
@@ -81,6 +81,31 @@ if (opt$runtype == "user"){
   
   # Read in favourite genes
   network_genes <- list.files(opt$networkGenes, full.names = T)
+  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
+  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+
+} else if (opt$runtype == "docker"){
+  cat('R script running through docker\n')
+  
+  sapply(list.files('/home/bin/R/custom_functions/', full.names = T), source)
+  
+  plot.path = "/home/results/plots/"
+  rds.path = "/home/results/RDS.files/"
+  dir.create(plot.path, recursive = T)
+  dir.create(rds.path, recursive = T)
+  
+  data_path = "/home/alignmentOut/cellrangerCounts_renamed"
+  # read all files from dir
+  files <- list.files(data_path, recursive = T, full.names = T)
+  # remove file suffix
+  file.path <- dirname(files)[!duplicated(dirname(files))]
+  # make dataframe with tissue matching directory
+  tissue = c("hh4", "hh6", "ss4", "ss8")
+  matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
+  sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
+  
+  # Read in favourite genes
+  network_genes <- list.files("/home/bin/network_genes/", full.names = T)
   hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
   hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
 }
