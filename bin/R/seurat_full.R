@@ -358,7 +358,6 @@ clust.res(seurat.obj = norm.data.sexscale, by = 0.2)
 graphics.off()
 
 # cluster stability reduces after res 1.6
-
 # Use clustering resolution = 1.6 for subsequent filtering of poor quality clusters this increases the stringency of poor quality clusters, removing the least data possible
 norm.data.sexscale <- FindClusters(norm.data.sexscale, resolution = 1.6, verbose = FALSE)
 
@@ -399,7 +398,7 @@ genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
 ncol = 4
 png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 10*ceiling((length(genes)+1)/ncol), units = "cm", res = 200)
 multi.feature.plot(seurat.obj = norm.data.sexscale, gene.list = genes, plot.clusters = T,
-                   plot.stage = T, label = "", cluster.col = "RNA_snn_res.1.2", n.col = ncol)
+                   plot.stage = T, label = "", cluster.col = "RNA_snn_res.1.6", n.col = ncol)
 graphics.off()
 
 # Dotplot for identifying PGCs, Early mesoderm and Late mesoderm
@@ -408,15 +407,16 @@ DotPlot(norm.data.sexscale, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SI
 graphics.off()
 
 ############################### Remove contaminating cells from clusters ########################################
-# Clust 7, 13 = poor quality cells
-# Clust 15 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
-# Clust 16 = Late mesoderm - expresses twist1, six1, eya2
-# Clust 17 = PGC's - expresses dazl very highly
-norm.data.clustfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  7 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 13 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 15 |
+# Clust 13, 16, 17 = poor quality cells
+# Clust 18 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
+# Clust 20 = Late mesoderm - expresses twist1, six1, eya2
+# Clust 22 = PGC's - expresses dazl very highly
+norm.data.clustfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  13 |
                                                                 norm.data.sexscale@meta.data$seurat_clusters == 16 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 17]
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 17 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 18 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 20 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 22]
 
 norm.data.clustfilt <- subset(norm.data.sexscale, cells = norm.data.clustfilt, invert = T)
 
