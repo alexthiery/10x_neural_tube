@@ -20,11 +20,13 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   if(tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
     stop("runtype must be either 'user' or 'nextflow'")
   }
-  if(is.null(opt$customFuncs)){
-    stop("path to customFuncs must be specified")
-  }
-  if(is.null(opt$networkGenes)){
-    stop("path to networkGenes must be specified")
+  if(tolower(opt$runtype) == "nextflow"){
+    if(is.null(opt$customFuncs)){
+      stop("path to customFuncs must be specified")
+    }
+    if(is.null(opt$networkGenes)){
+      stop("path to networkGenes must be specified")
+    }
   }
 }
 
