@@ -224,7 +224,7 @@ cluster.order = order.cell.stage.clust(seurat_object = norm.data, col.to.sort = 
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
-png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 50, width = 75, units = 'cm', res = 500)
+png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 50, width = 75, units = 'cm', res = 700)
 tenx.pheatmap(data = norm.data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
@@ -387,7 +387,7 @@ graphics.off()
 #####################################################################################################
 
 # Change plot path
-curr.plot.path <- paste0(plot.path, "1.5_contamination_filt/")
+curr.plot.path <- paste0(plot.path, "2_contamination_filt/")
 dir.create(curr.plot.path)
 
 # Identify mesoderm and PGCs
@@ -492,7 +492,7 @@ saveRDS(norm.data.clustfilt, paste0(rds.path, "norm.data.clustfilt.RDS"))
 # norm.data.clustfilt <- readRDS(paste0(rds.path, "norm.data.clustfilt.RDS"))
 
 # Change plot path
-curr.plot.path <- paste0(plot.path, "2_cluster_filt/")
+curr.plot.path <- paste0(plot.path, "3_cluster_filt/")
 dir.create(curr.plot.path)
 
 # PCA
@@ -532,7 +532,7 @@ graphics.off()
 ####################################################################################
 
 # Set plot path
-curr.plot.path <- paste0(plot.path, "3_cell_cycle/")
+curr.plot.path <- paste0(plot.path, "4_cell_cycle/")
 dir.create(curr.plot.path)
 
 # Calculate cell cycle for each cell
@@ -614,7 +614,7 @@ graphics.off()
 #####################################################################################################
 
 # Set plot path
-curr.plot.path <- paste0(plot.path, "4_stage_split/")
+curr.plot.path <- paste0(plot.path, "5_stage_split/")
 dir.create(curr.plot.path)
 
 # Split dataset into different stages
@@ -742,7 +742,7 @@ clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,2), "ss4" = c(0,1), "ss8" = c(0,1
 ########## Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
 
 # Set plot path
-curr.plot.path <- paste0(plot.path, "5_neural_subset/")
+curr.plot.path <- paste0(plot.path, "6_neural_subset/")
 dir.create(curr.plot.path)
 
 # Get cell IDs from each stage based on clusters to subset
