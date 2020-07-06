@@ -454,11 +454,16 @@ clust.res(seurat.obj = norm.data.contamfilt, by = 0.2)
 graphics.off()
 
 # Use clustering resolution = 1.4 in order to make lots of clusters and identify any remaining poor quality cells
-norm.data.clustfilt <- FindClusters(norm.data.clustfilt, resolution = 1.4)
+norm.data.contamfilt <- FindClusters(norm.data.contamfilt, resolution = 1.4)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(norm.data.clustfilt)
+clust.stage.plot(norm.data.contamfilt)
+graphics.off()
+
+# Plot QC for each cluster
+png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
+QC.plot(norm.data.contamfilt)
 graphics.off()
 
 
@@ -467,17 +472,13 @@ graphics.off()
 
 
 
+############################### Remove poor quality clusters ########################################
 
+norm.data.clustfilt <- rownames(norm.data.contamfilt@meta.data)[norm.data.contamfilt@meta.data$seurat_clusters ==  8 |
+                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 9 |
+                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 10]
 
-############################### Remove contaminating cells from clusters ########################################
-# Clust 8 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
-# Clust 9 = Late mesoderm - expresses twist1, six1, eya2
-# Clust 10 = PGC's - expresses dazl very highly
-norm.data.clustfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  8 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 9 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 10]
-
-norm.data.clustfilt <- subset(norm.data.sexscale, cells = norm.data.clustfilt, invert = T)
+norm.data.clustfilt <- subset(norm.data.contamfilt, cells = norm.data.clustfilt, invert = T)
 
 # Re-run findvariablefeatures and scaling
 norm.data.clustfilt <- FindVariableFeatures(norm.data.clustfilt, selection.method = "vst", nfeatures = 2000)
