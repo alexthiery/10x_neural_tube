@@ -152,7 +152,7 @@ merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "p
 #####################################################################################################
 
 # Remove data which do not pass filter threshold
-merged.data <- subset(merged.data, subset = c(nFeature_RNA > 1250 & nFeature_RNA < 6000 & percent.mt < 15))
+merged.data <- subset(merged.data, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
 
 # Log normalize data and find variable features
 norm.data <- NormalizeData(merged.data, normalization.method = "LogNormalize", scale.factor = 10000)
@@ -354,12 +354,11 @@ norm.data.sexscale <- RunUMAP(norm.data.sexscale, dims = 1:15, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = norm.data.sexscale, by = 0.2)
+clust.res(seurat.obj = norm.data.sexscale, by = 0.1)
 graphics.off()
 
-# cluster stability reduces after res 1.6
-# Use clustering resolution = 1.6 for subsequent filtering of poor quality clusters this increases the stringency of poor quality clusters, removing the least data possible
-norm.data.sexscale <- FindClusters(norm.data.sexscale, resolution = 1.6, verbose = FALSE)
+# Use clustering resolution = 0.5 to look for contamination clusters
+norm.data.sexscale <- FindClusters(norm.data.sexscale, resolution = 0.5, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
@@ -384,11 +383,11 @@ tenx.pheatmap(data = norm.data.sexscale, metadata = c("seurat_clusters", "orig.i
 graphics.off()
 
 #####################################################################################################
-#                 Identify and remove poor quality clusters / contamination (mesoderm and PGCs)     #
+#                           Identify and remove contamination (mesoderm and PGCs)                   #
 #####################################################################################################
 
 # Change plot path
-curr.plot.path <- paste0(plot.path, "2_cluster_filt/")
+curr.plot.path <- paste0(plot.path, "1.5_contamination_filt/")
 dir.create(curr.plot.path)
 
 # Identify mesoderm and PGCs
@@ -398,7 +397,7 @@ genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
 ncol = 4
 png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 10*ceiling((length(genes)+1)/ncol), units = "cm", res = 200)
 multi.feature.plot(seurat.obj = norm.data.sexscale, gene.list = genes, plot.clusters = T,
-                   plot.stage = T, label = "", cluster.col = "RNA_snn_res.1.6", n.col = ncol)
+                   plot.stage = T, label = "", cluster.col = "RNA_snn_res.0.5", n.col = ncol)
 graphics.off()
 
 # Dotplot for identifying PGCs, Early mesoderm and Late mesoderm
@@ -407,16 +406,76 @@ DotPlot(norm.data.sexscale, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SI
 graphics.off()
 
 ############################### Remove contaminating cells from clusters ########################################
-# Clust 13, 16, 17 = poor quality cells
-# Clust 18 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
-# Clust 20 = Late mesoderm - expresses twist1, six1, eya2
-# Clust 22 = PGC's - expresses dazl very highly
-norm.data.clustfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  13 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 16 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 17 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 18 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 20 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 22]
+# Clust 8 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
+# Clust 9 = Late mesoderm - expresses twist1, six1, eya2
+# Clust 10 = PGC's - expresses dazl very highly
+norm.data.contamfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  8 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 9 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 10]
+
+norm.data.contamfilt <- subset(norm.data.sexscale, cells = norm.data.contamfilt, invert = T)
+
+# Re-run findvariablefeatures and scaling
+norm.data.contamfilt <- FindVariableFeatures(norm.data.contamfilt, selection.method = "vst", nfeatures = 2000)
+
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
+norm.data.contamfilt <- ScaleData(norm.data.contamfilt, features = rownames(norm.data.contamfilt), vars.to.regress = c("percent.mt", "sex"))
+
+saveRDS(norm.data.contamfilt, paste0(rds.path, "norm.data.contamfilt.RDS"))
+
+# Read in RDS data if needed
+# norm.data.contamfilt <- readRDS(paste0(rds.path, "norm.data.contamfilt.RDS"))
+
+# PCA
+norm.data.contamfilt <- RunPCA(object = norm.data.contamfilt, verbose = FALSE)
+
+png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
+DimHeatmap(norm.data.contamfilt, dims = 1:30, balanced = TRUE, cells = 500)
+graphics.off()
+
+png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
+print(ElbowPlot(norm.data.contamfilt, ndims = 40))
+graphics.off()
+
+png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
+PCA.level.comparison(norm.data.contamfilt, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+graphics.off()
+
+# Use PCA=15 as elbow plot is relatively stable across stages
+norm.data.contamfilt <- FindNeighbors(norm.data.contamfilt, dims = 1:15, verbose = FALSE)
+norm.data.contamfilt <- RunUMAP(norm.data.contamfilt, dims = 1:15, verbose = FALSE)
+
+# Find optimal cluster resolution
+png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
+clust.res(seurat.obj = norm.data.contamfilt, by = 0.2)
+graphics.off()
+
+# Use clustering resolution = 1.4 in order to make lots of clusters and identify any remaining poor quality cells
+norm.data.clustfilt <- FindClusters(norm.data.clustfilt, resolution = 1.4)
+
+# Plot UMAP for clusters and developmental stage
+png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
+clust.stage.plot(norm.data.clustfilt)
+graphics.off()
+
+
+
+
+
+
+
+
+
+############################### Remove contaminating cells from clusters ########################################
+# Clust 8 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
+# Clust 9 = Late mesoderm - expresses twist1, six1, eya2
+# Clust 10 = PGC's - expresses dazl very highly
+norm.data.clustfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  8 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 9 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 10]
 
 norm.data.clustfilt <- subset(norm.data.sexscale, cells = norm.data.clustfilt, invert = T)
 
