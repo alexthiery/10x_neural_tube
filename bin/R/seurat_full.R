@@ -36,15 +36,15 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 if (opt$runtype == "user"){
   sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
   
-  plot.path = "./results/R/plots/"
-  rds.path = "./results/R/RDS.files/"
+  plot.path = "./results/plots/"
+  rds.path = "./results/RDS.files/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
   ##################################
   # set path where data is located #
   ##################################
-  data_path = "./results/alignment/cellrangerCounts_renamed"
+  data_path = "./alignmentOut/cellrangerCounts_renamed"
   
   # read all files from dir
   files <- list.files(data_path, recursive = T, full.names = T)
