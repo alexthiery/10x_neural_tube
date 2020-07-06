@@ -14,6 +14,10 @@ to run RStudio interactively in docker container
 
 docker run -e PASSWORD=password --rm -p 8787:8787 -v ~/dev/repos/10x_neural_tube:/home/rstudio alexthiery/10x_neural_tube:dev
 
+docker run --rm --volume /Users/alex/dev/repos/10x_neural_tube:/home --workdir /Users/alex/dev/repos/10x_neural_tube:/home -it alexthiery/10x_neural_tube:dev Rscript /home/bin/R/seurat_full.R
+
+
+
 
 to remove pipeline from local
 nextflow drop alexthiery/10x_neural_tube

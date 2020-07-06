@@ -13,3 +13,5 @@ data
 .cache
 results
 temp
+nf-testData
+testData

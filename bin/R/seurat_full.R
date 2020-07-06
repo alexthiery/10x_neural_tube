@@ -5,48 +5,65 @@ library('getopt')
 
 # set arguments for Rscript
 spec = matrix(c(
-  'location', 'l', 2, "character",
+  'runtype', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
-  'samples' , 's', 2, "character",
-  'myfuncs', 'm', 2, "character",
-  'extraData', 'd', 2, "character"
+  'customFuncs', 'm', 2, "character",
+  'networkGenes', 'd', 2, "character"
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
 # set default location
-if(is.null(opt$location)){opt$location = "docker"}
+if(length(commandArgs(trailingOnly = TRUE)) == 0){
+  cat('No command line arguments provided, user defaults paths are set for running interactively in Rstudio on docker')
+  opt$runtype = "user"
+} else {
+  if(tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
+    stop("runtype must be either 'user' or 'nextflow'")
+  }
+  if(tolower(opt$runtype) == "nextflow"){
+    if(is.null(opt$customFuncs)){
+      stop("path to customFuncs must be specified")
+    }
+    if(is.null(opt$networkGenes)){
+      stop("path to networkGenes must be specified")
+    }
+  }
+}
 
-if (opt$location == "docker"){
-  cat('Script running in Rstudio on docker\n')
+####################################################################
+# user paths need to be defined here in order to run interactively #
+####################################################################
+if (opt$runtype == "user"){
+  sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
   
-  sapply(list.files('./bin/R/my_functions/', full.names = T), source)
-  
-  plot.path = "./results/plots/1_seurat_full/"
-  rds.path = "./results/RDS.files/1_seurat_full/"
+  plot.path = "./results/R/plots/"
+  rds.path = "./results/R/RDS.files/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
-  # Read in favourite genes
-  network_genes <- list.files("./data/network_genes/", full.names = T)
-  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
-  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+  ##################################
+  # set path where data is located #
+  ##################################
+  data_path = "./results/alignment/cellrangerCounts_renamed"
   
-  # read all files from folder and keep only those from chr_edit
-  files <- Filter(function(x) grepl("chr_edit", x), list.files("./data/cellranger_output", recursive = T, full.names = T))
-  
+  # read all files from dir
+  files <- list.files(data_path, recursive = T, full.names = T)
   # remove file suffix
   file.path <- dirname(files)[!duplicated(dirname(files))]
-  
   # make dataframe with tissue matching directory
-  tissue = c("hh4", "hh6", "4ss", "8ss")
+  tissue = c("hh4", "hh6", "ss4", "ss8")
   matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
-  sample.paths$tissue = c("hh4", "hh6", "ss4", "ss8")
   
-} else if (opt$location == "CAMP"){
-  cat('data loaded from CAMP\n')
+  # Read in favourite genes
+  network_genes <- list.files("./bin/network_genes/", full.names = T)
+  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
+  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+
+} else if (opt$runtype == "nextflow"){
+  cat('pipeling running through nextflow\n')
   
-  sapply(list.files(opt$myfuncs, full.names = T), source)
+  sapply(list.files(opt$customFuncs, full.names = T), source)
   
   plot.path = "plots/"
   dir.create(plot.path, recursive = T)
@@ -54,31 +71,23 @@ if (opt$location == "docker"){
   dir.create(rds.path, recursive = T)
   
   # read all files from folder and keep only those from chr_edit
-  files <- Filter(function(x) grepl("chr_edit", x), list.files(opt$samples, recursive = T, full.names = T))
-  
+  files <- list.files("./", recursive = T, full.names = T)
   # remove file suffix
   file.path <- dirname(files)[!duplicated(dirname(files))]
-  
   # make dataframe with tissue matching directory
-  tissue = c("hh4", "hh6", "4ss", "8ss")
+  tissue = c("hh4", "hh6", "ss4", "ss8")
   matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
-  sample.paths$tissue = c("hh4", "hh6", "ss4", "ss8")
   
-
   # Read in favourite genes
-
-  network_genes <- list.files(opt$extraData, full.names = T)
+  network_genes <- list.files(opt$networkGenes, full.names = T)
   hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
   hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+}
 
-
-  # set number of cores to use for parallelisation
-  if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
-  
-  cat(paste0("script ran with ", ncores, " cores\n"))
-  
-} else {stop("Script can only be ran locally or on CAMP")}
+# set number of cores to use for parallelisation
+if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
+cat(paste0("script ran with ", ncores, " cores\n"))
 
 # Load packages - packages are stored within renv in the repository
 reticulate::use_python('/usr/bin/python3.7')
@@ -320,8 +329,10 @@ png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', r
 clust.res(seurat.obj = norm.data.sexscale, by = 0.2)
 graphics.off()
 
-# Use clustering resolution = 1.4 for subsequent filtering of poor quality clusters this increases the stringency of poor quality clusters, removing the least data possible
-norm.data.sexscale <- FindClusters(norm.data.sexscale, resolution = 1.4, verbose = FALSE)
+# cluster stability reduces after res 1.2
+
+# Use clustering resolution = 1.2 for subsequent filtering of poor quality clusters this increases the stringency of poor quality clusters, removing the least data possible
+norm.data.sexscale <- FindClusters(norm.data.sexscale, resolution = 1.2, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
@@ -329,7 +340,7 @@ clust.stage.plot(norm.data.sexscale)
 graphics.off()
 
 # Plot QC for each cluster
-png(paste0(curr.plot.path, "cluster.QC.png"), width=36, height=14, units = 'cm', res = 200)
+png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
 QC.plot(norm.data.sexscale)
 graphics.off()
 
@@ -360,7 +371,7 @@ genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
 ncol = 4
 png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 10*ceiling((length(genes)+1)/ncol), units = "cm", res = 200)
 multi.feature.plot(seurat.obj = norm.data.sexscale, gene.list = genes, plot.clusters = T,
-                   plot.stage = T, label = "", cluster.col = "RNA_snn_res.1.4", n.col = ncol)
+                   plot.stage = T, label = "", cluster.col = "RNA_snn_res.1.2", n.col = ncol)
 graphics.off()
 
 # Dotplot for identifying PGCs, Early mesoderm and Late mesoderm
@@ -369,15 +380,15 @@ DotPlot(norm.data.sexscale, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SI
 graphics.off()
 
 ############################### Remove contaminating cells from clusters ########################################
-# Clust 8, 15 = poor quality cells
-# Clust 16 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
-# Clust 17 = Late mesoderm - expresses twist1, six1, eya2
-# Clust 18 = PGC's - expresses dazl very highly
-norm.data.clustfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  8|
-                                                               norm.data.sexscale@meta.data$seurat_clusters == 15 |
-                                                               norm.data.sexscale@meta.data$seurat_clusters == 16 |
-                                                               norm.data.sexscale@meta.data$seurat_clusters == 17 |
-                                                               norm.data.sexscale@meta.data$seurat_clusters == 18]
+# Clust 7, 13 = poor quality cells
+# Clust 15 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
+# Clust 16 = Late mesoderm - expresses twist1, six1, eya2
+# Clust 17 = PGC's - expresses dazl very highly
+norm.data.clustfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  7 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 13 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 15 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 16 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 17]
 
 norm.data.clustfilt <- subset(norm.data.sexscale, cells = norm.data.clustfilt, invert = T)
 
@@ -504,7 +515,7 @@ cluster.order = order.cell.stage.clust(seurat_object = norm.data.clustfilt.cc, c
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
-png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 200)
+png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 400)
 tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
@@ -584,7 +595,7 @@ markers <- lapply(seurat_stage, function(x) FindAllMarkers(x, only.pos = T, logf
 top15 <- lapply(markers, function(x) x %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC))
 
 for(stage in names(seurat_stage)){
-  png(paste0(curr.plot.path, "HM.top15.DE.", stage, ".png"), height = 75, width = 100, units = 'cm', res = 200)
+  png(paste0(curr.plot.path, "HM.top15.DE.", stage, ".png"), height = 75, width = 100, units = 'cm', res = 400)
   tenx.pheatmap(data = seurat_stage[[stage]], metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
                 selected_genes = unique(top15[[stage]]$gene), gaps_col = "seurat_clusters")
   graphics.off()
@@ -711,7 +722,7 @@ cluster.order = order.cell.stage.clust(seurat_object = neural.seurat, col.to.sor
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
-png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 200)
+png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 400)
 tenx.pheatmap(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
@@ -724,13 +735,13 @@ umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs
 umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/"))
 
 # Plot heatmap for hh4 genes in neural subset
-png(paste0(curr.plot.path, "neural.seurat_hh4genes.HM.png"), width=75, height=100, units = "cm", res = 200)
+png(paste0(curr.plot.path, "neural.seurat_hh4genes.HM.png"), width=75, height=100, units = "cm", res = 400)
 tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh4_genes[hh4_genes %in% rownames(neural.seurat)],
               hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
 
 # Plot heatmap for hh6 genes in neural subset
-png(paste0(curr.plot.path, "neural.seurat_hh6genes.HM.png"), width=75, height=100, units = "cm", res = 200)
+png(paste0(curr.plot.path, "neural.seurat_hh6genes.HM.png"), width=75, height=100, units = "cm", res = 400)
 tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh6_genes[hh6_genes %in% rownames(neural.seurat)],
               hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
