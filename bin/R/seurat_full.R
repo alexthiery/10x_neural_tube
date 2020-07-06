@@ -453,8 +453,8 @@ png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', r
 clust.res(seurat.obj = norm.data.contamfilt, by = 0.2)
 graphics.off()
 
-# Use clustering resolution = 1.4 in order to make lots of clusters and identify any remaining poor quality cells
-norm.data.contamfilt <- FindClusters(norm.data.contamfilt, resolution = 1.4)
+# Use clustering resolution = 1.6 in order to make lots of clusters and identify any remaining poor quality cells
+norm.data.contamfilt <- FindClusters(norm.data.contamfilt, resolution = 1.6)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
@@ -465,10 +465,6 @@ graphics.off()
 png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
 QC.plot(norm.data.contamfilt)
 graphics.off()
-
-
-
-
 
 
 
@@ -493,6 +489,10 @@ saveRDS(norm.data.clustfilt, paste0(rds.path, "norm.data.clustfilt.RDS"))
 
 # Read in RDS data if needed
 # norm.data.clustfilt <- readRDS(paste0(rds.path, "norm.data.clustfilt.RDS"))
+
+# Change plot path
+curr.plot.path <- paste0(plot.path, "2_cluster_filt/")
+dir.create(curr.plot.path)
 
 # PCA
 norm.data.clustfilt <- RunPCA(object = norm.data.clustfilt, verbose = FALSE)
