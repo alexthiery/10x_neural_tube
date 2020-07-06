@@ -213,7 +213,7 @@ clust.stage.plot(norm.data)
 graphics.off()
 
 # Plot QC for each cluster
-png(paste0(curr.plot.path, "cluster.QC.png"), width=36, height=14, units = 'cm', res = 200)
+png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
 QC.plot(norm.data)
 graphics.off()
 
@@ -532,7 +532,7 @@ clust.stage.plot(norm.data.clustfilt.cc)
 graphics.off()
 
 # Plot QC for each cluster
-png(paste0(curr.plot.path, "cluster.QC.png"), width=36, height=14, units = 'cm', res = 200)
+png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
 QC.plot(norm.data.clustfilt.cc)
 graphics.off()
 
@@ -739,7 +739,7 @@ clust.stage.plot(neural.seurat)
 graphics.off()
 
 # Plot QC for each cluster
-png(paste0(curr.plot.path, "cluster.QC.png"), width=36, height=14, units = 'cm', res = 200)
+png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
 QC.plot(neural.seurat)
 graphics.off()
 
