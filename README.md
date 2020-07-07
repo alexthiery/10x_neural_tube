@@ -36,7 +36,7 @@ If you are wanting to run the downstream analysis interactively outside of Nextf
 #
 Docker allows us to run our analysis through a container with all required libraries and dependencies. This ensures cross-platform reproducibility of our results.
 
-The docker image used can be found [here](https://hub.docker.com/r/alexthiery/10x)
+The docker image used can be found [here](https://hub.docker.com/r/alexthiery/10x_neural_tube)
 
 We have also included Rstudio within our docker image to allow you to run the downstream analysis interactively if you wish - for details on how to do this click [here](#interactive-downstream-analysis).
 
