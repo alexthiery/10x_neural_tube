@@ -706,7 +706,7 @@ for(stage in names(GOI)){
 }
 
 # Change order or clusters for plotting dotplots
-levels = list("hh4" = c(3,0,1,2), "hh6" = c(3,1,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,1,4,0))
+levels = list("hh4" = c(3,0,1,2), "hh6" = c(2,1,3,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,1,4,0))
 for(stage in names(levels)){
   seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
 }
@@ -737,7 +737,7 @@ saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
 # seurat_stage <- readRDS(paste0(rds.path, "seurat_stage_out.RDS"))
 
 # Make list of clusters to subset
-clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,2), "ss4" = c(0,1), "ss8" = c(0,1,4))
+clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,3), "ss4" = c(0,1), "ss8" = c(0,1,4))
 
 ########## Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
 
