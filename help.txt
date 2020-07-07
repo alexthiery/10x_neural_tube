@@ -28,3 +28,10 @@ singularity run --bind /Users/alex/dev/repos/10x_neural_tube:/home
 
 to remove pipeline from local
 nextflow drop alexthiery/10x_neural_tube
+
+
+rsync -azP /Volumes/lab-luscomben/scratch/thierya/10x_neural_tube/work/b1/7079537ed9261db658085b65ba0fdc/plots/ ~/Desktop
+l
+rsync -azP /Volumes/lab-luscomben/scratch/thierya/10x_neural_tube/work/d1/50144a923d8c2bb8a53039a90a9b17/cellrangerOut_hh4/outs/raw_feature_bc_matrix/ /Users/alex/dev/repos/10x_neural_tube/alignmentOut/
+
+scratch/10x_neural_tube/alignmentOut/cellrangerCounts/
