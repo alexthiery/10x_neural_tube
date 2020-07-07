@@ -21,6 +21,7 @@ process renameFeatures {
     import re
     import gzip
 
+
     def matrix_edit(filt_gtf, feat):
 
         features = gzip.open(feat, 'rt')
@@ -38,16 +39,12 @@ process renameFeatures {
                         gene_name = line.split('gene_name')[1].split(';')[0].replace('"', '').strip()
                         if gene_name not in output:
                             output[gene_name] = chrm
-                        # if there is no gene name - i.e. if there is no annotation, then take the gene ID instead so that we can still identify ensembl IDs within the downstream analysis
-                        else:
-                            gene_id = line.split('gene_id')[1].split(';')[0].replace('"', '').strip()
-                            if gene_id not in output:
-                                output[gene_id] = chrm
+                    else:
+                        gene_id = line.split('gene_id')[1].split(';')[0].replace('"', '').strip()
+                        if gene_id not in output:
+                            output[gene_id] = chrm
 
-        # make new character vector which will be become the new ammended features file
-        # split the features lines and take the second element [2] as this contains the gene names
-        # if gene name in features file is in the output list we generated above, then keep append the line with the value from the dictionary, but only if MT- is not already there
-        
+        # create new features file with gene names replaced if they are present in output
         new_feat = ''
         for line in features:
             gene = line.split()[1]
@@ -56,8 +53,7 @@ process renameFeatures {
                 new_feat += newline
             else:
                 new_feat += line
-
-        # overwrite features file with edited MT- label features
+                
         with gzip.open(feat, 'wt') as zipfile:
             zipfile.write(new_feat)
 
