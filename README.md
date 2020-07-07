@@ -1,4 +1,4 @@
-# Chick 10x Neural Development
+#Chick 10x Neural Development
 
 <p align="center">
 
