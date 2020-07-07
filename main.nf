@@ -1,45 +1,74 @@
 #!/usr/bin/env nextflow
 
-rFile_ch = Channel.fromPath('./bin/R/test.R')
-params.runName = '1_seurat_full'
-params.customFunctions = Channel.fromPath('./bin/R/my_functions')
+nextflow.preview.dsl=2
 
-process run_1_seurat_full {
-
-    publishDir "${params.outDir}/${params.runName}",
-        mode: "copy", overwrite: false
-
-    input:
-        //path samples from sample_ch
-        path rFile from rFile_ch
-        path customFunctions from params.customFunctions
-
-    output:
-        path("plots")
-        path("processed_data")
-
-    """
-    Rscript ${rFile} ${customFunctions}
-    """
-}
-
-
-// params.runName = '2_seurat_full'
-
-// process run_2_neural_subset {
-
-//     publishDir "${params.outDir}/${params.runName}",
-//         mode: "copy", overwrite: false
-
-//     input:
-//         path samples from sample_ch
-//         path rFile from rFile_ch
-
-//     output:
-//         path("plots")
-//         path("processed_data")
-
-//     """
-//     Rscript ${rFile} ${samples}
-//     """
+/*-----------------------------------------------------------------------------------------------------------------------------
+Pipeline params
+-------------------------------------------------------------------------------------------------------------------------------*/
+params.rFile = "$baseDir/bin/R/seurat_full.R"
+params.customFuncs = "$baseDir/bin/R/custom_functions"
+params.networkGenes = "$baseDir/bin/network_genes"
+// // Check params
+// if (!params.gtf) {
+//     exit 1, "No gtf file provided"
 // }
+// if (!params.fa) {
+//     exit 1, "No fa file provided"
+// }
+// if (!params.cpus) {
+//     params.cpus = 2
+// }
+// if (!params.ram) {
+//     params.ram = 4
+// }
+
+/*-----------------------------------------------------------------------------------------------------------------------------
+Include modules
+-------------------------------------------------------------------------------------------------------------------------------*/
+
+include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
+include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
+include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
+include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
+include renameFeatures from "$baseDir/modules/renameFeatures/renameFeatures.nf"
+include runR from "$baseDir/modules/runR/runR.nf"
+
+/*-----------------------------------------------------------------------------------------------------------------------------
+Init
+-------------------------------------------------------------------------------------------------------------------------------*/
+// Show banner
+log.info projectHeader()
+
+/*------------------------------------------------------------------------------------*/
+/* Define input channels
+--------------------------------------------------------------------------------------*/
+
+Channel
+    .from( params.gtf )
+    .set {ch_gtf}
+
+Channel
+    .from( params.fa )
+    .set {ch_fa}
+
+Channel
+    .fromPath( params.metadata )
+    .splitCsv(header: ['sample_id', 'sample_name', 'dir1', 'dir2'], skip: 1 )
+    .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
+    .set { ch_fastq }
+
+Channel
+    .fromPath(params.rFile)
+    .set { ch_rFile }
+
+/*-----------------------------------------------------------------------------------------------------------------------------
+Main workflow
+-------------------------------------------------------------------------------------------------------------------------------*/
+
+workflow {
+    filterGTF( ch_gtf )
+    makeRef( filterGTF.out, ch_fa )
+    cellrangerCount( ch_fastq.combine(makeRef.out) )
+    renameFeatures( cellrangerCount.out.sampleName.combine(filterGTF.out), cellrangerCount.out.countFiles )
+    runR( ch_rFile, renameFeatures.out.collect() )
+}
