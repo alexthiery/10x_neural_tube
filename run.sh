@@ -14,18 +14,20 @@ ml Graphviz
 
 nextflow pull alexthiery/10x_neural_tube -r dev -hub github
 
-nextflow run alexthiery/10x_neural_tube -r dev \
+nextflow run alexthiery/10x_neural_tube -r Dev \
 -hub github \
--profile local \
+-profile singularity \
 --metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv \
 --gtf /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.97.gtf \
 --fa /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.dna.toplevel.fa \
+--memory 100 \
+--max_cpus 16 \
 -resume \
 
 
-nextflow run alexthiery/10x_neural_tube -r dev \
--hub github \
---metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv \
---gtf ~/dev/genomes/galgal6/Gallus_gallus.GRCg6a.97.gtf \
---fa ~/dev/genomes/galgal6/Gallus_gallus.GRCg6a.dna.toplevel.fa \
--resume \
+# NXF_VER=20.01.0 nextflow run alexthiery/10x_neural_tube -r Dev \
+# -hub github \
+# -profile custom \
+# --metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv \
+# --gtf ~/dev/genomes/galgal6/Gallus_gallus.GRCg6a.97.gtf \
+# --fa ~/dev/genomes/galgal6/Gallus_gallus.GRCg6a.dna.toplevel.fa 
