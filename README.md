@@ -59,9 +59,18 @@ nextflow run alexthiery/10x_neural_tube \
 --fa <path to genome>
 ```
 
-This pipeline is configured to be ran on a cluster with 224GB memory and 32CPUs by default. These settings can be changed using the --max_cpus and --max_memory flags.
+This pipeline is configured to be ran on a cluster with 224GB memory and 32CPUs by default. The -profile flag can be used to set  either 'docker' or 'singularity', depending on the container application installed on your system. These settings can be adjusted  by replacing -profile with a custom config file as below.
 
-The -profile flag can also be set as either 'docker' or 'singularity', depending on the container installed on 
+``` sh
+nextflow run alexthiery/10x_neural_tube \
+-c <path to custom.config file> \
+--metadata <path to sampleInfo.csv> \
+--gtf <path to gtf> \
+--fa <path to genome>
+```
+
+ For a template of a custom.config file, see [crick.config](conf/crick.config). Further information on Nextflow config files can be found [here](https://www.nextflow.io/docs/latest/config.html#configuration-file)
+
 
 
 #
