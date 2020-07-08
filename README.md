@@ -29,6 +29,8 @@ This repository contains the required code to run the entire alignment and downs
 #
 The pipeline is run using Nextflow and Docker to ensure reproducibility. The repository can be called directly from GitHub, so to re-run the analysis you just need to install [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) and [Docker](https://docs.docker.com/get-docker/).
 
+
+
 If you are wanting to run the downstream analysis interactively outside of Nextflow, you still need to download Docker and you will also need to download this repository.
 
 #
@@ -43,6 +45,7 @@ We have also included Rstudio within our docker image to allow you to run the do
 #
 ## Nextflow
 #
+You can easily re-run our entire pipeline in Nextflow. For this
 
 #
 ## Interactive downstream analysis
