@@ -48,17 +48,22 @@ You can easily re-run our entire pipeline in Nextflow using the following steps:
 2) Download chick genome ([galgal6](ftp://ftp.ensembl.org/pub/release-97/fasta/gallus_gallus/dna/Gallus_gallus.GRCg6a.dna.toplevel.fa.gz))
 3) Download annotation gtf ([galgal6](ftp://ftp.ensembl.org/pub/release-97/gtf/gallus_gallus/Gallus_gallus.GRCg6a.97.gtf.gz))
 2) Download raw reads from [here]()
-3) Make a csv file containing the sample names and corresponding paths using this [template](sampleInfo.csv)
+3) Make a sampleInfo.csv file containing the sample names and corresponding paths using this [template](sampleInfo.csv)
 4) Run Nextflow using the following command
 
 ``` sh
-nextflow run alexthiery/10x_neural_tube -r Dev \
--hub github \
--profile singularity \
---metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv \
---gtf /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.97.gtf \
---fa /camp/home/thierya/working/genomes/galgal6/Gallus_gallus.GRCg6a.dna.toplevel.fa
+nextflow run alexthiery/10x_neural_tube \
+-profile docker \
+--metadata <path to sampleInfo.csv> \
+--gtf <path to gtf> \
+--fa <path to genome>
 ```
+
+This pipeline is configured to be ran on a cluster with 224GB memory and 32CPUs by default. These settings can be changed using the --max_cpus and --max_memory flags.
+
+The -profile flag can also be set as either 'docker' or 'singularity', depending on the container installed on 
+
+
 #
 ## Interactive downstream analysis
 #
