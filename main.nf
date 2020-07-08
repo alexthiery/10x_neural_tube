@@ -8,19 +8,6 @@ Pipeline params
 params.rFile = "$baseDir/bin/R/seurat_full.R"
 params.customFuncs = "$baseDir/bin/R/custom_functions"
 params.networkGenes = "$baseDir/bin/network_genes"
-// // Check params
-// if (!params.gtf) {
-//     exit 1, "No gtf file provided"
-// }
-// if (!params.fa) {
-//     exit 1, "No fa file provided"
-// }
-// if (!params.cpus) {
-//     params.cpus = 2
-// }
-// if (!params.ram) {
-//     params.ram = 4
-// }
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Include modules
