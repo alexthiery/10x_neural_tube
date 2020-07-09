@@ -3,7 +3,7 @@
 nextflow.preview.dsl=2
 
 process runR {
-    publishDir "${params.r_outDir}",
+    publishDir "${params.r_outDir}/test",
         mode: "copy", overwrite: true
 
     label 'high_memory'
