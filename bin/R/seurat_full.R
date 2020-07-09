@@ -718,7 +718,7 @@ for(stage in names(GOI)){
 }
 
 # Change order or clusters for plotting dotplots
-levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,4,6,1))
+levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,1,6,4))
 for(stage in names(levels)){
   seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
 }
