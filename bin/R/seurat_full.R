@@ -39,8 +39,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 if (opt$runtype == "user"){
   sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
   
-  plot.path = "./results/plots/"
-  rds.path = "./results/RDS.files/"
+  plot.path = "./results/R_results/plots/"
+  rds.path = "./results/R_results/RDS.files/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
@@ -92,8 +92,8 @@ if (opt$runtype == "user"){
   
   sapply(list.files('/home/bin/R/custom_functions/', full.names = T), source)
   
-  plot.path = "/home/results/plots/"
-  rds.path = "/home/results/RDS.files/"
+  plot.path = "/home/results/R_results/plots/"
+  rds.path = "/home/results/R_results/RDS.files/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
@@ -140,8 +140,20 @@ for(i in 1:nrow(sample.paths["path"])){
 temp <- merge(hh4, y = c(hh6, ss4, ss8), add.cell.ids = c("hh4", "hh6", "ss4", "ss8"), project = "chick.10x")
 merged.data<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
 
+
+# make seurat object with ensembl names and save as separate dataframe for adding to misc slot
+for(i in 1:nrow(sample.paths["path"])){
+  name<-paste(sample.paths[i,"tissue"])
+  assign(paste0(name, "_ensID"), CreateSeuratObject(counts= Read10X(data.dir = paste(sample.paths[i,"path"]), gene.column = 1), project = paste(sample.paths[i, "tissue"])))
+}
+temp <- merge(hh4_ensID, y = c(hh6_ensID, ss4_ensID, ss8_ensID), add.cell.ids = c("hh4", "hh6", "ss4", "ss8"), project = "chick.10x")
+merged.data_ensID<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
+
+# add gene IDs dataframe to merged data object
+Misc(merged.data, slot = "geneIDs") <- cbind("gene_ID" = rownames(merged.data_ensID), "gene_name" =  rownames(merged.data))
+
 # The original Seurat objects are then removed from the global environment
-rm(hh4, hh6, ss4, ss8, sample.paths, temp)
+rm(hh4, hh6, ss4, ss8, sample.paths, temp, hh4_ensID, hh6_ensID, ss4_ensID, ss8_ensID, merged.data_ensID)
 
 # Store mitochondrial percentage in object meta data
 merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "percent.mt")
