@@ -803,8 +803,8 @@ png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', r
 clust.res(seurat.obj = neural.seurat, by = 0.2)
 graphics.off()
 
-# Use clustering resolution = 1.2
-neural.seurat <- FindClusters(neural.seurat, resolution = 1.2)
+# Use clustering resolution = 1
+neural.seurat <- FindClusters(neural.seurat, resolution = 1)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
