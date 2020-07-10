@@ -19,5 +19,5 @@ NXF_VER=20.01.0 nextflow run alexthiery/10x_neural_tube -r Dev \
 -profile crick \
 --metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv \
 --gtf /camp/home/thierya/working/genomes/galgal5/Gallus_gallus.Gallus_gallus-5.0.94_modified.gtf \
---fa /camp/home/thierya/working/genomes/galgal5/Gallus_gallus.Gallus_gallus-5.0.dna.toplevel.fa.gz \
+--fa /camp/home/thierya/working/genomes/galgal5/Gallus_gallus.Gallus_gallus-5.0.dna.toplevel.fa \
 -resume
