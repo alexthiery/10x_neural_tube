@@ -1,4 +1,6 @@
 # HH4
+norm.data <- readRDS("./results/R_results/RDS.files/norm.data.RDS")
+
 temp <- "BACH1,CSRP2,DLX5,ELF1,ETS2,GATA2,GRHL3,HIC2,HOXA1,ID2,ID3,
 KLF5,MEF2D,MSX1,MYC,NANOG,PDLIM5,PITX2,RASSF7,TFAP2A,VGLL1,
 EPAS1,ATF3,CCND1,CEBPB,ETV1,ETV5,IRF7,KLF6,LIN28B,MGA,
@@ -37,7 +39,8 @@ HH4_missing <- c(
 
 HH4_missing <- data.frame(gene_id = HH4_missing, gene_names = names(HH4_missing), row.names = NULL, stringsAsFactors = F)
 
-HH4_genelist <- c(HH4_missing[HH4_missing$gene_id %in% merged.data@misc$geneIDs[,"gene_ID"],2], temp)
+
+HH4_genelist <- c(HH4_missing[HH4_missing$gene_id %in% norm.data@misc$geneIDs[,"gene_ID"],2], temp)
 
 # write HH4 genelist
 lapply(HH4_genelist, write, "./bin/network_genes/neural_induction_related_genes_HH4.txt", append = T)
@@ -77,12 +80,12 @@ HH6_missing <- c(
 HH6_missing <- data.frame(gene_id = HH6_missing, gene_names = names(HH6_missing), row.names = NULL, stringsAsFactors = F)
 
 # names of genes in original dataset
-HH6_genelist <- c(HH6_missing[HH6_missing$gene_id %in% merged.data@misc$geneIDs[,"gene_ID"],2], temp)
+HH6_genelist <- c(HH6_missing[HH6_missing$gene_id %in% norm.data@misc$geneIDs[,"gene_ID"],2], temp)
 
 lapply(HH6_genelist, write, "./bin/network_genes/neural_induction_related_genes_HH6.txt", append = T)
 
 # genes missing from merged dataset
-HH6_missing[!HH6_missing$gene_id %in% merged.data@misc$geneIDs[,"gene_ID"],]
+HH6_missing[!HH6_missing$gene_id %in% norm.data@misc$geneIDs[,"gene_ID"],]
 
 HH6_missing <- c("ENSGALG00000013454 HOXB1 - pseudogene")
 
