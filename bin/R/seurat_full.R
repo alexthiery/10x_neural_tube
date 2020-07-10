@@ -39,8 +39,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 if (opt$runtype == "user"){
   sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
   
-  plot.path = "./results/plots/"
-  rds.path = "./results/RDS.files/"
+  plot.path = "./results/R_results/plots/"
+  rds.path = "./results/R_results/RDS.files/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
@@ -92,8 +92,8 @@ if (opt$runtype == "user"){
   
   sapply(list.files('/home/bin/R/custom_functions/', full.names = T), source)
   
-  plot.path = "/home/results/plots/"
-  rds.path = "/home/results/RDS.files/"
+  plot.path = "/home/results/R_results/plots/"
+  rds.path = "/home/results/R_results/RDS.files/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
@@ -140,8 +140,20 @@ for(i in 1:nrow(sample.paths["path"])){
 temp <- merge(hh4, y = c(hh6, ss4, ss8), add.cell.ids = c("hh4", "hh6", "ss4", "ss8"), project = "chick.10x")
 merged.data<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
 
+
+# make seurat object with ensembl names and save as separate dataframe for adding to misc slot
+for(i in 1:nrow(sample.paths["path"])){
+  name<-paste(sample.paths[i,"tissue"])
+  assign(paste0(name, "_ensID"), CreateSeuratObject(counts= Read10X(data.dir = paste(sample.paths[i,"path"]), gene.column = 1), project = paste(sample.paths[i, "tissue"])))
+}
+temp <- merge(hh4_ensID, y = c(hh6_ensID, ss4_ensID, ss8_ensID), add.cell.ids = c("hh4", "hh6", "ss4", "ss8"), project = "chick.10x")
+merged.data_ensID<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
+
+# add gene IDs dataframe to merged data object
+Misc(merged.data, slot = "geneIDs") <- cbind("gene_ID" = rownames(merged.data_ensID), "gene_name" =  rownames(merged.data))
+
 # The original Seurat objects are then removed from the global environment
-rm(hh4, hh6, ss4, ss8, sample.paths, temp)
+rm(hh4, hh6, ss4, ss8, sample.paths, temp, hh4_ensID, hh6_ensID, ss4_ensID, ss8_ensID, merged.data_ensID)
 
 # Store mitochondrial percentage in object meta data
 merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "percent.mt")
@@ -667,7 +679,7 @@ for(stage in names(seurat_stage)){
 }
 
 # Use custom clustering resolution for each stage
-res = c("hh4" = 0.5, "hh6" = 0.4, "ss4" = 0.4, "ss8" = 0.3)
+res = c("hh4" = 0.5, "hh6" = 0.5, "ss4" = 0.5, "ss8" = 0.5)
 seurat_stage <- lapply(names(res), function(x) FindClusters(seurat_stage[[x]], resolution = res[names(res) %in% x]))
 names(seurat_stage) = names(res)
 
@@ -706,7 +718,7 @@ for(stage in names(GOI)){
 }
 
 # Change order or clusters for plotting dotplots
-levels = list("hh4" = c(3,0,1,2), "hh6" = c(2,1,3,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,1,4,0))
+levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,1,6,4))
 for(stage in names(levels)){
   seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
 }
@@ -737,7 +749,7 @@ saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
 # seurat_stage <- readRDS(paste0(rds.path, "seurat_stage_out.RDS"))
 
 # Make list of clusters to subset
-clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,3), "ss4" = c(0,1), "ss8" = c(0,1,4))
+clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,2), "ss4" = c(0,1), "ss8" = c(0,1,4,6,7))
 
 ########## Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
 
