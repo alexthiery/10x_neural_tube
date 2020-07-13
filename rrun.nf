@@ -24,7 +24,7 @@ log.info projectHeader()
 
 // Header log info
 def summary = [:]
-summary['Run Name']               = custom_runName ?: workflow.runName
+summary['Run Name']               = workflow.runName
 summary['Metadata File']          = params.metadata
 summary['Fasta File']             = params.fa
 summary['GTF File']               = params.gtf
