@@ -23,7 +23,6 @@ Init
 log.info projectHeader()
 
 // Header log info
-log.info nfcoreHeader()
 def summary = [:]
 summary['Run Name']               = custom_runName ?: workflow.runName
 summary['Metadata File']          = params.metadata
