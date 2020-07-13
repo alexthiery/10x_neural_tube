@@ -404,10 +404,10 @@ dir.create(curr.plot.path)
 
 # Identify mesoderm and PGCs
 # UMAP plots GOI
-genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
+genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "CXCR4")
 
-ncol = 4
-png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 10*ceiling((length(genes)+1)/ncol), units = "cm", res = 200)
+ncol = 3
+png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 10*ceiling((length(genes)+2)/ncol), units = "cm", res = 200)
 multi.feature.plot(seurat.obj = norm.data.sexscale, gene.list = genes, plot.clusters = T,
                    plot.stage = T, label = "", cluster.col = "RNA_snn_res.0.5", n.col = ncol)
 graphics.off()
