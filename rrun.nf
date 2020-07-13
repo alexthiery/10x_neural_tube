@@ -22,6 +22,24 @@ Init
 // Show banner
 log.info projectHeader()
 
+// Header log info
+log.info nfcoreHeader()
+def summary = [:]
+summary['Run Name']               = custom_runName ?: workflow.runName
+summary['Metadata File']          = params.metadata
+summary['Fasta File']             = params.fa
+summary['GTF File']               = params.gtf
+summary['Max Resources']          = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
+if (workflow.containerEngine)     summary['Container'] = "$workflow.containerEngine - $workflow.container"
+summary['Output Dir']             = params.outdir
+summary['Launch Dir']             = workflow.launchDir
+summary['Working Dir']            = workflow.workDir
+summary['Script Dir']             = workflow.projectDir
+summary['User']                   = workflow.userName
+summary['Config Profile']         = workflow.profile
+log.info summary.collect { k,v -> "${k.padRight(20)}: $v" }.join('\n')
+log.info "-\033[2m--------------------------------------------------\033[0m-"
+
 /*------------------------------------------------------------------------------------*/
 /* Define input channels
 --------------------------------------------------------------------------------------*/
