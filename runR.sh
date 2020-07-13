@@ -17,4 +17,4 @@ nextflow pull alexthiery/10x_neural_tube -r R -hub github
 NXF_VER=20.01.0 nextflow run alexthiery/10x_neural_tube -r R \
 -hub github \
 -profile crick \
---counts /camp/home/thierya/scratch/10x_neural_tube/storedat/alignmentOut/cellrangerCounts_renamed
+--counts /camp/home/thierya/scratch/10x_neural_tube/alignmentOut/cellrangerCounts_renamed
