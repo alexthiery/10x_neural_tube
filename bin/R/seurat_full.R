@@ -266,7 +266,7 @@ norm.data@meta.data$k_clusters <- k_clusters[match(colnames(norm.data@assays$RNA
 k_clus_1 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 1,])
 k_clus_2 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 2,])
 
-# K clustering identities are stochastic, so I mneed to identify which cluster is male and female
+# K clustering identities are stochastic, so I need to identify which cluster is male and female
 # Sum of W genes is order of magnitude greater in cluster 2 - these are the female cells
 sumclus1 <- sum(W_genes[,k_clus_1])
 sumclus2 <- sum(W_genes[,k_clus_2])
