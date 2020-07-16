@@ -9,7 +9,7 @@ params.rFile = "$baseDir/bin/R/seurat_full.R"
 params.customFuncs = "$baseDir/bin/R/custom_functions"
 params.networkGenes = "$baseDir/bin/network_genes"
 params.wGenes = "$baseDir/bin/wGenes/wGenes.csv"
-params.py-modifyGTF = "$baseDir/bin/python/modifyGTF.py"
+params.pymodifyGTF = "$baseDir/bin/python/modifyGTF.py"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Include modules
@@ -68,7 +68,7 @@ Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    modifyGTF( file(params.py-modifyGTF), ch_gtf, file(params.wGenes) )
+    modifyGTF( file(params.pymodifyGTF), ch_gtf, file(params.wGenes) )
     filterGTF( modifyGTF.out )
     makeRef( filterGTF.out, ch_fa )
     cellrangerCount( ch_fastq.combine(makeRef.out) )
