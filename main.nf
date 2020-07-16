@@ -50,11 +50,11 @@ log.info "-\033[2m--------------------------------------------------\033[0m-"
 --------------------------------------------------------------------------------------*/
 
 Channel
-    .from( params.gtf )
+    .fromPath( params.gtf )
     .set {ch_gtf}
 
 Channel
-    .from( params.fa )
+    .fromPath( params.fa )
     .set {ch_fa}
 
 Channel
@@ -68,9 +68,9 @@ Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    modifyGTF( params.py-modifyGTF, ch_gtf, params.wGenes )
+    modifyGTF( file(params.py-modifyGTF), ch_gtf, file(params.wGenes) )
     filterGTF( modifyGTF.out )
     makeRef( filterGTF.out, ch_fa )
     cellrangerCount( ch_fastq.combine(makeRef.out) )
-    runR( params.rFile, cellrangerCount.out.countFiles.collect() )
+    runR( file(params.rFile), cellrangerCount.out.countFiles.collect() )
 }
