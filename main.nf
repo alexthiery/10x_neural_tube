@@ -5,9 +5,9 @@ nextflow.preview.dsl=2
 /*-----------------------------------------------------------------------------------------------------------------------------
 Pipeline params
 -------------------------------------------------------------------------------------------------------------------------------*/
-// params.rFile = "$baseDir/bin/R/seurat_full.R"
-// params.customFuncs = "$baseDir/bin/R/custom_functions"
-// params.networkGenes = "$baseDir/bin/network_genes"
+params.rFile = "$baseDir/bin/R/seurat_full.R"
+params.customFuncs = "$baseDir/bin/R/custom_functions"
+params.networkGenes = "$baseDir/bin/network_genes"
 params.wGenes = "$baseDir/bin/wGenes/wGenes.csv"
 params.py-modifyGTF = "$baseDir/bin/python/modifyGTF.py"
 
@@ -17,10 +17,10 @@ Include modules
 
 include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
 include modifyGTF from "$baseDir/modules/modifyGTF/modifyGTF.nf"
-// include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
-// include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
-// include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
-// include runR from "$baseDir/modules/runR/runR.nf"
+include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
+include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
+include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
+include runR from "$baseDir/modules/runR/runR.nf"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Init
@@ -53,24 +53,24 @@ Channel
     .fromPath( params.gtf )
     .set {ch_gtf}
 
-// Channel
-//     .fromPath( params.fa )
-//     .set {ch_fa}
+Channel
+    .fromPath( params.fa )
+    .set {ch_fa}
 
-// Channel
-//     .fromPath( params.metadata )
-//     .splitCsv(header: ['sample_id', 'sample_name', 'dir1', 'dir2'], skip: 1 )
-//     .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
-//     .set { ch_fastq }
+Channel
+    .fromPath( params.metadata )
+    .splitCsv(header: ['sample_id', 'sample_name', 'dir1', 'dir2'], skip: 1 )
+    .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
+    .set { ch_fastq }
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    modifyGTF( Channel.fromPath(params.py-modifyGTF), ch_gtf, Channel.fromPath(params.wGenes) )
-    // filterGTF( modifyGTF.out )
-    // makeRef( filterGTF.out, ch_fa )
-    // cellrangerCount( ch_fastq.combine(makeRef.out) )
-    // runR( file(params.rFile), cellrangerCount.out.countFiles.collect() )
+    modifyGTF( file(params.py-modifyGTF), ch_gtf, file(params.wGenes) )
+    filterGTF( modifyGTF.out )
+    makeRef( filterGTF.out, ch_fa )
+    cellrangerCount( ch_fastq.combine(makeRef.out) )
+    runR( file(params.rFile), cellrangerCount.out.countFiles.collect() )
 }
