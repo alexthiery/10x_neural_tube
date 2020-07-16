@@ -5,9 +5,9 @@ nextflow.preview.dsl=2
 /*-----------------------------------------------------------------------------------------------------------------------------
 Pipeline params
 -------------------------------------------------------------------------------------------------------------------------------*/
-params.rFile = "$baseDir/bin/R/seurat_full.R"
-params.customFuncs = "$baseDir/bin/R/custom_functions"
-params.networkGenes = "$baseDir/bin/network_genes"
+// params.rFile = "$baseDir/bin/R/seurat_full.R"
+// params.customFuncs = "$baseDir/bin/R/custom_functions"
+// params.networkGenes = "$baseDir/bin/network_genes"
 params.wGenes = "$baseDir/bin/wGenes/wGenes.csv"
 params.py-modifyGTF = "$baseDir/bin/python/modifyGTF.py"
 
@@ -16,7 +16,7 @@ Include modules
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
-// include modifyGTF from "$baseDir/modules/modifyGTF/modifyGTF.nf"
+include modifyGTF from "$baseDir/modules/modifyGTF/modifyGTF.nf"
 // include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
 // include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
 // include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
