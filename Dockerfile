@@ -27,7 +27,7 @@ RUN apt-get update \
  procps=2:3.3.15-2 \
  build-essential=12.6 \
  zlib1g-dev=1:1.2.11.dfsg-1 \
- python3-pandas \
+ python-pandas \
  libxt-dev \
  libmagick++-dev
 
