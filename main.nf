@@ -36,7 +36,7 @@ summary['Fasta File']             = params.fa
 summary['GTF File']               = params.gtf
 summary['Max Resources']          = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine)     summary['Container'] = "$workflow.containerEngine - $workflow.container"
-summary['Output Dir']             = params.outdir
+summary['Output Dir']             = params.outDir
 summary['Launch Dir']             = workflow.launchDir
 summary['Working Dir']            = workflow.workDir
 summary['Script Dir']             = workflow.projectDir
@@ -68,7 +68,7 @@ Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    modifyGTF( file(params.py-modifyGTF), ch_gtf, file(params.wGenes) )
+    modifyGTF( Channel.fromPath(params.py-modifyGTF), ch_gtf, Channel.fromPath(params.wGenes) )
     // filterGTF( modifyGTF.out )
     // makeRef( filterGTF.out, ch_fa )
     // cellrangerCount( ch_fastq.combine(makeRef.out) )
