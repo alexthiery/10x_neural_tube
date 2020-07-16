@@ -8,16 +8,18 @@ Pipeline params
 params.rFile = "$baseDir/bin/R/seurat_full.R"
 params.customFuncs = "$baseDir/bin/R/custom_functions"
 params.networkGenes = "$baseDir/bin/network_genes"
+params.wGenes = "$baseDir/bin/wGenes/wGenes.csv"
+params.py-modifyGTF = "$baseDir/bin/python/modifyGTF.py"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Include modules
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
+include modifyGTF from "$baseDir/modules/modifyGTF/modifyGTF.nf"
 include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
 include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
 include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
-include renameFeatures from "$baseDir/modules/renameFeatures/renameFeatures.nf"
 include runR from "$baseDir/modules/runR/runR.nf"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
@@ -61,18 +63,14 @@ Channel
     .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
     .set { ch_fastq }
 
-Channel
-    .fromPath(params.rFile)
-    .set { ch_rFile }
-
 /*-----------------------------------------------------------------------------------------------------------------------------
 Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    filterGTF( ch_gtf )
+    modifyGTF( params.py-modifyGTF, ch_gtf, params.wGenes )
+    filterGTF( modifyGTF.out )
     makeRef( filterGTF.out, ch_fa )
     cellrangerCount( ch_fastq.combine(makeRef.out) )
-    renameFeatures( cellrangerCount.out.sampleName.combine(filterGTF.out), cellrangerCount.out.countFiles )
-    runR( ch_rFile, renameFeatures.out.collect() )
+    runR( params.rFile, cellrangerCount.out.countFiles.collect() )
 }
