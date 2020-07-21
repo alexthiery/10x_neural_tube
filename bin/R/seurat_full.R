@@ -286,47 +286,12 @@ saveRDS(cell.sex.ID, paste0(rds.path, "sex_kmeans.RDS"))
 norm.data@meta.data$sex <- unlist(lapply(rownames(norm.data@meta.data), function(x)
   if(x %in% k.male){"male"} else if(x %in% k.female){"female"} else{stop("cell sex is not assigned")}))
 
-
-###### Next - subset autosomal genes and Z genes - then calculate the average for each gene for both kmeans clustered cells and plot in order to compare whether the two groups show significant differences in their expression.
-
-# This is a test on autosomal genes to try and calculate and compare FC betweeen clusters
-# Calculating median is tricky as there are a lot of dropouts in 10x data so you end up with either 0s (when the median  = 0) or 1 (when the median expression in both clusters is the same - probably a result of normalisation resulting in a UMI of 0 or 1 being normalised to a nominal value)
-
-# Make dataframe for mean Z expression in male cells
-mean.Z.male <- data.frame(Z.mean = apply(norm.data@assays$RNA[grepl("Z-", rownames(norm.data@assays$RNA)), k.male], 1, mean))
-# add 1 before log2 as log2(1) = 0
-mean.Z.male <- log2(mean.Z.male + 1)
-
-# Make dataframe for mean Z expression in female cells
-mean.Z.female <- data.frame(Z.mean = apply(norm.data@assays$RNA[grepl("Z-", rownames(norm.data@assays$RNA)), k.female], 1, mean))
-mean.Z.female <- log2(mean.Z.female + 1)
-
-# Make dataframe for mean autosomal expression in male cells
-mean.auto.male <- data.frame(auto.mean = apply(norm.data@assays$RNA[!grepl("Z-", rownames(norm.data@assays$RNA)) & !grepl("W-", rownames(norm.data@assays$RNA)), k.male], 1, mean))
-mean.auto.male <- log2(mean.auto.male + 1)
-
-# Make dataframe for mean autosomal expression in male cells
-mean.auto.female <- data.frame(auto.mean = apply(norm.data@assays$RNA[!grepl("Z-", rownames(norm.data@assays$RNA)) & !grepl("W-", rownames(norm.data@assays$RNA)), k.female], 1, mean))
-mean.auto.female <- log2(mean.auto.female + 1)
-
-# Calculate FC by subtracting log2 expression from each other
-FC <- list()
-FC$Z <- mean.Z.male - mean.Z.female
-FC$auto <-  mean.auto.male - mean.auto.female
-
-# Plot boxplot of Z gene and autosomal expression in male vs female cells
-png(paste0(curr.plot.path,"sex_kmeans_log2FC_boxplot.png"), height = 18, width = 18, units = "cm", res = 200)
-boxplot(c(FC$Z, FC$auto),  ylab = "male - female log2 FC (mean normalised UMI +1)", names = c("Z chromosome genes", "autosomal genes"))
-graphics.off()
-
-# Z genes are upregulated within male genes relative to female genes whereas autosomal genes have a normal distribution of logFCs
-
 #####################################################################################################
-#                                     Regress sex effect                                            #
+#                             Remove W chromosome genes and regress sex effect                      #                      #
 #####################################################################################################
 
-# Init sexscale object 
-norm.data.sexscale <- norm.data
+# Init sexscale object
+norm.data.sexscale <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.data))],]
 
 # Re-run findvariablefeatures and scaling
 norm.data.sexscale <- FindVariableFeatures(norm.data.sexscale, selection.method = "vst", nfeatures = 2000)
