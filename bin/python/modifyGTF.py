@@ -33,10 +33,9 @@ with open(fn, 'rt') as gtf:
             chr = line.split()[0]
             if chr in lab:
                 match = [s for s in lab if chr in s]
-                if 'gene_id' in line:
-                    line = re.sub('gene_id "', 'gene_id "'+''.join(match)+'-', line)
+                line = re.sub('gene_id "', 'gene_id "'+''.join(match)+'-', line)
                 if 'gene_name' in line:
-                    line = re.sub('gene_name "', 'gene_id "'+''.join(match)+'-', line)
+                    line = re.sub('gene_name "', 'gene_name "'+''.join(match)+'-', line)
 
             # change gene names and gene ids which are on W chrom in galgal6 but not galgal5 (W_genes)
             gene_id = line.split('gene_id')[1].split(';')[0].replace('"', '').strip()
