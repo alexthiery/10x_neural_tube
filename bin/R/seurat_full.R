@@ -670,7 +670,7 @@ for(stage in names(seurat_stage)){
 # Plot features listed below at each stage
 GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
                      "AATF", "MAFA", "ING5", "SETD2", "LIN28B", "YEATS4",
-                     "TBXT", "EOMES", "ADMP"),
+                     "EOMES", "ADMP"),
            "hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
            "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
            "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
