@@ -14,7 +14,7 @@ ml Graphviz
 
 nextflow pull alexthiery/10x_neural_tube -r nextflow -hub github
 
-NXF_VER=20.01.0 nextflow run alexthiery/10x_neural_tube -r nextflow \
+NXF_VER=20.01.0 nextflow run alexthiery/10x_neural_tube \
 -hub github \
 -profile crick \
 --metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv \
