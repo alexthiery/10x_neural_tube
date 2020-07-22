@@ -27,9 +27,11 @@ RUN apt-get update \
  procps=2:3.3.15-2 \
  build-essential=12.6 \
  zlib1g-dev=1:1.2.11.dfsg-1 \
- python3-pandas \
  libxt-dev \
- libmagick++-dev
+ libmagick++-dev \
+ python-pip
+
+RUN pip install pandas
 
 RUN R -e "devtools::install_version('Seurat', version = '3.1.5', dependencies= NA)"
 RUN R -e "devtools::install_version('future', version = '1.17.0', dependencies= T)"
@@ -39,4 +41,3 @@ RUN R -e "devtools::install_version('gridExtra', version = '2.3', dependencies=T
 RUN R -e "devtools::install_version('getopt', version = '1.20.3', dependencies=T)"
 RUN R -e "devtools::install_version('pheatmap', version = '1.0.12', dependencies=T)"
 RUN R -e "BiocManager::install('limma')"
-
