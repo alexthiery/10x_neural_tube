@@ -77,6 +77,16 @@ nextflow run alexthiery/10x_neural_tube \
 ## Interactive downstream analysis
 #
 
+If do not want to re-run the alignment, but would like to run the downstream analysis from the count files, you can run RStudio from within the docker container.
+
+To do this, follow these steps:
+
+1) clone this repository to your local computer
+2) download docker image - `docker pull alexthiery/10x_neural_tube:v1.0`
+3) launch docker container interactively - `docker run --rm -e PASSWORD=test -p 8787:8787 -v <PATH_TO_LOCAL_REPOSITORY>:/home/rstudio alexthiery/10x_neural_tube:v1.0`
+4) go to `localhost:8787` in the browser to open RStudio
+
+
 #
 ## Downstream analysis pipeline
 #
