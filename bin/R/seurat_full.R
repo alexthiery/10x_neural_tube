@@ -449,7 +449,7 @@ graphics.off()
 
 norm.data.clustfilt <- rownames(norm.data.contamfilt@meta.data)[norm.data.contamfilt@meta.data$seurat_clusters ==  11 |
                                                                   norm.data.contamfilt@meta.data$seurat_clusters == 14 |
-                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 17 |
+                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 16 |
                                                                   norm.data.contamfilt@meta.data$seurat_clusters == 18]
 
 norm.data.clustfilt <- subset(norm.data.contamfilt, cells = norm.data.clustfilt, invert = T)
