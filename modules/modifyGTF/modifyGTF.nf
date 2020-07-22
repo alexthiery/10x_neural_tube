@@ -7,6 +7,8 @@ process modifyGTF {
     publishDir "${params.alignment_outDir}/modifiedGTF",
     mode: "copy", overwrite: true
 
+    label 'low_memory'
+
     input:
         path(pythonFile)
         path(gtf)

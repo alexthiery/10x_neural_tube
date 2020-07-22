@@ -12,7 +12,7 @@ ml Nextflow/20.01.0
 ml Singularity/3.4.2
 ml Graphviz
 
-nextflow pull alexthiery/10x_neural_tube -r nextflow -hub github
+nextflow pull alexthiery/10x_neural_tube -hub github
 
 NXF_VER=20.01.0 nextflow run alexthiery/10x_neural_tube \
 -hub github \
