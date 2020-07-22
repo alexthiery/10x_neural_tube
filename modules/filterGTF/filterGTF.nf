@@ -18,5 +18,6 @@ process filterGTF {
     cellranger mkgtf ${gtf} filtered_genome.gtf \
     --attribute=gene_biotype:protein_coding \
     --attribute=gene_biotype:lncRNA \
+    --attribute=gene_biotype:pseudogene
     """
 }

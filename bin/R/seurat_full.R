@@ -39,8 +39,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 if (opt$runtype == "user"){
   sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
   
-  plot.path = "./results/plots/"
-  rds.path = "./results/RDS.files/"
+  plot.path = "./results/R_results/plots/"
+  rds.path = "./results/R_results/RDS.files/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
@@ -92,8 +92,8 @@ if (opt$runtype == "user"){
   
   sapply(list.files('/home/bin/R/custom_functions/', full.names = T), source)
   
-  plot.path = "/home/results/plots/"
-  rds.path = "/home/results/RDS.files/"
+  plot.path = "/home/results/R_results/plots/"
+  rds.path = "/home/results/R_results/RDS.files/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
@@ -140,8 +140,20 @@ for(i in 1:nrow(sample.paths["path"])){
 temp <- merge(hh4, y = c(hh6, ss4, ss8), add.cell.ids = c("hh4", "hh6", "ss4", "ss8"), project = "chick.10x")
 merged.data<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
 
+
+# make seurat object with ensembl names and save as separate dataframe for adding to misc slot
+for(i in 1:nrow(sample.paths["path"])){
+  name<-paste(sample.paths[i,"tissue"])
+  assign(paste0(name, "_ensID"), CreateSeuratObject(counts= Read10X(data.dir = paste(sample.paths[i,"path"]), gene.column = 1), project = paste(sample.paths[i, "tissue"])))
+}
+temp <- merge(hh4_ensID, y = c(hh6_ensID, ss4_ensID, ss8_ensID), add.cell.ids = c("hh4", "hh6", "ss4", "ss8"), project = "chick.10x")
+merged.data_ensID<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
+
+# add gene IDs dataframe to merged data object
+Misc(merged.data, slot = "geneIDs") <- cbind("gene_ID" = rownames(merged.data_ensID), "gene_name" =  rownames(merged.data))
+
 # The original Seurat objects are then removed from the global environment
-rm(hh4, hh6, ss4, ss8, sample.paths, temp)
+rm(hh4, hh6, ss4, ss8, sample.paths, temp, hh4_ensID, hh6_ensID, ss4_ensID, ss8_ensID, merged.data_ensID)
 
 # Store mitochondrial percentage in object meta data
 merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "percent.mt")
@@ -254,7 +266,7 @@ norm.data@meta.data$k_clusters <- k_clusters[match(colnames(norm.data@assays$RNA
 k_clus_1 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 1,])
 k_clus_2 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 2,])
 
-# K clustering identities are stochastic, so I mneed to identify which cluster is male and female
+# K clustering identities are stochastic, so I need to identify which cluster is male and female
 # Sum of W genes is order of magnitude greater in cluster 2 - these are the female cells
 sumclus1 <- sum(W_genes[,k_clus_1])
 sumclus2 <- sum(W_genes[,k_clus_2])
@@ -274,47 +286,12 @@ saveRDS(cell.sex.ID, paste0(rds.path, "sex_kmeans.RDS"))
 norm.data@meta.data$sex <- unlist(lapply(rownames(norm.data@meta.data), function(x)
   if(x %in% k.male){"male"} else if(x %in% k.female){"female"} else{stop("cell sex is not assigned")}))
 
-
-###### Next - subset autosomal genes and Z genes - then calculate the average for each gene for both kmeans clustered cells and plot in order to compare whether the two groups show significant differences in their expression.
-
-# This is a test on autosomal genes to try and calculate and compare FC betweeen clusters
-# Calculating median is tricky as there are a lot of dropouts in 10x data so you end up with either 0s (when the median  = 0) or 1 (when the median expression in both clusters is the same - probably a result of normalisation resulting in a UMI of 0 or 1 being normalised to a nominal value)
-
-# Make dataframe for mean Z expression in male cells
-mean.Z.male <- data.frame(Z.mean = apply(norm.data@assays$RNA[grepl("Z-", rownames(norm.data@assays$RNA)), k.male], 1, mean))
-# add 1 before log2 as log2(1) = 0
-mean.Z.male <- log2(mean.Z.male + 1)
-
-# Make dataframe for mean Z expression in female cells
-mean.Z.female <- data.frame(Z.mean = apply(norm.data@assays$RNA[grepl("Z-", rownames(norm.data@assays$RNA)), k.female], 1, mean))
-mean.Z.female <- log2(mean.Z.female + 1)
-
-# Make dataframe for mean autosomal expression in male cells
-mean.auto.male <- data.frame(auto.mean = apply(norm.data@assays$RNA[!grepl("Z-", rownames(norm.data@assays$RNA)) & !grepl("W-", rownames(norm.data@assays$RNA)), k.male], 1, mean))
-mean.auto.male <- log2(mean.auto.male + 1)
-
-# Make dataframe for mean autosomal expression in male cells
-mean.auto.female <- data.frame(auto.mean = apply(norm.data@assays$RNA[!grepl("Z-", rownames(norm.data@assays$RNA)) & !grepl("W-", rownames(norm.data@assays$RNA)), k.female], 1, mean))
-mean.auto.female <- log2(mean.auto.female + 1)
-
-# Calculate FC by subtracting log2 expression from each other
-FC <- list()
-FC$Z <- mean.Z.male - mean.Z.female
-FC$auto <-  mean.auto.male - mean.auto.female
-
-# Plot boxplot of Z gene and autosomal expression in male vs female cells
-png(paste0(curr.plot.path,"sex_kmeans_log2FC_boxplot.png"), height = 18, width = 18, units = "cm", res = 200)
-boxplot(c(FC$Z, FC$auto),  ylab = "male - female log2 FC (mean normalised UMI +1)", names = c("Z chromosome genes", "autosomal genes"))
-graphics.off()
-
-# Z genes are upregulated within male genes relative to female genes whereas autosomal genes have a normal distribution of logFCs
-
 #####################################################################################################
-#                                     Regress sex effect                                            #
+#                             Remove W chromosome genes and regress sex effect                      #                      #
 #####################################################################################################
 
-# Init sexscale object 
-norm.data.sexscale <- norm.data
+# Init sexscale object
+norm.data.sexscale <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.data))],]
 
 # Re-run findvariablefeatures and scaling
 norm.data.sexscale <- FindVariableFeatures(norm.data.sexscale, selection.method = "vst", nfeatures = 2000)
@@ -392,10 +369,10 @@ dir.create(curr.plot.path)
 
 # Identify mesoderm and PGCs
 # UMAP plots GOI
-genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
+genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "CXCR4")
 
-ncol = 4
-png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 10*ceiling((length(genes)+1)/ncol), units = "cm", res = 200)
+ncol = 3
+png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 10*ceiling((length(genes)+2)/ncol), units = "cm", res = 200)
 multi.feature.plot(seurat.obj = norm.data.sexscale, gene.list = genes, plot.clusters = T,
                    plot.stage = T, label = "", cluster.col = "RNA_snn_res.0.5", n.col = ncol)
 graphics.off()
@@ -407,11 +384,11 @@ graphics.off()
 
 ############################### Remove contaminating cells from clusters ########################################
 # Clust 8 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
-# Clust 9 = Late mesoderm - expresses twist1, six1, eya2
-# Clust 10 = PGC's - expresses dazl very highly
+# Clust 10 = Late mesoderm - expresses twist1, six1, eya2
+# Clust 11 = PGC's - expresses dazl very highly
 norm.data.contamfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  8 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 9 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 10]
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 10 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 11]
 
 norm.data.contamfilt <- subset(norm.data.sexscale, cells = norm.data.contamfilt, invert = T)
 
@@ -453,8 +430,8 @@ png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', r
 clust.res(seurat.obj = norm.data.contamfilt, by = 0.2)
 graphics.off()
 
-# Use clustering resolution = 1.6 in order to make lots of clusters and identify any remaining poor quality cells
-norm.data.contamfilt <- FindClusters(norm.data.contamfilt, resolution = 1.6)
+# Use clustering resolution = 1.4 in order to make lots of clusters and identify any remaining poor quality cells
+norm.data.contamfilt <- FindClusters(norm.data.contamfilt, resolution = 1.4)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
@@ -462,7 +439,7 @@ clust.stage.plot(norm.data.contamfilt)
 graphics.off()
 
 # Plot QC for each cluster
-png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
+png(paste0(curr.plot.path, "cluster.QC.png"), width=45, height=14, units = 'cm', res = 200)
 QC.plot(norm.data.contamfilt)
 graphics.off()
 
@@ -470,10 +447,10 @@ graphics.off()
 
 ############################### Remove poor quality clusters ########################################
 
-norm.data.clustfilt <- rownames(norm.data.contamfilt@meta.data)[norm.data.contamfilt@meta.data$seurat_clusters ==  12 |
+norm.data.clustfilt <- rownames(norm.data.contamfilt@meta.data)[norm.data.contamfilt@meta.data$seurat_clusters ==  11 |
+                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 14 |
                                                                   norm.data.contamfilt@meta.data$seurat_clusters == 16 |
-                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 17 |
-                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 19]
+                                                                  norm.data.contamfilt@meta.data$seurat_clusters == 18]
 
 norm.data.clustfilt <- subset(norm.data.contamfilt, cells = norm.data.clustfilt, invert = T)
 
@@ -667,7 +644,7 @@ for(stage in names(seurat_stage)){
 }
 
 # Use custom clustering resolution for each stage
-res = c("hh4" = 0.5, "hh6" = 0.4, "ss4" = 0.4, "ss8" = 0.3)
+res = c("hh4" = 0.5, "hh6" = 0.5, "ss4" = 0.5, "ss8" = 0.5)
 seurat_stage <- lapply(names(res), function(x) FindClusters(seurat_stage[[x]], resolution = res[names(res) %in% x]))
 names(seurat_stage) = names(res)
 
@@ -693,7 +670,7 @@ for(stage in names(seurat_stage)){
 # Plot features listed below at each stage
 GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
                      "AATF", "MAFA", "ING5", "SETD2", "LIN28B", "YEATS4",
-                     "TBXT", "EOMES", "ADMP"),
+                     "EOMES", "ADMP"),
            "hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
            "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
            "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
@@ -706,7 +683,7 @@ for(stage in names(GOI)){
 }
 
 # Change order or clusters for plotting dotplots
-levels = list("hh4" = c(3,0,1,2), "hh6" = c(2,1,3,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,1,4,0))
+levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,4,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,1,6,4))
 for(stage in names(levels)){
   seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
 }
@@ -737,7 +714,7 @@ saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
 # seurat_stage <- readRDS(paste0(rds.path, "seurat_stage_out.RDS"))
 
 # Make list of clusters to subset
-clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,3), "ss4" = c(0,1), "ss8" = c(0,1,4))
+clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,2,4), "ss4" = c(0,1), "ss8" = c(0,1,4,6,7))
 
 ########## Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
 

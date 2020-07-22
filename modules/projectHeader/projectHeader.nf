@@ -29,12 +29,7 @@ ${c_blue}    | |   | | | || ||  __/| |   | |_| |  / /_ | |_| |/ /_ | |_| | ${c_r
 ${c_blue}    |_|   |_| |_||_| \\___||_|    \\__, | |____| \\___/|____| \\___/ ${c_reset}
 ${c_blue}                                  __/ | ${c_reset}
 ${c_blue}                                 |___/ ${c_reset}
-${c_magenta}                        _       _ ${c_reset}
-${c_magenta}                       (_)     (_) ${c_reset}
-${c_magenta}                           / ${c_reset}
-${c_magenta}                          (___ ${c_reset}
-
-${c_magenta}                         \\_____/ ${c_reset}
+${c_magenta} alexthiery/10x_neural_tube ${c_reset}
 
 -${c_dim}---------------------------------------------------------------${c_reset}-
     """.stripIndent()

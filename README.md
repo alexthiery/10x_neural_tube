@@ -43,6 +43,35 @@ We have also included Rstudio within our docker image to allow you to run the do
 #
 ## Nextflow
 #
+You can easily re-run our entire pipeline in Nextflow using the following steps:
+1) Install Nextflow and Docker
+2) Download chick genome ([galgal6](http://ftp.ensembl.org/pub/release-97/fasta/gallus_gallus/dna/Gallus_gallus.GRCg6a.dna.toplevel.fa.gz))
+3) Download annotation gtf ([galgal6](http://ftp.ensembl.org/pub/release-97/gtf/gallus_gallus/Gallus_gallus.GRCg6a.97.gtf.gz))
+2) Download raw reads from [here]()
+3) Make a sampleInfo.csv file containing the sample names and corresponding paths using this [template](sampleInfo.csv)
+4) Run Nextflow using the following command
+
+``` sh
+nextflow run alexthiery/10x_neural_tube \
+-profile docker \
+--metadata <path to sampleInfo.csv> \
+--gtf <path to gtf> \
+--fa <path to genome>
+```
+
+This pipeline is configured to be ran on a cluster with 224GB memory and 32CPUs by default. The `-profile` flag can be used to set  either 'docker' or 'singularity', depending on the container application installed on your system. These settings can be adjusted  by replacing the `-profile` flag with a custom config file as below.
+
+``` sh
+nextflow run alexthiery/10x_neural_tube \
+-c <path to custom.config file> \
+--metadata <path to sampleInfo.csv> \
+--gtf <path to gtf> \
+--fa <path to genome>
+```
+
+ For a template of a custom.config file, see [crick.config](conf/crick.config). Further information on Nextflow config files can be found [here](https://www.nextflow.io/docs/latest/config.html#configuration-file).
+
+
 
 #
 ## Interactive downstream analysis
