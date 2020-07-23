@@ -356,7 +356,7 @@ graphics.off()
 
 |                               Dimensions heatmap                               |                              ElbowPlot                              |                     PCA level comparison                     |
 | :------------------------------------------------------------------: | :----------------------------------------------------------------: | :----------------------------------------------: |
-|                    ![](./suppl_files/0_filt_data/dimHM.png)                    |                   ![](./suppl_files/0_filt_data/elbowplot.png)                   |          ![](./suppl_files/0_filt_data/UMAP_PCA_comparison.png)          |
+|                    ![](./suppl_files/plots/0_filt_data/dimHM.png)                    |                   ![](./suppl_files/plots/0_filt_data/elbowplot.png)                   |          ![](./suppl_files/plots/0_filt_data/UMAP_PCA_comparison.png)          |
 
 
 # 
