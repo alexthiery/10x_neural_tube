@@ -519,3 +519,55 @@ graphics.off()
 |![](./suppl_files/plots/1_sex_filt/dimHM.png)|![](./suppl_files/plots/1_sex_filt/elbowplot.png)|![](./suppl_files/plots/1_sex_filt/UMAP_PCA_comparison.png)|
 
 <br />
+
+Use PCA=15 as elbow plot is relatively stable across stages
+``` R
+norm.data.sexscale <- FindNeighbors(norm.data.sexscale, dims = 1:15, verbose = FALSE)
+norm.data.sexscale <- RunUMAP(norm.data.sexscale, dims = 1:15, verbose = FALSE)
+```
+
+Find optimal cluster resolution
+``` R
+png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
+clust.res(seurat.obj = norm.data.sexscale, by = 0.1)
+graphics.off()
+```
+
+Use clustering resolution = 0.5 to look for contamination clusters
+``` R
+norm.data.sexscale <- FindClusters(norm.data.sexscale, resolution = 0.5, verbose = FALSE)
+```
+
+Plot UMAP for clusters and developmental stage
+``` R
+png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
+clust.stage.plot(norm.data.sexscale)
+graphics.off()
+```
+
+Plot QC for each cluster
+``` R
+png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
+QC.plot(norm.data.sexscale)
+graphics.off()
+```
+
+|ClusTree|UMAP|Clsuter QC|
+| :---: | :---: | :---: |
+|![](./supp_files/plots/1_sex_filt/clustree.png)|![](./suppl_files/plots/1_sex_filt/UMAP.png)|![](./suppl_files/plots/1_sex_filt/cluster.QC.png)             
+
+
+Find differentially expressed genes and plot heatmap of top DE genes for each cluster
+``` R
+markers <- FindAllMarkers(norm.data.sexscale, only.pos = T, logfc.threshold = 0.25)
+# get automated cluster order based on percentage of cells in adjacent stages
+cluster.order = order.cell.stage.clust(seurat_object = norm.data.sexscale, col.to.sort = seurat_clusters, sort.by = orig.ident)
+# Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
+
+png(paste0(curr.plot.path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 500)
+tenx.pheatmap(data = norm.data.sexscale, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
+graphics.off()
+```
+![](./suppl_files/plots/1_sex_filt/HM.top15.DE.post-sexfilt.png)
