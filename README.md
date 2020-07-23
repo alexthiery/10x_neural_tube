@@ -392,9 +392,9 @@ graphics.off()
 |                               Dimensions heatmap                               |                              ElbowPlot                              |                     PCA level comparison                     |
 | :------------------------------------------------------------------: | :----------------------------------------------------------------: | :----------------------------------------------: |
 |                    ![](./suppl_files/plots/0_filt_data/dimHM.png)                    |                   ![](./suppl_files/plots/0_filt_data/elbowplot.png)                   |          ![](./suppl_files/plots/0_filt_data/UMAP_PCA_comparison.png)          |
-|                               Dimensions heatmap                               |                              ElbowPlot                              |                     PCA level comparison                     |
+|                               UMAP                               |                              Clsuter QC                              |                     DEG Heatmap                     |
 | :------------------------------------------------------------------: | :----------------------------------------------------------------: | :----------------------------------------------: |
-|                    ![](./suppl_files/plots/0_filt_data/umap.png)                    |                   ![](./suppl_files/plots/0_filt_data/cluster.QC.png)                   |          ![](./suppl_files/plots/0_filt_data/HM.top15.DE.png)          |
+|                    ![](./suppl_files/plots/0_filt_data/UMAP.png)                    |                   ![](./suppl_files/plots/0_filt_data/cluster.QC.png)                   |          ![](./suppl_files/plots/0_filt_data/HM.top15.DE.png)          |
 
 
 # 
