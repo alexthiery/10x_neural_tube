@@ -552,10 +552,11 @@ QC.plot(norm.data.sexscale)
 graphics.off()
 ```
 
-|ClusTree|UMAP|Clsuter QC|
+|ClusTree|UMAP|Cluster QC|
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/1_sex_filt/clustree.png)|![](./suppl_files/plots/1_sex_filt/UMAP.png)|![](./suppl_files/plots/1_sex_filt/cluster.QC.png)             
 
+<br />
 
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 ``` R
@@ -571,3 +572,130 @@ tenx.pheatmap(data = norm.data.sexscale, metadata = c("seurat_clusters", "orig.i
 graphics.off()
 ```
 ![](./suppl_files/plots/1_sex_filt/HM.top15.DE.post-sexfilt.png)
+
+<br />
+
+### Identify and remove contamination
+
+Change plot path
+``` R
+curr.plot.path <- paste0(plot.path, "2_cluster_filt/")
+dir.create(curr.plot.path)
+```
+
+Identify mesoderm and PGCs using candidate genes
+``` R
+genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
+
+ncol = 3
+png(paste0(curr.plot.path, "UMAP_GOI.png"), width = ncol*10, height = 12*ceiling(length(genes)/ncol), units = "cm", res = 200)
+multi.feature.plot(seurat.obj = norm.data.sexfilt, gene.list = genes, plot.clusters = T,
+                   plot.stage = T, label = "", cluster.col = "RNA_snn_res.1.4", n.col = ncol)
+graphics.off()
+```
+
+![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/2_cluster_filt/UMAP_GOI.png)
+
+Dotplot for identifying PGCs, Early mesoderm and Late mesoderm
+``` R
+png(paste0(curr.plot.path, "dotplot.GOI.png"), width = 20, height = 12, units = "cm", res = 200)
+DotPlot(norm.data.sexfilt, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SIX1",  "PITX2", "DAZL"))
+graphics.off()
+```
+
+![](/Users/alex/dev/output/10x_neural_tube/plots/1_seurat_full/2_cluster_filt/dotplot.GOI.png)
+
+|Feature plots|DotPlots|
+| :---: | :---: |
+|![](./suppl_files/plots/2_cluster_filt/UMAP_GOI.png)|![](./suppl_files/plots/2_cluster_filt/dotplot.GOI.png)             
+
+<br />
+
+### Remove contaminating cells from clusters
+Clust 8 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
+Clust 10 = Late mesoderm - expresses twist1, six1, eya2
+Clust 11 = PGC's - expresses dazl very highly
+``` R
+norm.data.contamfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  8 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 10 |
+                                                                norm.data.sexscale@meta.data$seurat_clusters == 11]
+
+norm.data.contamfilt <- subset(norm.data.sexscale, cells = norm.data.contamfilt, invert = T)
+```
+
+Re-run findvariablefeatures and scaling
+``` R
+norm.data.contamfilt <- FindVariableFeatures(norm.data.contamfilt, selection.method = "vst", nfeatures = 2000)
+
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
+norm.data.contamfilt <- ScaleData(norm.data.contamfilt, features = rownames(norm.data.contamfilt), vars.to.regress = c("percent.mt", "sex"))
+
+saveRDS(norm.data.contamfilt, paste0(rds.path, "norm.data.contamfilt.RDS"))
+```
+Read in RDS data if needed
+``` R
+# norm.data.contamfilt <- readRDS(paste0(rds.path, "norm.data.contamfilt.RDS"))
+```
+
+PCA
+``` R
+norm.data.contamfilt <- RunPCA(object = norm.data.contamfilt, verbose = FALSE)
+
+png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
+DimHeatmap(norm.data.contamfilt, dims = 1:30, balanced = TRUE, cells = 500)
+graphics.off()
+
+png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
+print(ElbowPlot(norm.data.contamfilt, ndims = 40))
+graphics.off()
+
+png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
+PCA.level.comparison(norm.data.contamfilt, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+graphics.off()
+```
+
+|Dimensions heatmap|ElbowPlot|PCA level comparison|
+| :---: | :---: | :---: |
+|![](./suppl_files/plots/2_cluster_filt/dimHM.png)|![](./suppl_files/plots/2_cluster_filt/elbowplot.png)|![](./suppl_files/plots/2_cluster_filt/UMAP_PCA_comparison.png)|
+
+<br />
+
+Use PCA=15 as elbow plot is relatively stable across stages
+``` R
+norm.data.contamfilt <- FindNeighbors(norm.data.contamfilt, dims = 1:15, verbose = FALSE)
+norm.data.contamfilt <- RunUMAP(norm.data.contamfilt, dims = 1:15, verbose = FALSE)
+```
+
+Find optimal cluster resolution
+``` R
+png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
+clust.res(seurat.obj = norm.data.contamfilt, by = 0.2)
+graphics.off()
+```
+
+Use clustering resolution = 1.4 in order to make lots of clusters and identify any remaining poor quality cells
+``` R
+norm.data.contamfilt <- FindClusters(norm.data.contamfilt, resolution = 1.4)
+```
+
+Plot UMAP for clusters and developmental stage
+``` R
+png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
+clust.stage.plot(norm.data.contamfilt)
+graphics.off()
+```
+
+Plot QC for each cluster
+``` R
+png(paste0(curr.plot.path, "cluster.QC.png"), width=45, height=14, units = 'cm', res = 200)
+QC.plot(norm.data.contamfilt)
+graphics.off()
+```
+
+|ClusTree|UMAP|Cluster QC|
+| :---: | :---: | :---: |
+|![](./suppl_files/plots/2_cluster_filt/clustree.png)|![](./suppl_files/plots/2_cluster_filt/UMAP.png)|![](./suppl_files/plots/2_cluster_filt/cluster.QC.png)             
+
