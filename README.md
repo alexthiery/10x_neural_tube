@@ -973,9 +973,7 @@ for(stage in names(seurat_stage)){
 }
 ```
 
-<h1 style="font-size:150%;"; align="center">
- <b>HH4<br>
-</h1>
+### HH4
  
 |Dimensions heatmap|ElbowPlot|PCA level comparison|
 | :---: | :---: | :---: |
@@ -983,9 +981,7 @@ for(stage in names(seurat_stage)){
 
 <br />
 
-<h1 style="font-size:150%;"; align="center">
- <b>HH6<br>
-</h1>
+### HH6
  
 |Dimensions heatmap|ElbowPlot|PCA level comparison|
 | :---: | :---: | :---: |
@@ -993,20 +989,15 @@ for(stage in names(seurat_stage)){
  
 <br />
 
- <h1 style="font-size:150%;"; align="center">
- <b>4ss<br>
-</h1>
- 
+### 4ss
 |Dimensions heatmap|ElbowPlot|PCA level comparison|
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/5_stage_split/dimHM.ss4.png)|![](./suppl_files/plots/5_stage_split/elbowplot.ss4.png)|![](./suppl_files/plots/5_stage_split/UMAP_PCA_comparison.ss4.png)|
  
 <br />
 
- <h1 style="font-size:150%;"; align="center">
- <b>8ss<br>
-</h1>
- 
+### 8ss
+
 |Dimensions heatmap|ElbowPlot|PCA level comparison|
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/5_stage_split/dimHM.ss8.png)|![](./suppl_files/plots/5_stage_split/elbowplot.ss8.png)|![](./suppl_files/plots/5_stage_split/UMAP_PCA_comparison.ss8.png)|
@@ -1028,6 +1019,11 @@ for(stage in names(seurat_stage)){
 }
 ```
 
+|HH4|HH6|4ss|8ss|
+| :---: | :---: | :---: | :---: |
+|![](./suppl_files/plots/5_stage_split/clustree.hh4.png)|![](./suppl_files/plots/5_stage_split/clustree.hh6.png)|![](./suppl_files/plots/5_stage_split/clustree.ss4.png)|![](./suppl_files/plots/5_stage_split/clustree.ss8.png)|
+
+
 Cluster each stage
 ``` R
 res = c("hh4" = 0.5, "hh6" = 0.5, "ss4" = 0.5, "ss8" = 0.5)
@@ -1044,45 +1040,9 @@ for(stage in names(seurat_stage)){
 }
 ```
 
-<h1 style="font-size:150%;"; align="center">
- <b>HH4<br>
-</h1>
- 
-|ClusTree|UMAP|
-| :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/clustree.hh4.png)|![](./suppl_files/plots/5_stage_split/UMAP.hh4.png)|  
-
-<br />
-
-<h1 style="font-size:150%;"; align="center">
- <b>HH6<br>
-</h1>
- 
-|ClusTree|UMAP|
-| :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/clustree.hh6.png)|![](./suppl_files/plots/5_stage_split/UMAP.hh6.png)|  
- 
-<br />
-
- <h1 style="font-size:150%;"; align="center">
- <b>4ss<br>
-</h1>
- 
-|ClusTree|UMAP|
-| :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/clustree.ss4.png)|![](./suppl_files/plots/5_stage_split/UMAP.ss4.png)|  
-
-<br />
-
- <h1 style="font-size:150%;"; align="center">
- <b>8ss<br>
-</h1>
- 
-|ClusTree|UMAP|
-| :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/clustree.ss8.png)|![](./suppl_files/plots/5_stage_split/UMAP.ss8.png)|  
-
-<br />
+|HH4|HH6|4ss|8ss|
+| :---: | :---: | :---: | :---: |
+|![](./suppl_files/plots/5_stage_split/UMAP.hh4.png)|![](./suppl_files/plots/5_stage_split/UMAP.hh6.png)|![](./suppl_files/plots/5_stage_split/UMAP.ss4.png)|![](./suppl_files/plots/5_stage_split/UMAP.ss8.png)|
 
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster at each stage
 lower FC threshold as some clusters have no DE genes
@@ -1098,35 +1058,9 @@ for(stage in names(seurat_stage)){
 }
 ```
 
-<h1 style="font-size:150%;"; align="center">
- <b>HH4<br>
-</h1>
- 
-![](./suppl_files/plots/5_stage_split/HM.top15.DE.hh4.png) 
-
-<br />
-
-<h1 style="font-size:150%;"; align="center">
- <b>HH6<br>
-</h1>
- 
-![](./suppl_files/plots/5_stage_split/HM.top15.DE.hh6.png) 
- 
-<br />
-
- <h1 style="font-size:150%;"; align="center">
- <b>4ss<br>
-</h1>
- 
-![](./suppl_files/plots/5_stage_split/HM.top15.DE.ss4.png)
-
-<br />
-
- <h1 style="font-size:150%;"; align="center">
- <b>8ss<br>
-</h1>
- 
-![](./suppl_files/plots/5_stage_split/HM.top15.DE.ss8.png) 
+|HH4|HH6|4ss|8ss|
+| :---: | :---: | :---: | :---: |
+|![](./suppl_files/plots/5_stage_split/HM.top15.DE.hh4.png)|![](./suppl_files/plots/5_stage_split/HM.top15.DE.hh6.png)|![](./suppl_files/plots/5_stage_split/HM.top15.DE.ss4.png)|![](./suppl_files/plots/5_stage_split/HM.top15.DE.ss8.png)|
 
 <br />
 
@@ -1151,6 +1085,8 @@ for(stage in names(GOI)){
 | :---: | :---: | :---: | :---: |
 |![](./suppl_files/plots/5_stage_split/UMAP_GOI.hh4.png)|![](./suppl_files/plots/5_stage_split/UMAP_GOI.hh6.png)|![](./suppl_files/plots/5_stage_split/UMAP_GOI.ss4.png)|![](./suppl_files/plots/5_stage_split/UMAP_GOI.ss8.png)|
 
+<br />
+
 Change order or clusters for plotting dotplots
 ``` R
 levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,4,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,1,6,4))
@@ -1169,18 +1105,24 @@ for(stage in names(GOI)){
 }
 ```
 
+|HH4|HH6|4ss|8ss|
+| :---: | :---: | :---: | :---: |
+|![](./suppl_files/plots/5_stage_split/dotplot.hh4.png)|![](./suppl_files/plots/5_stage_split/dotplot.hh6.png)|![](./suppl_files/plots/5_stage_split/dotplot.ss4.png)|![](./suppl_files/plots/5_stage_split/dotplot.ss8.png)|
+
+<br />
+
 Change target gene names if they are from Z and W chromosomes
 ``` R
 hh4_genes <- unlist(lapply(hh4_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
 hh6_genes <- unlist(lapply(hh6_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
 ```
 
-Plot genes from hh4 gene list at each stage
+Plot genes from hh4 gene list at each stage - plots can be found [here](./suppl_files/plots/5_stage_split/hh4_genes_UMAPs/)
 ``` R
 lapply(names(seurat_stage), function(x) umap.gene.list(seurat_stage[[x]], hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/", x, "/")))
 ```
 
-Plot genes from hh6 gene list at each stage
+Plot genes from hh6 gene list at each stage - plots can be found [here](./suppl_files/plots/5_stage_split/hh6_genes_UMAPs/)
 ``` R
 lapply(names(seurat_stage), function(x) umap.gene.list(seurat_stage[[x]], hh6_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/", x, "/")))
 ```
@@ -1257,6 +1199,12 @@ PCA.level.comparison(neural.seurat, PCA.levels = c(7, 10, 15, 20), cluster_res =
 graphics.off()
 ```
 
+|Dimensions heatmap|ElbowPlot|PCA level comparison|
+| :---: | :---: | :---: |
+|![](./suppl_files/plots/6_neural_subset/dimHM.png)|![](./suppl_files/plots/6_neural_subset/elbowplot.png)|![](./suppl_files/plots/6_neural_subset/UMAP_PCA_comparison.png)|
+
+<br />    
+
 Use PCA=15 as elbow plot is relatively stable across stages
 ``` R
 neural.seurat <- FindNeighbors(neural.seurat, dims = 1:15, verbose = FALSE)
@@ -1289,6 +1237,11 @@ QC.plot(neural.seurat)
 graphics.off()
 ```
 
+|ClusTree|UMAP|Cluster QC|
+| :---: | :---: | :---: |
+|![](./suppl_files/plots/6_neural_subset/clustree.png)|![](./suppl_files/plots/6_neural_subset/UMAP.png)|![](./suppl_files/plots/6_neural_subset/cluster.QC.png)         
+<br />
+
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 ``` R
 markers <- FindAllMarkers(neural.seurat, only.pos = T, logfc.threshold = 0.25)
@@ -1304,11 +1257,17 @@ graphics.off()
 
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
 ```
+![](./suppl_files/plots/6_neural_subset/HM.top15.DE.png)
 
-Plot genes from hh4 gene list in neural subset
+<br />
+
+Plot genes from hh4 gene list in neural subset - plots can be found [here](./suppl_files/plots/6_neural_subset/hh4_genes_UMAPs/)
 ``` R
 umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/"))
-# plot genes from hh6 gene list in neural subset
+```
+
+Plot genes from hh6 gene list in neural subset - plots can be found [here](./suppl_files/plots/6_neural_subset/hh6_genes_UMAPs/)
+``` R
 umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/"))
 ```
 
@@ -1319,6 +1278,9 @@ tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"
               hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
 ```
+![](./suppl_files/plots/6_neural_subset/neural.seurat_hh4genes.HM.png)
+
+<br />
 
 Plot heatmap for hh6 genes in neural subset
 ``` R
@@ -1327,3 +1289,7 @@ tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"
               hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
 ```
+
+![](./suppl_files/plots/6_neural_subset/neural.seurat_hh6genes.HM.png)
+
+<br />
