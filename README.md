@@ -344,8 +344,6 @@ print(ElbowPlot(norm.data, ndims = 40))
 graphics.off()
 ```
 
-![](./suppl_files/0_filt_data/elbowplot.png)
-
 ##### PCA level comparison
 Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
 ``` R
@@ -353,8 +351,6 @@ png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, unit
 PCA.level.comparison(norm.data, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 ```
-
-![](![](./suppl_files/0_filt_data/UMAP_PCA_comparison.png)
 
 # 
 
