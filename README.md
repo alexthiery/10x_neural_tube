@@ -324,3 +324,38 @@ norm.data <- RunPCA(object = norm.data, verbose = FALSE)
 
 <br />
 
+#### PCA {.tabset .tabset-fade .tabset-pills}
+
+Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept!
+
+##### Dimensions heatmap
+Plot heatmap of top variable genes across top principle components
+``` R
+png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
+DimHeatmap(norm.data, dims = 1:30, balanced = TRUE, cells = 500)
+graphics.off()
+```
+
+![](./suppl_files/0_filt_data/dimHM.png)
+
+##### ElbowPlot
+Another heuristic method is ElbowPlot which ranks PCs based on the % variance explained by each PC
+``` R
+png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
+print(ElbowPlot(norm.data, ndims = 40))
+graphics.off()
+```
+
+![](./suppl_files/0_filt_data/elbowplot.png)
+
+##### PCA level comparison
+Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
+``` R
+png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
+PCA.level.comparison(norm.data, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+graphics.off()
+```
+
+![](![](./suppl_files/0_filt_data/UMAP_PCA_comparison.png)
+
+#### {-}
