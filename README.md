@@ -345,18 +345,57 @@ PCA.level.comparison(norm.data, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5
 graphics.off()
 ```
 
+Use PCA=15 as elbow plot is relatively stable across stages
+Use clustering resolution = 0.5 for filtering
+``` R
+norm.data <- FindNeighbors(norm.data, dims = 1:15, verbose = FALSE)
+norm.data <- RunUMAP(norm.data, dims = 1:15, verbose = FALSE)
+norm.data <- FindClusters(norm.data, resolution = 0.5, verbose = FALSE)
+```
+
+Plot UMAP for clusters and developmental stage
+``` R
+png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
+clust.stage.plot(norm.data)
+graphics.off()
+```
+
+Plot QC for each cluster
+``` R
+png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
+QC.plot(norm.data)
+graphics.off()
+```
+
+Find differentially expressed genes and plot heatmap of top 15 DE genes for each cluster
+```{r eval = FALSE}
+# Find differentially expressed genes and plot heatmap of top DE genes for each cluster
+markers <- FindAllMarkers(norm.data, only.pos = T, logfc.threshold = 0.25)
+
+# get automated cluster order based on percentage of cells in adjacent stages
+cluster.order = order.cell.stage.clust(seurat_object = norm.data, col.to.sort = seurat_clusters, sort.by = orig.ident)
+
+# Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
+
+png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 50, width = 75, units = 'cm', res = 700)
+tenx.pheatmap(data = norm.data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
+graphics.off()
+```
+
+**Heatmap clearly shows clusters segregate by sex - check this and remove sex genes**
+
+
 # 
 
 |                               Dimensions heatmap                               |                              ElbowPlot                              |                     PCA level comparison                     |
 | :------------------------------------------------------------------: | :----------------------------------------------------------------: | :----------------------------------------------: |
 |                    ![](./suppl_files/plots/0_filt_data/dimHM.png)                    |                   ![](./suppl_files/plots/0_filt_data/elbowplot.png)                   |          ![](./suppl_files/plots/0_filt_data/UMAP_PCA_comparison.png)          |
-|    <a href="./suppl_files/plots/0_filt_data/dimHM.png">Download</a>   |    <a href="./suppl_files/plots/0_filt_data/elbowplot.png">Download</a>   |    <a href="./suppl_files/plots/0_filt_data/UMAP_PCA_comparison.png">Download</a>   |
+|                               Dimensions heatmap                               |                              ElbowPlot                              |                     PCA level comparison                     |
+| :------------------------------------------------------------------: | :----------------------------------------------------------------: | :----------------------------------------------: |
+|                    ![](./suppl_files/plots/0_filt_data/umap.png)                    |                   ![](./suppl_files/plots/0_filt_data/cluster.QC.png)                   |          ![](./suppl_files/plots/0_filt_data/HM.top15.DE.png)          |
 
 
 # 
-
-
-
-
-
 
