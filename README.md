@@ -554,7 +554,7 @@ graphics.off()
 
 |ClusTree|UMAP|Clsuter QC|
 | :---: | :---: | :---: |
-|![](./supp_files/plots/1_sex_filt/clustree.png)|![](./suppl_files/plots/1_sex_filt/UMAP.png)|![](./suppl_files/plots/1_sex_filt/cluster.QC.png)             
+|![](./suppl_files/plots/1_sex_filt/clustree.png)|![](./suppl_files/plots/1_sex_filt/UMAP.png)|![](./suppl_files/plots/1_sex_filt/cluster.QC.png)             
 
 
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
