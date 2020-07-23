@@ -973,64 +973,120 @@ for(stage in names(seurat_stage)){
 }
 ```
 
-<h1 style="font-size:300%;"; align="center">
+<h1 style="font-size:150%;"; align="center">
  <b>HH4<br>
 </h1>
+ 
 |Dimensions heatmap|ElbowPlot|PCA level comparison|
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/5_stage_split/dimHM.hh4.png)|![](./suppl_files/plots/5_stage_split/elbowplot.hh4.png)|![](./suppl_files/plots/5_stage_split/UMAP_PCA_comparison.hh4.png)|
 
 <br />
 
-<h1 style="font-size:300%;"; align="center">
+<h1 style="font-size:150%;"; align="center">
  <b>HH6<br>
 </h1>
+ 
 |Dimensions heatmap|ElbowPlot|PCA level comparison|
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/5_stage_split/dimHM.hh6.png)|![](./suppl_files/plots/5_stage_split/elbowplot.hh6.png)|![](./suppl_files/plots/5_stage_split/UMAP_PCA_comparison.hh6.png)|
  
- <h1 style="font-size:300%;"; align="center">
+<br />
+
+ <h1 style="font-size:150%;"; align="center">
  <b>4ss<br>
 </h1>
+ 
 |Dimensions heatmap|ElbowPlot|PCA level comparison|
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/5_stage_split/dimHM.ss4.png)|![](./suppl_files/plots/5_stage_split/elbowplot.ss4.png)|![](./suppl_files/plots/5_stage_split/UMAP_PCA_comparison.ss4.png)|
  
- <h1 style="font-size:300%;"; align="center">
+<br />
+
+ <h1 style="font-size:150%;"; align="center">
  <b>8ss<br>
 </h1>
+ 
 |Dimensions heatmap|ElbowPlot|PCA level comparison|
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/5_stage_split/dimHM.ss8.png)|![](./suppl_files/plots/5_stage_split/elbowplot.ss8.png)|![](./suppl_files/plots/5_stage_split/UMAP_PCA_comparison.ss8.png)|
- 
- 
+
+<br />
+
 Use PCA=15 as elbow plot is relatively stable across stages
 ``` R
 seurat_stage <- lapply(seurat_stage, function(x) FindNeighbors(x, dims = 1:15, verbose = FALSE))
 seurat_stage <- lapply(seurat_stage, function(x) RunUMAP(x, dims = 1:15, verbose = FALSE))
 ```
 
-# Find optimal cluster resolution
+Find optimal cluster resolution
+``` R
 for(stage in names(seurat_stage)){
   png(paste0(curr.plot.path, "clustree.", stage, ".png"), width=70, height=35, units = 'cm', res = 200)
   clust.res(seurat.obj = seurat_stage[[stage]], by = 0.1)
   graphics.off()
 }
+```
 
-# Use custom clustering resolution for each stage
+Cluster each stage
+``` R
 res = c("hh4" = 0.5, "hh6" = 0.5, "ss4" = 0.5, "ss8" = 0.5)
 seurat_stage <- lapply(names(res), function(x) FindClusters(seurat_stage[[x]], resolution = res[names(res) %in% x]))
 names(seurat_stage) = names(res)
+```
 
-# Plot UMAP for clusters and developmental stage
+Plot UMAP for clusters and developmental stage
+``` R
 for(stage in names(seurat_stage)){
   png(paste0(curr.plot.path, "UMAP.", stage, ".png"), width=20, height=10, units = 'cm', res = 200)
   clust.stage.plot(seurat_stage[[stage]])
   graphics.off()
 }
+```
 
-# Find differentially expressed genes and plot heatmap of top DE genes for each cluster at each stage
-# lower FC threshold as some clusters have no DE genes
+<h1 style="font-size:150%;"; align="center">
+ <b>HH4<br>
+</h1>
+ 
+|ClusTree|UMAP|
+| :---: | :---: |
+|![](./suppl_files/plots/5_stage_split/clustree.hh4.png)|![](./suppl_files/plots/5_stage_split/UMAP.hh4.png)|  
+
+<br />
+
+<h1 style="font-size:150%;"; align="center">
+ <b>HH6<br>
+</h1>
+ 
+|ClusTree|UMAP|
+| :---: | :---: |
+|![](./suppl_files/plots/5_stage_split/clustree.hh6.png)|![](./suppl_files/plots/5_stage_split/UMAP.hh6.png)|  
+ 
+<br />
+
+ <h1 style="font-size:150%;"; align="center">
+ <b>4ss<br>
+</h1>
+ 
+|ClusTree|UMAP|
+| :---: | :---: |
+|![](./suppl_files/plots/5_stage_split/clustree.ss4.png)|![](./suppl_files/plots/5_stage_split/UMAP.ss4.png)|  
+
+<br />
+
+ <h1 style="font-size:150%;"; align="center">
+ <b>8ss<br>
+</h1>
+ 
+|ClusTree|UMAP|
+| :---: | :---: |
+|![](./suppl_files/plots/5_stage_split/clustree.ss8.png)|![](./suppl_files/plots/5_stage_split/UMAP.ss8.png)|  
+
+<br />
+
+Find differentially expressed genes and plot heatmap of top DE genes for each cluster at each stage
+lower FC threshold as some clusters have no DE genes
+``` R
 markers <- lapply(seurat_stage, function(x) FindAllMarkers(x, only.pos = T, logfc.threshold = 0.1))
 top15 <- lapply(markers, function(x) x %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC))
 
@@ -1040,8 +1096,42 @@ for(stage in names(seurat_stage)){
                 selected_genes = unique(top15[[stage]]$gene), gaps_col = "seurat_clusters")
   graphics.off()
 }
+```
 
-# Plot features listed below at each stage
+<h1 style="font-size:150%;"; align="center">
+ <b>HH4<br>
+</h1>
+ 
+![](./suppl_files/plots/5_stage_split/HM.top15.DE.hh4.png) 
+
+<br />
+
+<h1 style="font-size:150%;"; align="center">
+ <b>HH6<br>
+</h1>
+ 
+![](./suppl_files/plots/5_stage_split/HM.top15.DE.hh6.png) 
+ 
+<br />
+
+ <h1 style="font-size:150%;"; align="center">
+ <b>4ss<br>
+</h1>
+ 
+![](./suppl_files/plots/5_stage_split/HM.top15.DE.ss4.png)
+
+<br />
+
+ <h1 style="font-size:150%;"; align="center">
+ <b>8ss<br>
+</h1>
+ 
+![](./suppl_files/plots/5_stage_split/HM.top15.DE.ss8.png) 
+
+<br />
+
+Plot features listed below at each stage
+``` R
 GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
                      "AATF", "MAFA", "ING5", "SETD2", "LIN28B", "YEATS4",
                      "EOMES", "ADMP"),
@@ -1055,40 +1145,60 @@ for(stage in names(GOI)){
   print(multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage])))
   graphics.off()
 }
+```
 
-# Change order or clusters for plotting dotplots
+|HH4|HH6|4ss|8ss|
+| :---: | :---: | :---: | :---: |
+|![](./suppl_files/plots/5_stage_split/UMAP_GOI.hh4.png)|![](./suppl_files/plots/5_stage_split/UMAP_GOI.hh6.png)|![](./suppl_files/plots/5_stage_split/UMAP_GOI.ss4.png)|![](./suppl_files/plots/5_stage_split/UMAP_GOI.ss8.png)|
+
+Change order or clusters for plotting dotplots
+``` R
 levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,4,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,1,6,4))
 for(stage in names(levels)){
   seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
 }
+```
 
-# Plot dotplot to identify clusters
+Plot dotplot to identify clusters
+``` R
 for(stage in names(GOI)){
   png(paste0(curr.plot.path, "dotplot.", stage, ".png"), width = 30, height = 12, units = "cm", res = 200)
   print(DotPlot(seurat_stage[[stage]], group.by = "seurat_clusters", features = unlist(GOI[names(GOI) %in% stage])) +
           theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
   graphics.off()
 }
+```
 
-
-# change target gene names if they are from Z and W chromosomes
+Change target gene names if they are from Z and W chromosomes
+``` R
 hh4_genes <- unlist(lapply(hh4_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
 hh6_genes <- unlist(lapply(hh6_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
+```
 
-
-# plot genes from hh4 gene list at each stage
+Plot genes from hh4 gene list at each stage
+``` R
 lapply(names(seurat_stage), function(x) umap.gene.list(seurat_stage[[x]], hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/", x, "/")))
-# plot genes from hh6 gene list at each stage
+```
+
+Plot genes from hh6 gene list at each stage
+``` R
 lapply(names(seurat_stage), function(x) umap.gene.list(seurat_stage[[x]], hh6_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/", x, "/")))
+```
 
-# Save stage data after clustering
+Save stage data after clustering
+``` R
 saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
+```
 
-# Read in RDS data if needed
+Read in RDS data if needed
+``` R
 # seurat_stage <- readRDS(paste0(rds.path, "seurat_stage_out.RDS"))
+```
 
-# Make list of clusters to subset
+Make list of clusters to subset
+``` R
 clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,2,4), "ss4" = c(0,1), "ss8" = c(0,1,4,6,7))
+```
 
 ########## Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
 
