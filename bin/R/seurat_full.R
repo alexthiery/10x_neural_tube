@@ -447,6 +447,7 @@ graphics.off()
 
 ############################### Remove poor quality clusters ########################################
 
+# Clust 11, 14, 16, 18 = poor quality cells
 norm.data.clustfilt <- rownames(norm.data.contamfilt@meta.data)[norm.data.contamfilt@meta.data$seurat_clusters ==  11 |
                                                                   norm.data.contamfilt@meta.data$seurat_clusters == 14 |
                                                                   norm.data.contamfilt@meta.data$seurat_clusters == 16 |
@@ -502,6 +503,11 @@ norm.data.clustfilt <- FindClusters(norm.data.clustfilt, resolution = 0.8)
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 clust.stage.plot(norm.data.clustfilt)
+graphics.off()
+
+# Plot cluster QC
+png(paste0(curr.plot.path, "cluster.QC.png"), width=45, height=14, units = 'cm', res = 200)
+QC.plot(norm.data.clustfilt)
 graphics.off()
 
 ####################################################################################
@@ -807,7 +813,7 @@ tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"
 graphics.off()
 
 # Plot heatmap for hh6 genes in neural subset
-png(paste0(curr.plot.path, "neural.seurat_hh6genes.HM.png"), width=75, height=100, units = "cm", res = 500)
+png(paste0(curr.plot.path, "neural.seurat_hh6genes.HM.png"), width=75, height=50, units = "cm", res = 500)
 tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh6_genes[hh6_genes %in% rownames(neural.seurat)],
               hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
