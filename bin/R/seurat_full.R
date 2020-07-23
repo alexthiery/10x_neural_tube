@@ -170,11 +170,11 @@ merged.data <- subset(merged.data, subset = c(nFeature_RNA > 1000 & nFeature_RNA
 norm.data <- NormalizeData(merged.data, normalization.method = "LogNormalize", scale.factor = 10000)
 norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures = 2000)
 
-# Scale data and regress out MT content
 # Enable parallelisation
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
+# Scale data and regress out MT content
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 
 # Save RDS after scaling as this step takes time
