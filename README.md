@@ -89,3 +89,145 @@ To do this, follow these steps:
 #
 ## Downstream analysis pipeline
 #
+
+This analysis is ran using Seurat v3.1. For more information see https://satijalab.org/seurat/
+
+
+Set environmental variables, load data and make Seurat object
+In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
+
+``` R
+#!/usr/bin/env Rscript
+
+library('getopt')
+
+# set arguments for Rscript
+spec = matrix(c(
+  'runtype', 'l', 2, "character",
+  'cores'   , 'c', 2, "integer",
+  'customFuncs', 'm', 2, "character",
+  'networkGenes', 'd', 2, "character"
+), byrow=TRUE, ncol=4)
+opt = getopt(spec)
+
+# set default location
+if(length(commandArgs(trailingOnly = TRUE)) == 0){
+  cat('No command line arguments provided, user defaults paths are set for running interactively in Rstudio on docker\n')
+  opt$runtype = "user"
+} else {
+  if(is.null(opt$runtype)){
+    stop("--runtype must be either 'user', 'nextflow' or 'docker'")
+  }
+  if(tolower(opt$runtype) != "docker" & tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
+    stop("--runtype must be either 'user', 'nextflow' or 'docker'")
+  }
+  if(tolower(opt$runtype) == "nextflow"){
+    if(is.null(opt$customFuncs)){
+      stop("--customFuncs path must be specified")
+    }
+    if(is.null(opt$networkGenes)){
+      stop("--networkGenes path must be specified")
+    }
+  }
+}
+
+####################################################################
+# user paths need to be defined here in order to run interactively #
+####################################################################
+if (opt$runtype == "user"){
+  sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
+  
+  plot.path = "./results/R_results/plots/"
+  rds.path = "./results/R_results/RDS.files/"
+  dir.create(plot.path, recursive = T)
+  dir.create(rds.path, recursive = T)
+  
+  ##################################
+  # set path where data is located #
+  ##################################
+  data_path = "./alignmentOut/cellrangerCounts_renamed"
+  
+  # read all files from dir
+  files <- list.files(data_path, recursive = T, full.names = T)
+  # remove file suffix
+  file.path <- dirname(files)[!duplicated(dirname(files))]
+  # make dataframe with tissue matching directory
+  tissue = c("hh4", "hh6", "ss4", "ss8")
+  matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
+  sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
+  
+  # Read in favourite genes
+  network_genes <- list.files("./bin/network_genes/", full.names = T)
+  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
+  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+
+} else if (opt$runtype == "nextflow"){
+  cat('pipeling running through nextflow\n')
+  
+  sapply(list.files(opt$customFuncs, full.names = T), source)
+  
+  plot.path = "plots/"
+  dir.create(plot.path, recursive = T)
+  rds.path = "RDS.files/"
+  dir.create(rds.path, recursive = T)
+  
+  # read all files from folder and keep only those from chr_edit
+  files <- list.files("./", recursive = T, full.names = T)
+  # remove file suffix
+  file.path <- dirname(files)[!duplicated(dirname(files))]
+  # make dataframe with tissue matching directory
+  tissue = c("hh4", "hh6", "ss4", "ss8")
+  matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
+  sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
+  
+  # Read in favourite genes
+  network_genes <- list.files(opt$networkGenes, full.names = T)
+  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
+  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+
+} else if (opt$runtype == "docker"){
+  cat('R script running through docker\n')
+  
+  sapply(list.files('/home/bin/R/custom_functions/', full.names = T), source)
+  
+  plot.path = "/home/results/R_results/plots/"
+  rds.path = "/home/results/R_results/RDS.files/"
+  dir.create(plot.path, recursive = T)
+  dir.create(rds.path, recursive = T)
+  
+  data_path = "/home/alignmentOut/cellrangerCounts_renamed"
+  # read all files from dir
+  files <- list.files(data_path, recursive = T, full.names = T)
+  # remove file suffix
+  file.path <- dirname(files)[!duplicated(dirname(files))]
+  # make dataframe with tissue matching directory
+  tissue = c("hh4", "hh6", "ss4", "ss8")
+  matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
+  sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
+  
+  # Read in favourite genes
+  network_genes <- list.files("/home/bin/network_genes/", full.names = T)
+  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
+  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+}
+
+# set number of cores to use for parallelisation
+if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
+cat(paste0("script ran with ", ncores, " cores\n"))
+```
+
+Load packages
+
+``` R
+reticulate::use_python('/usr/bin/python3.7')
+library(Seurat)
+
+library(future)
+library(dplyr)
+library(cowplot)
+library(clustree)
+library(gridExtra)
+library(grid)
+library(pheatmap)
+library(RColorBrewer)
+```
