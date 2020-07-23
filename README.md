@@ -231,3 +231,96 @@ library(grid)
 library(pheatmap)
 library(RColorBrewer)
 ```
+
+Make Seurat objects for each of the different samples.
+``` R
+for(i in 1:nrow(sample.paths["path"])){
+  name<-paste(sample.paths[i,"tissue"])
+  assign(name, CreateSeuratObject(counts= Read10X(data.dir = paste(sample.paths[i,"path"])), project = paste(sample.paths[i, "tissue"])))
+}
+```
+
+The four Seurat objects are then merged, before running CreateSeuratObject again on the output in order to apply the min.cells parameter on the final merged dataset.
+``` R
+temp <- merge(hh4, y = c(hh6, ss4, ss8), add.cell.ids = c("hh4", "hh6", "ss4", "ss8"), project = "chick.10x")
+merged.data<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
+```
+
+Make seurat object with ensembl names and save as separate dataframe for adding to misc slot
+``` R
+for(i in 1:nrow(sample.paths["path"])){
+  name<-paste(sample.paths[i,"tissue"])
+  assign(paste0(name, "_ensID"), CreateSeuratObject(counts= Read10X(data.dir = paste(sample.paths[i,"path"]), gene.column = 1), project = paste(sample.paths[i, "tissue"])))
+}
+temp <- merge(hh4_ensID, y = c(hh6_ensID, ss4_ensID, ss8_ensID), add.cell.ids = c("hh4", "hh6", "ss4", "ss8"), project = "chick.10x")
+merged.data_ensID<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
+```
+
+Add gene IDs dataframe to merged data object
+``` R
+Misc(merged.data, slot = "geneIDs") <- cbind("gene_ID" = rownames(merged.data_ensID), "gene_name" =  rownames(merged.data))
+```
+
+The original Seurat objects are then removed from the global environment
+``` R
+rm(hh4, hh6, ss4, ss8, sample.paths, temp, hh4_ensID, hh6_ensID, ss4_ensID, ss8_ensID, merged.data_ensID)
+```
+
+Store mitochondrial percentage in object meta data
+``` R
+merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "percent.mt")
+```
+
+<br />
+
+#### Filter data based on variable threshold
+
+Remove data which do not pass filter threshold
+``` R
+merged.data <- subset(merged.data, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
+```
+
+Log normalize data and find variable features
+``` R
+norm.data <- NormalizeData(merged.data, normalization.method = "LogNormalize", scale.factor = 10000)
+norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures = 2000)
+```
+
+Enable parallelisation
+``` R
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+```
+
+Scale data and regress out MT content
+``` R
+norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
+```
+
+Save RDS after scaling as this step takes time
+``` R
+saveRDS(norm.data, paste0(rds.path, "norm.data.RDS"))
+```
+
+<br />
+
+#### Perform dimensionality reduction by PCA and UMAP embedding
+
+Read in RDS data if needed
+``` R
+# norm.data <- readRDS(paste0(rds.path, "norm.data.RDS"))
+```
+
+Change plot path
+``` R
+curr.plot.path <- paste0(plot.path, '0_filt_data/')
+dir.create(curr.plot.path)
+```
+
+Run PCA analysis on the each set of data
+``` R
+norm.data <- RunPCA(object = norm.data, verbose = FALSE)
+```
+
+<br />
+
