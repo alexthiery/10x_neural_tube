@@ -1200,21 +1200,30 @@ Make list of clusters to subset
 clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,2,4), "ss4" = c(0,1), "ss8" = c(0,1,4,6,7))
 ```
 
-########## Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
+<br />
 
-# Set plot path
+### Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
+
+Set plot path
+``` R
 curr.plot.path <- paste0(plot.path, "6_neural_subset/")
 dir.create(curr.plot.path)
+```
 
-# Get cell IDs from each stage based on clusters to subset
+Get cell IDs from each stage based on clusters to subset
+``` R
 cell.sub = unlist(lapply(names(clust.sub), function(x){
   rownames(seurat_stage[[x]]@meta.data)[seurat_stage[[x]]$seurat_clusters %in% unlist(clust.sub[names(clust.sub) %in% x])]
 }))
+```
 
-# Subset neural cells
+Subset neural cells
+``` R
 neural.seurat <- subset(norm.data.clustfilt.cc, cells = cell.sub)
+```
 
-# Re-run findvariablefeatures and scaling
+Re-run findvariablefeatures and scaling
+``` R
 neural.seurat <- FindVariableFeatures(neural.seurat, selection.method = "vst", nfeatures = 2000)
 
 # Enable parallelisation
@@ -1224,11 +1233,15 @@ options(future.globals.maxSize = 2000 * 1024^2)
 neural.seurat <- ScaleData(neural.seurat, features = rownames(neural.seurat), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.RDS"))
+```
 
-# Read in RDS data if needed
+Read in RDS data if needed
+``` R
 # neural.seurat <- readRDS(paste0(rds.path, "neural.seurat.RDS"))
+```
 
-# PCA
+PCA
+``` R
 neural.seurat <- RunPCA(object = neural.seurat, verbose = FALSE)
 
 png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
@@ -1242,30 +1255,42 @@ graphics.off()
 png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
 PCA.level.comparison(neural.seurat, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
+```
 
-# Use PCA=15 as elbow plot is relatively stable across stages
+Use PCA=15 as elbow plot is relatively stable across stages
+``` R
 neural.seurat <- FindNeighbors(neural.seurat, dims = 1:15, verbose = FALSE)
 neural.seurat <- RunUMAP(neural.seurat, dims = 1:15, verbose = FALSE)
+```
 
-# Find optimal cluster resolution
+Find optimal cluster resolution
+``` R
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
 clust.res(seurat.obj = neural.seurat, by = 0.2)
 graphics.off()
+```
 
-# Use clustering resolution = 1.2
+Use clustering resolution = 1.2
+``` R
 neural.seurat <- FindClusters(neural.seurat, resolution = 1.2)
+```
 
-# Plot UMAP for clusters and developmental stage
+Plot UMAP for clusters and developmental stage
+``` R
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 clust.stage.plot(neural.seurat)
 graphics.off()
+```
 
-# Plot QC for each cluster
+Plot QC for each cluster
+``` R
 png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
 QC.plot(neural.seurat)
 graphics.off()
+```
 
-# Find differentially expressed genes and plot heatmap of top DE genes for each cluster
+Find differentially expressed genes and plot heatmap of top DE genes for each cluster
+``` R
 markers <- FindAllMarkers(neural.seurat, only.pos = T, logfc.threshold = 0.25)
 # get automated cluster order based on percentage of cells in adjacent stages
 cluster.order = order.cell.stage.clust(seurat_object = neural.seurat, col.to.sort = seurat_clusters, sort.by = orig.ident)
@@ -1278,20 +1303,27 @@ tenx.pheatmap(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"
 graphics.off()
 
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
+```
 
-# plot genes from hh4 gene list in neural subset
+Plot genes from hh4 gene list in neural subset
+``` R
 umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/"))
 # plot genes from hh6 gene list in neural subset
 umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/"))
+```
 
-# Plot heatmap for hh4 genes in neural subset
+Plot heatmap for hh4 genes in neural subset
+``` R
 png(paste0(curr.plot.path, "neural.seurat_hh4genes.HM.png"), width=75, height=100, units = "cm", res = 500)
 tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh4_genes[hh4_genes %in% rownames(neural.seurat)],
               hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
+```
 
-# Plot heatmap for hh6 genes in neural subset
+Plot heatmap for hh6 genes in neural subset
+``` R
 png(paste0(curr.plot.path, "neural.seurat_hh6genes.HM.png"), width=75, height=100, units = "cm", res = 500)
 tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh6_genes[hh6_genes %in% rownames(neural.seurat)],
               hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
+```
