@@ -324,7 +324,7 @@ norm.data <- RunPCA(object = norm.data, verbose = FALSE)
 
 <br />
 
-#### PCA {.tabset .tabset-fade .tabset-pills}
+#### PCA
 
 Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept!
 
@@ -335,8 +335,6 @@ png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res 
 DimHeatmap(norm.data, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 ```
-
-![](./suppl_files/0_filt_data/dimHM.png)
 
 ##### ElbowPlot
 Another heuristic method is ElbowPlot which ranks PCs based on the % variance explained by each PC
@@ -358,4 +356,17 @@ graphics.off()
 
 ![](![](./suppl_files/0_filt_data/UMAP_PCA_comparison.png)
 
-#### {-}
+# 
+
+|                               Dimensions heatmap                               |                              ElbowPlot                              |                     PCA level comparison                     |
+| :------------------------------------------------------------------: | :----------------------------------------------------------------: | :----------------------------------------------: |
+|                    ![](./suppl_files/0_filt_data/dimHM.png)                    |                   ![](./suppl_files/0_filt_data/elbowplot.png)                   |          ![](./suppl_files/0_filt_data/UMAP_PCA_comparison.png)          |
+
+
+# 
+
+
+
+
+
+
