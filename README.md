@@ -345,6 +345,12 @@ PCA.level.comparison(norm.data, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5
 graphics.off()
 ```
 
+|Dimensions heatmap|ElbowPlot|PCA level comparison|
+| :---: | :---: | :---: |
+|![](./suppl_files/plots/0_filt_data/dimHM.png)|![](./suppl_files/plots/0_filt_data/elbowplot.png)|![](./suppl_files/plots/0_filt_data/UMAP_PCA_comparison.png)|
+
+<br />
+
 Use PCA=15 as elbow plot is relatively stable across stages
 Use clustering resolution = 0.5 for filtering
 ``` R
@@ -367,6 +373,12 @@ QC.plot(norm.data)
 graphics.off()
 ```
 
+|UMAP|Clsuter QC|
+| :---: | :---: |
+|![](./suppl_files/plots/0_filt_data/UMAP.png)|![](./suppl_files/plots/0_filt_data/cluster.QC.png)             
+
+<br />
+
 Find differentially expressed genes and plot heatmap of top 15 DE genes for each cluster
 ```{r eval = FALSE}
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
@@ -385,20 +397,125 @@ graphics.off()
 ```
 
 **Heatmap clearly shows clusters segregate by sex - check this and remove sex genes**
+![](./suppl_files/plots/0_filt_data/HM.top15.DE.png)
 
 
-# 
-table {
-    width:100%;
+#
+### Calculating sex effect and removing sex genes
+#
+
+Change plot path
+``` R
+curr.plot.path <- paste0(plot.path, '1_sex_filt/')
+dir.create(curr.plot.path)
+```
+
+There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are hh4 clusters. Clustering is driven by sex genes
+``` R
+png(paste0(curr.plot.path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 500)
+tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_clusters == 1 | norm.data$seurat_clusters == 2,])],
+              metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(norm.data, ident.1 = 1, ident.2 = 2)),
+              hclust_rows = T, gaps_col = "seurat_clusters")
+graphics.off()
+```
+
+![](./supp_files/plots/1_sex_filt/HM.top15.DE.pre-sexfilt.png)
+
+Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
+``` R
+W_genes <- as.matrix(norm.data@assays$RNA[grepl("W-", rownames(norm.data@assays$RNA)),])
+k_clusters <- kmeans(t(W_genes), 2)
+k_clusters <- data.frame(k_clusters$cluster)
+norm.data@meta.data$k_clusters <- k_clusters[match(colnames(norm.data@assays$RNA), rownames(k_clusters)),]
+```
+
+Get rownames for kmeans clusters 1 and 2
+``` R
+k_clus_1 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 1,])
+k_clus_2 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 2,])
+```
+
+K clustering identities are stochastic, so I need to identify which cluster is male and female
+Sum of W genes is order of magnitude greater in cluster 2 - these are the female cells
+``` R
+sumclus1 <- sum(W_genes[,k_clus_1])
+sumclus2 <- sum(W_genes[,k_clus_2])
+
+if(sumclus1 < sumclus2){
+  k.male <- k_clus_1
+  k.female <- k_clus_2
+} else {
+  k.female <- k_clus_1
+  k.male <- k_clus_2
 }
-|                               Dimensions heatmap                               |                              ElbowPlot                              |                     PCA level comparison                     |
-| :------------------------------------------------------------------: | :----------------------------------------------------------------: | :----------------------------------------------: |
-|                    ![](./suppl_files/plots/0_filt_data/dimHM.png)                    |                   ![](./suppl_files/plots/0_filt_data/elbowplot.png)                   |          ![](./suppl_files/plots/0_filt_data/UMAP_PCA_comparison.png)          |
 
-|                               UMAP                               |                              Clsuter QC                              |       DEG Heatmap        |
-| :------------------------------------------------------------------: | :----------------------------------------------------------------: | :--------------------------------: |
-|                   ![](./suppl_files/plots/0_filt_data/UMAP.png)               |                   ![](./suppl_files/plots/0_filt_data/cluster.QC.png)                 |          ![](./suppl_files/plots/0_filt_data/HM.top15.DE.png)          |
+cell.sex.ID <- list("male.cells" = k.male, "female.cells" = k.female)
+saveRDS(cell.sex.ID, paste0(rds.path, "sex_kmeans.RDS"))
+```
 
+Add sex data to meta.data
+``` R
+norm.data@meta.data$sex <- unlist(lapply(rownames(norm.data@meta.data), function(x)
+  if(x %in% k.male){"male"} else if(x %in% k.female){"female"} else{stop("cell sex is not assigned")}))
+```
 
-# 
+<br />
 
+#### Filter W chrom genes
+
+Following subsetting of cells and/or genes, the same pipeline as above is repeated i.e.
+Find variable features -> Scale data/regress out confounding variables -> PCA -> Find neighbours -> Run UMAP -> Find Clusters -> Cluster QC -> Find top DE genes
+
+Remove W genes
+``` R
+norm.data.sexscale <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.data))],]
+```
+
+Re-run findvariablefeatures and scaling
+``` R
+norm.data.sexscale <- FindVariableFeatures(norm.data.sexscale, selection.method = "vst", nfeatures = 2000)
+
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
+norm.data.sexscale <- ScaleData(norm.data.sexscale, features = rownames(norm.data.sexscale), vars.to.regress = c("percent.mt", "sex"))
+```
+
+Save RDS
+``` R
+saveRDS(norm.data.sexfilt, paste0(rds.path, "norm.data.sexfilt.RDS"))
+```
+
+Read in RDS data if needed
+``` R
+# norm.data.sexfilt <- readRDS(paste0(rds.path, "norm.data.sexfilt.RDS"))
+```
+
+Set plot path
+``` R
+curr.plot.path <- paste0(plot.path, '1_sex_filt/')
+```
+
+PCA
+``` R
+norm.data.sexfilt <- RunPCA(object = norm.data.sexfilt, verbose = FALSE)
+
+png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
+DimHeatmap(norm.data.sexfilt, dims = 1:30, balanced = TRUE, cells = 500)
+graphics.off()
+
+png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
+print(ElbowPlot(norm.data.sexfilt, ndims = 40))
+graphics.off()
+
+png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
+PCA.level.comparison(norm.data.sexfilt, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+graphics.off()
+```
+
+|Dimensions heatmap|ElbowPlot|PCA level comparison|
+| :---: | :---: | :---: |
+|![](./suppl_files/plots/1_sex_filt/dimHM.png)|![](./suppl_files/plots/1_sex_filt/elbowplot.png)|![](./suppl_files/plots/1_sex_filt/UMAP_PCA_comparison.png)|
+
+<br />
