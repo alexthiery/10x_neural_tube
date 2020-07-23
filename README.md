@@ -1284,7 +1284,7 @@ graphics.off()
 
 Plot heatmap for hh6 genes in neural subset
 ``` R
-png(paste0(curr.plot.path, "neural.seurat_hh6genes.HM.png"), width=75, height=100, units = "cm", res = 500)
+png(paste0(curr.plot.path, "neural.seurat_hh6genes.HM.png"), width=75, height=50, units = "cm", res = 500)
 tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh6_genes[hh6_genes %in% rownames(neural.seurat)],
               hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
