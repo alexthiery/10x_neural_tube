@@ -45,11 +45,11 @@ We have also included Rstudio within our docker image to allow you to run the do
 #
 You can easily re-run our entire pipeline in Nextflow using the following steps:
 1) Install Nextflow and Docker
-2) Download chick genome ([galgal6](http://ftp.ensembl.org/pub/release-97/fasta/gallus_gallus/dna/Gallus_gallus.GRCg6a.dna.toplevel.fa.gz))
-3) Download annotation gtf ([galgal6](http://ftp.ensembl.org/pub/release-97/gtf/gallus_gallus/Gallus_gallus.GRCg6a.97.gtf.gz))
-2) Download raw reads from [here]()
-3) Make a sampleInfo.csv file containing the sample names and corresponding paths using this [template](sampleInfo.csv)
-4) Run Nextflow using the following command
+2) Download chick genome ([galgal5](ftp://ftp.ensembl.org/pub/release-94/fasta/gallus_gallus/dna/Gallus_gallus.Gallus_gallus-5.0.dna.toplevel.fa.gz))
+3) For this analysis we used a manually edited GTF file as described in the paper methods. However you can also run the analysis with the GTF from ensembl ([galgal5](ftp://ftp.ensembl.org/pub/release-94/gtf/gallus_gallus/Gallus_gallus.Gallus_gallus-5.0.94.gtf.gz))
+4) Download raw reads from [here]()
+5) Make a sampleInfo.csv file containing the sample names and corresponding paths using this [template](sampleInfo.csv)
+6) Run Nextflow using the following command
 
 ``` sh
 nextflow run alexthiery/10x_neural_tube \
