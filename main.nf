@@ -7,8 +7,8 @@ Pipeline params
 -------------------------------------------------------------------------------------------------------------------------------*/
 params.rFile = "$baseDir/bin/R/seurat_full.R"
 params.customFuncs = "$baseDir/bin/R/custom_functions"
-params.networkGenes = "$baseDir/bin/network_genes"
-params.wGenes = "$baseDir/bin/wGenes/wGenes.csv"
+params.networkGenes = "$baseDir/input_files/network_genes"
+params.wGenes = "$baseDir/input_files/wGenes/wGenes.csv"
 params.pymodifyGTF = "$baseDir/bin/python/modifyGTF.py"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
