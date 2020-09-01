@@ -14,7 +14,10 @@ ml Graphviz
 
 nextflow pull alexthiery/10x_neural_tube -hub github
 
-NXF_VER=20.01.0 nextflow run alexthiery/10x_neural_tube \
+NXF_VER=20.01.0
+NXF_SINGULARITY_CACHEDIR=/camp/home/thierya/working/NF_singularity
+
+nextflow run alexthiery/10x_neural_tube \
 -hub github \
 -profile crick \
 --metadata /camp/home/thierya/scratch/10x_neural_tube/sampleInfo.csv \
