@@ -2,10 +2,7 @@ name: deploy
 
 on:
   schedule:
-    - cron: 20 * * * *
-  push:
-    branches:
-      - master
+    - cron: 30 * * * *
 
 jobs:
   docker-pull:
