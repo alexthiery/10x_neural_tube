@@ -15,12 +15,12 @@ params.pymodifyGTF = "$baseDir/bin/python/modifyGTF.py"
 Include modules
 -------------------------------------------------------------------------------------------------------------------------------*/
 
-include projectHeader from "$baseDir/modules/projectHeader/projectHeader.nf"
-include modifyGTF from "$baseDir/modules/modifyGTF/modifyGTF.nf"
-include filterGTF from "$baseDir/modules/filterGTF/filterGTF.nf"
-include makeRef from "$baseDir/modules/makeRef/makeRef.nf"
-include cellrangerCount from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
-include runR from "$baseDir/modules/runR/runR.nf"
+include {projectHeader} from "$baseDir/modules/projectHeader/projectHeader.nf"
+include {modifyGTF} from "$baseDir/modules/modifyGTF/modifyGTF.nf"
+include {filterGTF} from "$baseDir/modules/filterGTF/filterGTF.nf"
+include {makeRef} from "$baseDir/modules/makeRef/makeRef.nf"
+include {cellrangerCount} from "$baseDir/modules/cellrangerCount/cellrangerCount.nf"
+include {runR} from "$baseDir/modules/runR/runR.nf"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Init
