@@ -44,7 +44,7 @@ We have also included Rstudio within our docker image to allow you to run the do
 ## Nextflow
 #
 You can easily re-run our entire pipeline in Nextflow using the following steps:
-1) Install Nextflow and Docker
+1) Install Nextflow (version >=20.07.1) and Docker
 2) Download chick genome ([galgal5](ftp://ftp.ensembl.org/pub/release-94/fasta/gallus_gallus/dna/Gallus_gallus.Gallus_gallus-5.0.dna.toplevel.fa.gz))
 3) For this analysis we used a manually edited GTF file as described in the paper methods. However you can also run the analysis with the GTF from ensembl ([galgal5](ftp://ftp.ensembl.org/pub/release-94/gtf/gallus_gallus/Gallus_gallus.Gallus_gallus-5.0.94.gtf.gz))
 4) Download raw reads from [here]()
