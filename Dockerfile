@@ -3,8 +3,6 @@ FROM rocker/tidyverse:3.6.3
 LABEL authors="alex.thiery@crick.ac.uk" \
       description="Docker image containing all requirements to run 10x analysis"
 
-ARG WHEN
-
 
 # Install cellranger
 RUN cd /tmp/ && \
@@ -41,4 +39,4 @@ RUN R -e "devtools::install_version('gridExtra', version = '2.3', dependencies=T
 RUN R -e "devtools::install_version('getopt', version = '1.20.3', dependencies=T)"
 RUN R -e "devtools::install_version('pheatmap', version = '1.0.12', dependencies=T)"
 RUN R -e "BiocManager::install('limma')"
-RUN R -e "devtools::install_github('juliendelile/Antler, dependencies = TRUE)"
+RUN R -e "devtools::install_github('juliendelile/Antler', dependencies = TRUE)"
