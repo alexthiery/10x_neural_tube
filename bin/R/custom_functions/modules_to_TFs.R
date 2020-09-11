@@ -27,6 +27,6 @@ modules_to_TFs <- function(gm, gene_annotations, GO_terms = c('GO:0003700', 'GO:
   gm = lapply(gm, function(x) x[x %in% gene_sub])
   
   # remove empty elements from list
-  return(gms[lapply(gms, length)>0])
+  return(gm[lapply(gm, length)>0])
 }
 
