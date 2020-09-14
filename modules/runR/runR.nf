@@ -15,6 +15,7 @@ process runR {
     output:
         path("plots")
         path("RDS.files")
+        path("antler.input")
 
     """
     Rscript ${rFile} --customFuncs ${params.customFuncs} --networkGenes ${params.networkGenes} --cores ${task.cpus} --runtype nextflow
