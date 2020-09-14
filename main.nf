@@ -83,10 +83,9 @@ include {runR} from "$baseDir/modules/runR/runR.nf"
 Workflow to run rscript alone
 -------------------------------------------------------------------------------------------------------------------------------*/
 
-params.cellrangercount_output = "/Users/alex/dev/repos/10x_neural_tube/output/cellrangerCounts"
-
 Channel
     .fromPath( params.cellrangercount_output )
+    .collect()
     .set { ch_cellrangercount_output }
 
 workflow {
