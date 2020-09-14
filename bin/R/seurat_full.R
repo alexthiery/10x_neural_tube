@@ -133,6 +133,7 @@ library(gridExtra)
 library(grid)
 library(pheatmap)
 library(RColorBrewer)
+library(Antler)
 
 # Make Seurat objects for each of the different samples.
 for(i in 1:nrow(sample.paths["path"])){
