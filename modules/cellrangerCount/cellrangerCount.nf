@@ -8,6 +8,8 @@ process cellrangerCount {
     publishDir "${params.alignment_outDir}/cellrangerCounts",
         mode: "copy", overwrite: true
 
+    container 'alexthiery/10x_neural_tube:v1.0'
+
     label 'high_memory'
 
     input:

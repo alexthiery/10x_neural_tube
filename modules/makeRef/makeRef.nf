@@ -5,6 +5,8 @@ nextflow.enable.dsl=2
 process makeRef {
     label 'mid_memory'
 
+    container 'alexthiery/10x_neural_tube:v1.0'
+
     input:
         path(filt_genome)
         path(fasta)
