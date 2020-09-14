@@ -41,13 +41,15 @@ if (opt$runtype == "user"){
   
   plot.path = "./results/R_results/plots/"
   rds.path = "./results/R_results/RDS.files/"
+  antler.dir = "./results/R_results/antler.input/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
+  dir.create(antler.dir, recursive = T)
   
   ##################################
   # set path where data is located #
   ##################################
-  data_path = "./alignmentOut/cellrangerCounts_renamed"
+  data_path = "./alignmentOut/cellrangerCounts"
   
   # read all files from dir
   files <- list.files(data_path, recursive = T, full.names = T)
@@ -59,9 +61,8 @@ if (opt$runtype == "user"){
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
   
   # Read in favourite genes
-  network_genes <- list.files("./bin/network_genes/", full.names = T)
-  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
-  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+  network_genes <- list.files("./input_files/network_genes/", full.names = T)
+  NI_GRN_genes <- read.table(network_genes[grepl("NI_GRN", network_genes)], stringsAsFactors = F)[,1]
 
 } else if (opt$runtype == "nextflow"){
   cat('pipeling running through nextflow\n')
@@ -72,6 +73,9 @@ if (opt$runtype == "user"){
   dir.create(plot.path, recursive = T)
   rds.path = "RDS.files/"
   dir.create(rds.path, recursive = T)
+  antler.dir = "antler.input/"
+  dir.create(antler.dir, recursive = T)
+  
   
   # read all files from folder and keep only those from chr_edit
   files <- list.files("./", recursive = T, full.names = T)
@@ -84,8 +88,7 @@ if (opt$runtype == "user"){
   
   # Read in favourite genes
   network_genes <- list.files(opt$networkGenes, full.names = T)
-  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
-  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+  NI_GRN_genes <- read.table(network_genes[grepl("NI_GRN", network_genes)], stringsAsFactors = F)[,1]
 
 } else if (opt$runtype == "docker"){
   cat('R script running through docker\n')
@@ -94,10 +97,12 @@ if (opt$runtype == "user"){
   
   plot.path = "/home/results/R_results/plots/"
   rds.path = "/home/results/R_results/RDS.files/"
+  antler.dir = "/home/results/R_results/antler.input/"
+  dir.create(antler.dir, recursive = T)
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   
-  data_path = "/home/alignmentOut/cellrangerCounts_renamed"
+  data_path = "/home/alignmentOut/cellrangerCounts"
   # read all files from dir
   files <- list.files(data_path, recursive = T, full.names = T)
   # remove file suffix
@@ -108,9 +113,8 @@ if (opt$runtype == "user"){
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
   
   # Read in favourite genes
-  network_genes <- list.files("/home/bin/network_genes/", full.names = T)
-  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
-  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+  network_genes <- list.files("/home/input_files/network_genes/", full.names = T)
+  NI_GRN_genes <- read.table(network_genes[grepl("NI_GRN", network_genes)], stringsAsFactors = F)[,1]
 }
 
 # set number of cores to use for parallelisation
@@ -704,14 +708,10 @@ for(stage in names(GOI)){
 
 
 # change target gene names if they are from Z and W chromosomes
-hh4_genes <- unlist(lapply(hh4_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
-hh6_genes <- unlist(lapply(hh6_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
+NI_GRN_genes <- unlist(lapply(NI_GRN_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
 
-
-# plot genes from hh4 gene list at each stage
-lapply(names(seurat_stage), function(x) umap.gene.list(seurat_stage[[x]], hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/", x, "/")))
-# plot genes from hh6 gene list at each stage
-lapply(names(seurat_stage), function(x) umap.gene.list(seurat_stage[[x]], hh6_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/", x, "/")))
+# plot genes from neural induction GRN gene list at each stage
+lapply(names(seurat_stage), function(x) umap.gene.list(seurat_stage[[x]], NI_GRN_genes, paste0(curr.plot.path, "NI_GRN_genes_UMAPs/", x, "/")))
 
 # Save stage data after clustering
 saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
@@ -801,19 +801,85 @@ graphics.off()
 
 saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
 
-# plot genes from hh4 gene list in neural subset
-umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/"))
-# plot genes from hh6 gene list in neural subset
-umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/"))
+# plot genes from neural induction GRN gene list in neural subset
+umap.gene.list(neural.seurat, NI_GRN_genes, paste0(curr.plot.path, "NI_GRN_genes_UMAPs/"))
 
-# Plot heatmap for hh4 genes in neural subset
-png(paste0(curr.plot.path, "neural.seurat_hh4genes.HM.png"), width=75, height=100, units = "cm", res = 500)
-tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh4_genes[hh4_genes %in% rownames(neural.seurat)],
+# Plot heatmap for NI GRN genes in neural subset
+png(paste0(curr.plot.path, "neural.seurat_NI_GRN_genes.HM.png"), width=75, height=100, units = "cm", res = 500)
+tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = NI_GRN_genes[NI_GRN_genes %in% rownames(neural.seurat)],
               hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
 
-# Plot heatmap for hh6 genes in neural subset
-png(paste0(curr.plot.path, "neural.seurat_hh6genes.HM.png"), width=75, height=50, units = "cm", res = 500)
-tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh6_genes[hh6_genes %in% rownames(neural.seurat)],
-              hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
+
+########################################################################################################
+#                            Load Antler data and generate gene modules                                #
+########################################################################################################
+
+# Set plot path
+curr.plot.path <- paste0(plot.path, "6_gene_modules/")
+dir.create(curr.plot.path, recursive = TRUE)
+
+# first extract expression data and make dataset compatible with antler
+# strip end of cell names as this is incorrectly reformated in Antler
+neural.seurat <- RenameCells(neural.seurat, new.names = sub('-.*','',colnames(neural.seurat)))
+
+antler_data <- data.frame(row.names = colnames(neural.seurat),
+                          "timepoint" = as.numeric(substring(colnames(neural.seurat), 3, 3)),
+                          "treatment" = rep("null", ncol(neural.seurat)),
+                          "replicate_id" = rep(1, ncol(neural.seurat))
+)
+# save pheno data
+write.table(antler_data, file = paste0(antler.dir, "phenoData.csv"), row.names = T, sep = "\t", col.names = T)
+# save count data
+write.table(GetAssayData(neural.seurat, assay = "RNA", slot = "counts"), file = paste0(antler.dir, "assayData.csv"), row.names = T, sep = "\t", col.names = T, quote = F)
+
+# load data into antler
+antler <- Antler$new(output_folder = curr.plot.path, num_cores = 4)
+antler$load_dataset(folder_path = antler.dir)
+
+# remove genes which do not have >= 1 UMI count in >= 10 cells
+antler$exclude_unexpressed_genes(min_cells=10, min_level=1, verbose=T, data_status='Raw')
+
+antler$normalize(method = 'MR')
+
+antler$gene_modules$identify(
+  name                  = "unbiasedGMs",
+  corr_t                = 0.3,  # the Spearman correlation treshold
+  corr_min              = 3,    # min. number of genes a gene must correlate with
+  mod_min_cell          = 10,   # min. number of cells expressing the module
+  mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
+  process_plots         = TRUE)
+
+# get automated cluster order based on percentage of cells in adjacent stages
+cluster.order = order.cell.stage.clust(seurat_object = neural.seurat, col.to.sort = seurat_clusters, sort.by = orig.ident)
+
+# plot all gene modules
+png(paste0(curr.plot.path, 'allmodules.png'), height = 150, width = 120, units = 'cm', res = 600)
+GM.plot(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
+        show_rownames = F, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+graphics.off()
+
+# Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
+DEgenes <- FindAllMarkers(neural.seurat, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
+gms <- subset.gm(antler$gene_modules$lists$unbiasedGMs$content, selected_genes = DEgenes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
+
+png(paste0(curr.plot.path, 'DE.GM.png'), height = 160, width = 80, units = 'cm', res = 600)
+GM.plot(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), gene_modules = gms, gaps_col = "seurat_clusters",
+        show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+graphics.off()
+
+# Filter gene TFs from gene modules
+TF_gms <- modules_to_TFs(gm = gms, gene_annotations = neural.seurat@misc$geneIDs)
+png(paste0(curr.plot.path, 'DE.TF_GM.png'), height = 60, width = 75, units = 'cm', res = 600)
+GM.plot(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), gene_modules = TF_gms, show_rownames = T, gaps_col = "seurat_clusters",
+        custom_order = cluster.order, custom_order_column = "seurat_clusters")
+graphics.off()
+
+# filter gene modules by genes in neural induction gene list
+NI_genes_gms <- lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) x[x %in% NI_GRN_genes])
+NI_genes_gms <- NI_genes_gms[lapply(NI_genes_gms, length)>0]
+
+png(paste0(curr.plot.path, 'neural_induction_gms.png'), height = 50, width = 75, units = 'cm', res = 600)
+GM.plot(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), gene_modules = NI_genes_gms, show_rownames = T, gaps_col = "seurat_clusters",
+        custom_order = cluster.order, custom_order_column = "seurat_clusters")
 graphics.off()
