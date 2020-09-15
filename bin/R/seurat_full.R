@@ -869,13 +869,6 @@ GM.plot(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), gen
         show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
 graphics.off()
 
-# Filter gene TFs from gene modules
-TF_gms <- modules_to_TFs(gm = gms, gene_annotations = neural.seurat@misc$geneIDs)
-png(paste0(curr.plot.path, 'DE.TF_GM.png'), height = 60, width = 75, units = 'cm', res = 500)
-GM.plot(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), gene_modules = TF_gms, show_rownames = T, gaps_col = "seurat_clusters",
-        custom_order = cluster.order, custom_order_column = "seurat_clusters")
-graphics.off()
-
 # filter gene modules by genes in neural induction gene list
 NI_genes_gms <- lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) x[x %in% NI_GRN_genes])
 NI_genes_gms <- NI_genes_gms[lapply(NI_genes_gms, length)>0]
@@ -884,4 +877,77 @@ png(paste0(curr.plot.path, 'neural_induction_gms.png'), height = 50, width = 75,
 GM.plot(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), gene_modules = NI_genes_gms, show_rownames = T, gaps_col = "seurat_clusters",
         custom_order = cluster.order, custom_order_column = "seurat_clusters")
 graphics.off()
+
+
+# run GMs once for each stage
+antler <- Antler$new(output_folder = curr.plot.path, num_cores = 4)
+antler$load_dataset(folder_path = antler.dir)
+
+antler_stage <- list()
+
+for(stage in c("hh4", "hh6", "ss4", "ss8")){
+  antler_stage[[stage]] <- antler$copy()
+  antler_stage[[stage]]$remove_cells(ids = which(!grepl(stage, antler_stage[[stage]]$cell_names())))
+  
+  # remove genes which do not have >= 1 UMI count in >= 5 cells
+  antler_stage[[stage]]$exclude_unexpressed_genes(min_cells=5, min_level=1, verbose=T, data_status='Raw')
+  
+  antler_stage[[stage]]$normalize(method = 'MR')
+  
+  antler_stage[[stage]]$gene_modules$identify(
+    name                  = "unbiasedGMs",
+    corr_t                = 0.3,  # the Spearman correlation treshold
+    corr_min              = 3,    # min. number of genes a gene must correlate with
+    mod_min_cell          = 5,   # min. number of cells expressing the module
+    mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
+    process_plots         = TRUE)
+}
+
+
+# Subset stages from neural seurat
+seurat_antler_stage <- lapply(antler_stage, function(x) subset(neural.seurat, cells = x$cell_names()))
+
+# Re-run findvariablefeatures and scaling
+seurat_antler_stage <- lapply(seurat_antler_stage, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
+
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
+seurat_antler_stage <- lapply(seurat_antler_stage, function(x) ScaleData(x, features = rownames(x), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score")))
+seurat_antler_stage <- lapply(seurat_antler_stage, function(x) RunPCA(x, verbose = FALSE))
+seurat_antler_stage <- lapply(seurat_antler_stage, function(x) FindNeighbors(x, dims = 1:15, verbose = FALSE))
+seurat_antler_stage <- lapply(seurat_antler_stage, function(x) RunUMAP(x, dims = 1:15, verbose = FALSE))
+seurat_antler_stage <- lapply(seurat_antler_stage, function(x) FindClusters(x, resolution = 0.5))
+
+for(stage in c("hh4", "hh6", "ss4", "ss8")){
+  # plot all gene modules
+  png(paste0(curr.plot.path, 'all.gms.', stage, '.png'), height = 150, width = 120, units = 'cm', res = 500)
+  GM.plot(data = seurat_antler_stage[[stage]], metadata = c("seurat_clusters", "orig.ident"), gene_modules = antler_stage[[stage]]$gene_modules$lists$unbiasedGMs$content,
+          show_rownames = F, custom_order_column = "seurat_clusters")
+  graphics.off()
+}
+
+# Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
+DEgenes <- lapply(seurat_antler_stage, function(x) FindAllMarkers(x, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001))
+
+for(stage in c("hh4", "hh6", "ss4", "ss8")){
+  gms <- subset.gm(antler_stage[[stage]]$gene_modules$lists$unbiasedGMs$content, selected_genes = DEgenes[[stage]]$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
+  # plot DE gene modules for each stage
+  png(paste0(curr.plot.path, 'DE.GM.', stage, '.png'), height = 160, width = 80, units = 'cm', res = 500)
+  GM.plot(data = seurat_antler_stage[[stage]], metadata = c("seurat_clusters", "orig.ident"), gene_modules = gms, gaps_col = "seurat_clusters",
+          show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+  graphics.off()
+}
+
+for(stage in c("hh4", "hh6", "ss4", "ss8")){
+  # filter gene modules by genes in neural induction gene list
+  NI_genes_gms <- lapply(antler_stage[[stage]]$gene_modules$lists$unbiasedGMs$content, function(x) x[x %in% NI_GRN_genes])
+  NI_genes_gms <- NI_genes_gms[lapply(NI_genes_gms, length)>0]
+  
+  png(paste0(curr.plot.path, 'neural_induction_gms.', stage, '.png'), height = 50, width = 75, units = 'cm', res = 500)
+  GM.plot(data = seurat_antler_stage[[stage]], metadata = c("seurat_clusters", "orig.ident"), gene_modules = NI_genes_gms, show_rownames = T, gaps_col = "seurat_clusters")
+  graphics.off()
+}
+
 
