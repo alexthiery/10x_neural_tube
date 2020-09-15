@@ -915,10 +915,14 @@ plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
 seurat_antler_stage <- lapply(seurat_antler_stage, function(x) ScaleData(x, features = rownames(x), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score")))
+saveRDS(seurat_antler_stage, paste0(rds.path, "seurat_antler_stage.RDS"))
+
 seurat_antler_stage <- lapply(seurat_antler_stage, function(x) RunPCA(x, verbose = FALSE))
 seurat_antler_stage <- lapply(seurat_antler_stage, function(x) FindNeighbors(x, dims = 1:15, verbose = FALSE))
 seurat_antler_stage <- lapply(seurat_antler_stage, function(x) RunUMAP(x, dims = 1:15, verbose = FALSE))
 seurat_antler_stage <- lapply(seurat_antler_stage, function(x) FindClusters(x, resolution = 0.5))
+saveRDS(seurat_antler_stage, paste0(rds.path, "seurat_antler_stage.out.RDS"))
+saveRDS(antler_stage, paste0(rds.path, "antler_stage.out.RDS"))
 
 for(stage in c("hh4", "hh6", "ss4", "ss8")){
   # plot all gene modules
