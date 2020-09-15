@@ -800,8 +800,6 @@ tenx.pheatmap(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
-saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
-
 # plot genes from neural induction GRN gene list in neural subset
 umap.gene.list(neural.seurat, NI_GRN_genes, paste0(curr.plot.path, "NI_GRN_genes_UMAPs/"))
 
@@ -811,13 +809,15 @@ tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"
               hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
 graphics.off()
 
-
+saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
 ########################################################################################################
 #                            Load Antler data and generate gene modules                                #
 ########################################################################################################
 
+# neural.seurat <- readRDS(paste0(rds.path, "neural.seurat.out.RDS"))
+
 # Set plot path
-curr.plot.path <- paste0(plot.path, "6_gene_modules/")
+curr.plot.path <- paste0(plot.path, "7_gene_modules/")
 dir.create(curr.plot.path, recursive = TRUE)
 
 # first extract expression data and make dataset compatible with antler
@@ -855,7 +855,7 @@ antler$gene_modules$identify(
 cluster.order = order.cell.stage.clust(seurat_object = neural.seurat, col.to.sort = seurat_clusters, sort.by = orig.ident)
 
 # plot all gene modules
-png(paste0(curr.plot.path, 'allmodules.png'), height = 150, width = 120, units = 'cm', res = 600)
+png(paste0(curr.plot.path, 'allmodules.png'), height = 150, width = 120, units = 'cm', res = 500)
 GM.plot(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
         show_rownames = F, custom_order = cluster.order, custom_order_column = "seurat_clusters")
 graphics.off()
@@ -871,7 +871,7 @@ graphics.off()
 
 # Filter gene TFs from gene modules
 TF_gms <- modules_to_TFs(gm = gms, gene_annotations = neural.seurat@misc$geneIDs)
-png(paste0(curr.plot.path, 'DE.TF_GM.png'), height = 60, width = 75, units = 'cm', res = 600)
+png(paste0(curr.plot.path, 'DE.TF_GM.png'), height = 60, width = 75, units = 'cm', res = 500)
 GM.plot(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), gene_modules = TF_gms, show_rownames = T, gaps_col = "seurat_clusters",
         custom_order = cluster.order, custom_order_column = "seurat_clusters")
 graphics.off()
@@ -880,7 +880,8 @@ graphics.off()
 NI_genes_gms <- lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) x[x %in% NI_GRN_genes])
 NI_genes_gms <- NI_genes_gms[lapply(NI_genes_gms, length)>0]
 
-png(paste0(curr.plot.path, 'neural_induction_gms.png'), height = 50, width = 75, units = 'cm', res = 600)
+png(paste0(curr.plot.path, 'neural_induction_gms.png'), height = 50, width = 75, units = 'cm', res = 500)
 GM.plot(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), gene_modules = NI_genes_gms, show_rownames = T, gaps_col = "seurat_clusters",
         custom_order = cluster.order, custom_order_column = "seurat_clusters")
 graphics.off()
+
