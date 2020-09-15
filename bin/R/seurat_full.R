@@ -864,7 +864,7 @@ graphics.off()
 DEgenes <- FindAllMarkers(neural.seurat, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
 gms <- subset.gm(antler$gene_modules$lists$unbiasedGMs$content, selected_genes = DEgenes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
 
-png(paste0(curr.plot.path, 'DE.GM.png'), height = 160, width = 80, units = 'cm', res = 600)
+png(paste0(curr.plot.path, 'DE.GM.png'), height = 160, width = 80, units = 'cm', res = 500)
 GM.plot(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), gene_modules = gms, gaps_col = "seurat_clusters",
         show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
 graphics.off()
