@@ -903,7 +903,6 @@ for(stage in c("hh4", "hh6", "ss4", "ss8")){
     process_plots         = TRUE)
 }
 
-
 # Subset stages from neural seurat
 seurat_antler_stage <- lapply(antler_stage, function(x) subset(neural.seurat, cells = x$cell_names()))
 
@@ -935,21 +934,23 @@ for(stage in c("hh4", "hh6", "ss4", "ss8")){
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
 DEgenes <- lapply(seurat_antler_stage, function(x) FindAllMarkers(x, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001))
 
+height = c("hh4" = 50, "hh6" = 60, "ss4" = 75, "ss8" = 120)
 for(stage in c("hh4", "hh6", "ss4", "ss8")){
   gms <- subset.gm(antler_stage[[stage]]$gene_modules$lists$unbiasedGMs$content, selected_genes = DEgenes[[stage]]$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
   # plot DE gene modules for each stage
-  png(paste0(curr.plot.path, 'DE.GM.', stage, '.png'), height = 160, width = 80, units = 'cm', res = 500)
+  png(paste0(curr.plot.path, 'DE.GM.', stage, '.png'), height = height[[stage]], width = 60, units = 'cm', res = 500)
   GM.plot(data = seurat_antler_stage[[stage]], metadata = c("seurat_clusters", "orig.ident"), gene_modules = gms, gaps_col = "seurat_clusters",
-          show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+          show_rownames = T)
   graphics.off()
 }
 
+height = c("hh4" = 30, "hh6" = 30, "ss4" = 30, "ss8" = 50)
 for(stage in c("hh4", "hh6", "ss4", "ss8")){
   # filter gene modules by genes in neural induction gene list
   NI_genes_gms <- lapply(antler_stage[[stage]]$gene_modules$lists$unbiasedGMs$content, function(x) x[x %in% NI_GRN_genes])
   NI_genes_gms <- NI_genes_gms[lapply(NI_genes_gms, length)>0]
   
-  png(paste0(curr.plot.path, 'neural_induction_gms.', stage, '.png'), height = 50, width = 75, units = 'cm', res = 500)
+  png(paste0(curr.plot.path, 'neural_induction_gms.', stage, '.png'), height = height[[stage]], width = 50, units = 'cm', res = 500)
   GM.plot(data = seurat_antler_stage[[stage]], metadata = c("seurat_clusters", "orig.ident"), gene_modules = NI_genes_gms, show_rownames = T, gaps_col = "seurat_clusters")
   graphics.off()
 }
