@@ -79,15 +79,15 @@ workflow {
 
 
 
-/*-----------------------------------------------------------------------------------------------------------------------------
-Workflow to run rscript alone
--------------------------------------------------------------------------------------------------------------------------------*/
+// /*-----------------------------------------------------------------------------------------------------------------------------
+// Workflow to run rscript alone
+// -------------------------------------------------------------------------------------------------------------------------------*/
 
-Channel
-    .fromPath( params.cellrangercount_output )
-    .collect()
-    .set { ch_cellrangercount_output }
+// Channel
+//     .fromPath( params.cellrangercount_output )
+//     .collect()
+//     .set { ch_cellrangercount_output }
 
-workflow {
-    runR( file(params.rFile), ch_cellrangercount_output )
-}
+// workflow {
+//     runR( file(params.rFile), ch_cellrangercount_output )
+// }
