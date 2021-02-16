@@ -20,7 +20,7 @@ ENV PATH /opt/cellranger-3.0.2:$PATH
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
  git=1:2.20.1-2+deb10u3 \
- apt-utils=1.8.2.1 \
+ apt-util \
  unzip=6.0-23+deb10u1 \
  procps=2:3.3.15-2 \
  build-essential=12.6 \
@@ -31,13 +31,14 @@ RUN apt-get update \
 
 RUN pip install pandas
 
-RUN R -e "install.packages('ggbeeswarm')"
-RUN R -e "devtools::install_version('Seurat', version = '3.1.5', dependencies= NA)"
-RUN R -e "devtools::install_version('future', version = '1.17.0', dependencies= T)"
-RUN R -e "devtools::install_version('cowplot', version = '1.0.0', dependencies= T)"
-RUN R -e "devtools::install_version('clustree', version = '0.4.2', dependencies= NA)"
-RUN R -e "devtools::install_version('gridExtra', version = '2.3', dependencies=T)"
-RUN R -e "devtools::install_version('getopt', version = '1.20.3', dependencies=T)"
-RUN R -e "devtools::install_version('pheatmap', version = '1.0.12', dependencies=T)"
-RUN R -e "BiocManager::install('limma')"
-RUN R -e "devtools::install_github('juliendelile/Antler', dependencies = TRUE)"
+RUN R -e "install.packages('ggbeeswarm')" && \
+	R -e "BiocManager::install('monocle')" && \
+	R -e "devtools::install_version('Seurat', version = '3.1.5', dependencies= NA)" && \
+	R -e "devtools::install_version('future', version = '1.17.0', dependencies= T)" && \
+	R -e "devtools::install_version('cowplot', version = '1.0.0', dependencies= T)" && \
+	R -e "devtools::install_version('clustree', version = '0.4.2', dependencies= NA)" && \
+	R -e "devtools::install_version('gridExtra', version = '2.3', dependencies=T)" && \
+	R -e "devtools::install_version('getopt', version = '1.20.3', dependencies=T)" && \
+	R -e "devtools::install_version('pheatmap', version = '1.0.12', dependencies=T)" && \
+	R -e "BiocManager::install('limma')" && \
+	R -e "devtools::install_github('juliendelile/Antler', dependencies = TRUE)"
