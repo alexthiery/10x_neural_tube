@@ -95,10 +95,46 @@ norm.expression <- GetAssayData(neural.seurat.out, slot = 'scale.data')
 
 
 
+goi <- stack(list(early = c('ATF3', 'ETV1', 'NRIP1', 'RUNX1T1', 'TFAP2C', 'NAB1', 'NFKB2', 'CITED4', 'RNF14', 'JADE2', 'SAMD4A', 'SOX3', 'ERNI', 'TRIM24', 'Z-ZNF462'),
+                  middle = c('ATF7IP', 'BRD8', 'ENSGALG00000037457', "FUBP1", "HESX1", "MBD3", 'MID1', 'PTTG2', 'SOX2', 'SP4', 'TCF7L2', 'ZNF821', 'MDFI', 'HMGA2', 'LIN28A', 'LMO1', 'LMX1B', 'PDCD4', 'SIX3'),
+                  late = c("CBY1", "E2F3", "FEZF2", "GLI2", "HOXB1", "MAML2", "MEIS1", "NKX6-2", "Z-SMAD2Z", "T", "ZEB2", "SIX1")))
+
+
+colnames(goi) = c("gene_name", "category")
+
+
+
+
+plot_dat <- neural.seurat.out@meta.data[,'orig.ident', drop=F] %>%
+  tibble::rownames_to_column(var = "cell_name") %>%
+  mutate(pc1 = Embeddings(object = neural.seurat.out[["pca"]])[, 1]) %>%
+  mutate(rank = rank(pc1))
+
+
+temp <- as.data.frame(t(as.matrix(norm.expression[rownames(norm.expression) %in% goi$gene_name,]))) %>%
+  tibble::rownames_to_column(var = "cell_name") %>%
+  dplyr::full_join(plot_dat) %>%
+  pivot_longer(!c(cell_name, orig.ident, rank, pc1), names_to = "gene_name", values_to = "normalised_count") %>%
+  dplyr::left_join(goi)
+
+
+gam_out <- mgcv::gam(normalised_count ~ s(rank, by = category), data = temp)
+
+se <- predict(gam_out, type='response', se.fit = TRUE)
+
+
+ggplot(cbind(temp, gam = se$fit, se = se$se.fit), aes(x = rank, y = gam, colour = category)) +
+  geom_line()+
+  geom_ribbon(aes(ymin=gam-se, ymax=gam+se))+
+  theme_classic()
+
+ggplot(temp, aes(x = rank, y = normalised_count,colour = category)) +
+  geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95) +
+  theme_classic()
+
 
 
 # calculate and plot pseudotime using monocle spline curve
-
 # BiocManager::install("monocle")
 library(monocle)
 
