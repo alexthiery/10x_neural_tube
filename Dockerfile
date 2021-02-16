@@ -6,7 +6,7 @@ LABEL authors="alex.thiery@crick.ac.uk" \
 
 # Install cellranger
 RUN cd /tmp/ && \
-	wget -O cellranger-3.0.2.tar.gz "https://cf.10xgenomics.com/releases/cell-exp/cellranger-3.0.2.tar.gz?Expires=1599878456&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZi4xMHhnZW5vbWljcy5jb20vcmVsZWFzZXMvY2VsbC1leHAvY2VsbHJhbmdlci0zLjAuMi50YXIuZ3oiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE1OTk4Nzg0NTZ9fX1dfQ__&Signature=i~ctNh-a41qIXu67Ysy5uWRUJ6pT0grisE6gk~H-viZfeMm7uJt6MM-2xgeU2oa3OaRhfgABWPDngw3zhYSjFgbISyDG6j3LVdnZAQ5kpxEjv0HqGDEYXsycrDebLOMGkuVvnhhM96PewYqaHfdZeylWJ~yP1~uAyLQ~Y7vK6o4hdVa7X~j0pNzsji9tONwEfKJVLhTka9Cd9OWyLJIAqST7Glh365BS2BJZ5edREnKpz3WH8xTUwxoc6il1BRuPrGmM~zwLcx7pxHE2jUdheVZPZDX-Ecer3FGmlsLn14EJzeGOFXJ0oLCNmSdCSSzuTFzBaHrCsNxuUkR~fTxtow__&Key-Pair-Id=APKAI7S6A5RYOXBWRPDA" && \	
+	wget -O cellranger-3.0.2.tar.gz "https://cf.10xgenomics.com/releases/cell-exp/cellranger-3.0.2.tar.gz?Expires=1613526989&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZi4xMHhnZW5vbWljcy5jb20vcmVsZWFzZXMvY2VsbC1leHAvY2VsbHJhbmdlci0zLjAuMi50YXIuZ3oiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE2MTM1MjY5ODl9fX1dfQ__&Signature=b0iFXuBx48UbKDawH2e8AuhIWhSJHaeF~zSFjupoQ--K92PD5XQ6w6gJQHavTlnRLAOA4UCUdVwiCZLA4PWIroFFmm7DeBDlrt9i-1XdCci9VCa2S0NEMypjUZNfyyI4SHIRJFd5CETP2cqUFqrp1U1gWB2czzmuJXrY0v4ef~wSQq8sFdJr3YHKlJrf4J2U2JP9hbdT-Hgwi9p9bJkbcY5wLgYe~FXg-aWXN5h91lcIc5c4Q0oBVJPZQlEVercJDnbmlRO-yz24g7koOsMaozfLYvZywxBO~QobK1LJpwPpnoW9PZXJ~bjKv-knmzpF~dH35XN7R9VKBSv2FvGeKQ__&Key-Pair-Id=APKAI7S6A5RYOXBWRPDA" && \	
 	mv cellranger-3.0.2.tar.gz /opt/ && \
 	cd /opt/ && \
 	tar -xzvf cellranger-3.0.2.tar.gz && \
@@ -31,6 +31,7 @@ RUN apt-get update \
 
 RUN pip install pandas
 
+RUN R -e "install.packages('ggbeeswarm')"
 RUN R -e "devtools::install_version('Seurat', version = '3.1.5', dependencies= NA)"
 RUN R -e "devtools::install_version('future', version = '1.17.0', dependencies= T)"
 RUN R -e "devtools::install_version('cowplot', version = '1.0.0', dependencies= T)"
