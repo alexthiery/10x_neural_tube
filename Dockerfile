@@ -20,7 +20,7 @@ ENV PATH /opt/cellranger-3.0.2:$PATH
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
  git=1:2.20.1-2+deb10u3 \
- apt-util \
+ apt-utils \
  unzip=6.0-23+deb10u1 \
  procps=2:3.3.15-2 \
  build-essential=12.6 \
