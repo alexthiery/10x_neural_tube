@@ -203,7 +203,7 @@ graphics.off()
 library(monocle)
 
 
-# Get gene names and timepoint first expressed - filter 0 and down-regulated timepoints
+# Get gene names and timepoint
 goi <- read.csv('./input_files/selected_network_genes.csv')
 
 
