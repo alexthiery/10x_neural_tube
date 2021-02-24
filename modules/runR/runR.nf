@@ -8,9 +8,6 @@ process runR {
 
     label 'high_memory'
 
-    container 'alexthiery/10x_neural_tube:v1.0'
-
-
     input:
         path(rFile)
         path(cellrangerOut)
