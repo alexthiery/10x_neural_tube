@@ -12,8 +12,6 @@ ml Nextflow/20.07.1
 ml Singularity/3.4.2
 ml Graphviz
 
-nextflow pull alexthiery/10x_neural_tube
-
 NXF_VER=20.07.1
 
 nextflow run NF-downstream_analysis/main.nf \
