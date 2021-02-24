@@ -5,10 +5,10 @@ nextflow.enable.dsl=2
 /*-----------------------------------------------------------------------------------------------------------------------------
 Pipeline params
 -------------------------------------------------------------------------------------------------------------------------------*/
-params.rFile = "$baseDir/bin/R/seurat_full.R"
+params.rFile = "$baseDir/bin/R/seurat_full_slim.R"
 params.customFuncs = "$baseDir/bin/R/custom_functions"
-params.networkGenes = "$baseDir/input_files/network_genes"
-params.wGenes = "$baseDir/input_files/wGenes/wGenes.csv"
+params.networkGenes = "$baseDir/input_files/network_expression.csv"
+params.wGenes = "$baseDir/input_files/wGenes.csv"
 params.pymodifyGTF = "$baseDir/bin/python/modifyGTF.py"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
@@ -35,7 +35,6 @@ summary['Metadata File']          = params.metadata
 summary['Fasta File']             = params.fa
 summary['GTF File']               = params.gtf
 summary['Max Resources']          = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
-if (workflow.containerEngine)     summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output Dir']             = params.outDir
 summary['Launch Dir']             = workflow.launchDir
 summary['Working Dir']            = workflow.workDir
@@ -67,27 +66,27 @@ Channel
 Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
-workflow {
-    modifyGTF( file(params.pymodifyGTF), ch_gtf, file(params.wGenes) )
-    filterGTF( modifyGTF.out )
-    makeRef( filterGTF.out, ch_fa )
-    cellrangerCount( ch_fastq.combine(makeRef.out) )
-    runR( file(params.rFile), cellrangerCount.out.countFiles.collect() )
-}
-
-
-
-
-
-// /*-----------------------------------------------------------------------------------------------------------------------------
-// Workflow to run rscript alone
-// -------------------------------------------------------------------------------------------------------------------------------*/
-
-// Channel
-//     .fromPath( params.cellrangercount_output )
-//     .collect()
-//     .set { ch_cellrangercount_output }
-
 // workflow {
-//     runR( file(params.rFile), ch_cellrangercount_output )
+//     modifyGTF( file(params.pymodifyGTF), ch_gtf, file(params.wGenes) )
+//     filterGTF( modifyGTF.out )
+//     makeRef( filterGTF.out, ch_fa )
+//     cellrangerCount( ch_fastq.combine(makeRef.out) )
+//     runR( file(params.rFile), cellrangerCount.out.countFiles.collect() )
 // }
+
+
+
+
+
+/*-----------------------------------------------------------------------------------------------------------------------------
+Workflow to run rscript alone
+-------------------------------------------------------------------------------------------------------------------------------*/
+
+Channel
+    .fromPath( params.cellrangercount_output )
+    .collect()
+    .set { ch_cellrangercount_output }
+
+workflow {
+    runR( file(params.rFile), ch_cellrangercount_output )
+}
