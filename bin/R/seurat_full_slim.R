@@ -60,10 +60,10 @@ if (opt$runtype == "user"){
   matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
   
-  # Read in favourite genes
-  network_genes <- list.files("./input_files/network_genes/", full.names = T)
-  NI_GRN_genes <- read.table(network_genes[grepl("NI_GRN", network_genes)], stringsAsFactors = F)[,1]
-  
+  # Read in network genes and remove 0 timepoint
+  network_genes <- read.csv('./input_files/network_expression.csv') %>%
+    filter(!timepoint == 0)
+
 } else if (opt$runtype == "nextflow"){
   cat('pipeling running through nextflow\n')
   
@@ -86,10 +86,9 @@ if (opt$runtype == "user"){
   matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
   
-  # Read in favourite genes
-  network_genes <- list.files(opt$networkGenes, full.names = T)
-  NI_GRN_genes <- read.table(network_genes[grepl("NI_GRN", network_genes)], stringsAsFactors = F)[,1]
-  
+  # Read in network genes and remove 0 timepoint
+  network_genes <- read.csv(opt$networkGenes) %>%
+    filter(!timepoint == 0)
 }
 
 # set number of cores to use for parallelisation
@@ -580,7 +579,7 @@ graphics.off()
 
 
 # Set plot path
-curr.plot.path <- paste0(plot.path, "temp_gene_modules/")
+curr.plot.path <- paste0(plot.path, "5_gene_modules/")
 dir.create(curr.plot.path, recursive = TRUE)
 
 # first extract expression data and make dataset compatible with antler
@@ -633,14 +632,11 @@ GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ide
 graphics.off()
 
 
-
 # Keep only genes from network in the gene modules
-network_genes <- read.csv('./input_files/network_expression.csv')
-
 filtered_gms <- lapply(gms, function(x) x[x %in% network_genes$gene])
+
 # remove empty list elements
 filtered_gms <- filtered_gms[lapply(filtered_gms,length)>0]
-
 
 png(paste0(curr.plot.path, 'network.GM.png'), height = 40, width = 80, units = 'cm', res = 500)
 GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = filtered_gms, gaps_col = "seurat_clusters",
@@ -648,21 +644,16 @@ GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ide
 graphics.off()
 
 
-
-
 #######################################################################################################
 #                                     Subset neural clusters                                          #
 #######################################################################################################
-neural_cells = norm.data.clustfilt.cc@meta.data %>% tibble::rownames_to_column('cell') %>% filter(!seurat_clusters %in% c(12, 3, 11, 8, 10)) %>% dplyr::pull("cell")
 
-DimPlot(norm.data.clustfilt.cc, cells = neural_cells)
+neural_cells = norm.data.clustfilt.cc@meta.data %>% tibble::rownames_to_column('cell') %>% filter(!seurat_clusters %in% c(12, 3, 11, 8, 10)) %>% dplyr::pull("cell")
 
 neural_subset = subset(norm.data.clustfilt.cc, cells = neural_cells)
 
-
-
 # Set plot path
-curr.plot.path <- paste0(plot.path, "temp_neural_subset/")
+curr.plot.path <- paste0(plot.path, "6_neural_subset/")
 dir.create(curr.plot.path)
 
 # Re-run findvariablefeatures and scaling
@@ -718,20 +709,27 @@ graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(neural_subset, only.pos = T, logfc.threshold = 0.25)
+
 # get automated cluster order based on percentage of cells in adjacent stages
 cluster.order = order.cell.stage.clust(seurat_object = neural_subset, col.to.sort = seurat_clusters, sort.by = orig.ident)
+
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
 png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 500)
-tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+tenx.pheatmap(data = neural_subset, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
-#
 
 
+######################################################################################################
+#                                           Pseudotime                                               #
+######################################################################################################
 
+# Set plot path
+curr.plot.path <- paste0(plot.path, "7_pseudotime/")
+dir.create(curr.plot.path)
 
 # Rank cells according to position on PC1
 pc1_rank <- neural_subset@meta.data[,'orig.ident', drop=F] %>%
@@ -749,16 +747,13 @@ ggplot(pc1_rank, aes(x = pc1, y = orig.ident, colour = orig.ident)) +
   ggtitle("Cells ordered by first principal component")
 graphics.off()
 
-# Get gene names and timepoint first expressed - filter 0 and down-regulated timepoints
-goi <- read.csv('./input_files/network_expression.csv') %>%
-  filter(!timepoint == 0)
 
-# Filter scaled seurat counts by goi -> generate long df with corresponding pseudotime and normalised count
-plot_data <- as.data.frame(t(as.matrix(GetAssayData(neural_subset, slot = 'scale.data')[rownames(neural_subset) %in% goi$gene_name,]))) %>%
+# Filter scaled seurat counts by network_genes -> generate long df with corresponding pseudotime and normalised count
+plot_data <- as.data.frame(t(as.matrix(GetAssayData(neural_subset, slot = 'scale.data')[rownames(neural_subset) %in% network_genes$gene_name,]))) %>%
   tibble::rownames_to_column(var = "cell_name") %>%
   dplyr::full_join(pc1_rank) %>%
   pivot_longer(!c(cell_name, orig.ident, pseudotime, pc1, rank), names_to = "gene_name", values_to = "scaled_expression") %>%
-  dplyr::left_join(goi) %>%
+  dplyr::left_join(network_genes) %>%
   droplevels() %>%
   mutate(timepoint = factor(timepoint, levels = c(1,3,5,7,9,12)))
 
@@ -815,62 +810,62 @@ graphics.off()
 
 
 
-
-
-
-
-#####################################################################################################
-#                                        Cell type identification                                   #
-#####################################################################################################
-
-# Set plot path
-curr.plot.path <- paste0(plot.path, "5_stage_split/")
-dir.create(curr.plot.path)
-
-# Split dataset into different stages
-seurat_stage <- lapply(c('hh4', 'hh6', 'ss4', 'ss8'),
-                       function(x) subset(norm.data.clustfilt.cc, cells = rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.cc$orig.ident == x]))
-names(seurat_stage) = c('hh4', 'hh6', 'ss4', 'ss8')
-
-
-# Re-run findvariablefeatures and scaling
-seurat_stage <- lapply(seurat_stage, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
-
-# Enable parallelisation
-plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 2000 * 1024^2)
-
-seurat_stage <- lapply(seurat_stage, function(x) ScaleData(x, features = rownames(norm.data.clustfilt.cc),
-                                                           vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score")))
-
-saveRDS(seurat_stage, paste0(rds.path, "seurat_stage.RDS"))
-
-
-# Plot features listed below at each stage
-GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
-                     "AATF", "MAFA", "ING5", "SETD2", "LIN28B", "YEATS4",
-                     "EOMES", "ADMP"),
-           "hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
-           "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
-           "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
-
-for(stage in names(GOI)){
-  ncol = 3
-  png(paste0(curr.plot.path, "UMAP_GOI.", stage, ".png"), width = ncol*10, height = 10*ceiling((length(unlist(GOI[names(GOI) %in% stage]))+1)/ncol), units = "cm", res = 200)
-  print(multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage])))
-  graphics.off()
-}
-
-# Change order or clusters for plotting dotplots
-levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,4,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,1,6,4))
-for(stage in names(levels)){
-  seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
-}
-
-# Plot dotplot to identify clusters
-for(stage in names(GOI)){
-  png(paste0(curr.plot.path, "dotplot.", stage, ".png"), width = 30, height = 12, units = "cm", res = 200)
-  print(DotPlot(seurat_stage[[stage]], group.by = "seurat_clusters", features = unlist(GOI[names(GOI) %in% stage])) +
-          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
-  graphics.off()
-}
+# 
+# 
+# 
+# 
+# #####################################################################################################
+# #                                        Cell type identification                                   #
+# #####################################################################################################
+# 
+# # Set plot path
+# curr.plot.path <- paste0(plot.path, "5_stage_split/")
+# dir.create(curr.plot.path)
+# 
+# # Split dataset into different stages
+# seurat_stage <- lapply(c('hh4', 'hh6', 'ss4', 'ss8'),
+#                        function(x) subset(norm.data.clustfilt.cc, cells = rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.cc$orig.ident == x]))
+# names(seurat_stage) = c('hh4', 'hh6', 'ss4', 'ss8')
+# 
+# 
+# # Re-run findvariablefeatures and scaling
+# seurat_stage <- lapply(seurat_stage, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
+# 
+# # Enable parallelisation
+# plan("multiprocess", workers = ncores)
+# options(future.globals.maxSize = 2000 * 1024^2)
+# 
+# seurat_stage <- lapply(seurat_stage, function(x) ScaleData(x, features = rownames(norm.data.clustfilt.cc),
+#                                                            vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score")))
+# 
+# saveRDS(seurat_stage, paste0(rds.path, "seurat_stage.RDS"))
+# 
+# 
+# # Plot features listed below at each stage
+# GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
+#                      "AATF", "MAFA", "ING5", "SETD2", "LIN28B", "YEATS4",
+#                      "EOMES", "ADMP"),
+#            "hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
+#            "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
+#            "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
+# 
+# for(stage in names(GOI)){
+#   ncol = 3
+#   png(paste0(curr.plot.path, "UMAP_GOI.", stage, ".png"), width = ncol*10, height = 10*ceiling((length(unlist(GOI[names(GOI) %in% stage]))+1)/ncol), units = "cm", res = 200)
+#   print(multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage])))
+#   graphics.off()
+# }
+# 
+# # Change order or clusters for plotting dotplots
+# levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,4,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,1,6,4))
+# for(stage in names(levels)){
+#   seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
+# }
+# 
+# # Plot dotplot to identify clusters
+# for(stage in names(GOI)){
+#   png(paste0(curr.plot.path, "dotplot.", stage, ".png"), width = 30, height = 12, units = "cm", res = 200)
+#   print(DotPlot(seurat_stage[[stage]], group.by = "seurat_clusters", features = unlist(GOI[names(GOI) %in% stage])) +
+#           theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
+#   graphics.off()
+# }
