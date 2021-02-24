@@ -12,11 +12,10 @@ ml Nextflow/20.07.1
 ml Singularity/3.4.2
 ml Graphviz
 
-nextflow pull alexthiery/10x_neural_tube -hub github
+nextflow pull alexthiery/10x_neural_tube
 
 NXF_VER=20.07.1
 
-nextflow run alexthiery/10x_neural_tube \
+nextflow run NF-downstream_analysis/main.nf \
 -profile crick \
---cellrangercount_output "/camp/home/thierya/scratch/10x_neural_tube/results/alignmentOut/cellrangerCounts" \
--resume
+--input ./alignmentOut/cellrangerCounts

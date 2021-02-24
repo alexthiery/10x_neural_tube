@@ -4,10 +4,10 @@ nextflow.enable.dsl=2
 
 process modifyGTF {
 
-    publishDir "${params.alignment_outDir}/modifiedGTF",
+    publishDir "${params.outDir}/modifiedGTF",
     mode: "copy", overwrite: true
 
-    label 'low_memory'
+    label 'process_low'
 
     input:
         path(pythonFile)

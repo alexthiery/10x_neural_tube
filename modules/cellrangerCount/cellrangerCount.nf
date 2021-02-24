@@ -5,10 +5,10 @@ nextflow.enable.dsl=2
 
 process cellrangerCount {
 
-    publishDir "${params.alignment_outDir}/cellrangerCounts",
+    publishDir "${params.outDir}/cellrangerCounts",
         mode: "copy", overwrite: true
 
-    label 'high_memory'
+    label 'process_high'
 
     input:
         tuple val(sample_id), val(sample_name), path('dir1/*'), path('dir2/*'), path(reference_genome)

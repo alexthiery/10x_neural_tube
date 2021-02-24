@@ -1,7 +1,20 @@
 #!/usr/bin/env Rscript
 
-# In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
-library('getopt')
+# Load packages
+reticulate::use_python('/usr/bin/python3.7')
+library(Seurat)
+
+library(getopt)
+library(future)
+library(cowplot)
+library(clustree)
+library(gridExtra)
+library(grid)
+library(pheatmap)
+library(RColorBrewer)
+library(Antler)
+library(ggbeeswarm)
+library(tidyverse)
 
 # set arguments for Rscript
 spec = matrix(c(
@@ -78,11 +91,13 @@ if (opt$runtype == "user"){
   
   
   # read all files from folder and keep only those from chr_edit
-  files <- list.files("./", recursive = T, full.names = T)
+  files <- list.files("./cellrangerCounts", recursive = T, full.names = T)
   # remove file suffix
   file.path <- dirname(files)[!duplicated(dirname(files))]
   # make dataframe with tissue matching directory
   tissue = c("hh4", "hh6", "ss4", "ss8")
+
+  print(files)
   matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
   
@@ -94,21 +109,6 @@ if (opt$runtype == "user"){
 # set number of cores to use for parallelisation
 if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
 cat(paste0("script ran with ", ncores, " cores\n"))
-
-# Load packages - packages are stored within renv in the repository
-reticulate::use_python('/usr/bin/python3.7')
-library(Seurat)
-
-library(future)
-library(cowplot)
-library(clustree)
-library(gridExtra)
-library(grid)
-library(pheatmap)
-library(RColorBrewer)
-library(Antler)
-library(ggbeeswarm)
-library(tidyverse)
 
 # Make Seurat objects for each of the different samples.
 for(i in 1:nrow(sample.paths["path"])){

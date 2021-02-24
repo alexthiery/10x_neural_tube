@@ -3,10 +3,10 @@
 nextflow.enable.dsl=2
 
 process runR {
-    publishDir "${params.r_outDir}",
+    publishDir "${params.outDir}",
         mode: "copy", overwrite: true
 
-    label 'high_memory'
+    label 'process_high'
 
     input:
         path(rFile)

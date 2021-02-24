@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2
 
 process makeRef {
-    label 'mid_memory'
+    label 'process_medium'
 
     input:
         path(filt_genome)
