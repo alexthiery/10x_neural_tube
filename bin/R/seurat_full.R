@@ -63,7 +63,7 @@ if (opt$runtype == "user"){
   # Read in favourite genes
   network_genes <- list.files("./input_files/network_genes/", full.names = T)
   NI_GRN_genes <- read.table(network_genes[grepl("NI_GRN", network_genes)], stringsAsFactors = F)[,1]
-
+  
 } else if (opt$runtype == "nextflow"){
   cat('pipeling running through nextflow\n')
   
@@ -89,7 +89,7 @@ if (opt$runtype == "user"){
   # Read in favourite genes
   network_genes <- list.files(opt$networkGenes, full.names = T)
   NI_GRN_genes <- read.table(network_genes[grepl("NI_GRN", network_genes)], stringsAsFactors = F)[,1]
-
+  
 } else if (opt$runtype == "docker"){
   cat('R script running through docker\n')
   
@@ -392,8 +392,8 @@ graphics.off()
 # Clust 10 = Late mesoderm - expresses twist1, six1, eya2
 # Clust 11 = PGC's - expresses dazl very highly
 norm.data.contamfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  8 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 10 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 11]
+                                                                 norm.data.sexscale@meta.data$seurat_clusters == 10 |
+                                                                 norm.data.sexscale@meta.data$seurat_clusters == 11]
 
 norm.data.contamfilt <- subset(norm.data.sexscale, cells = norm.data.contamfilt, invert = T)
 
@@ -596,6 +596,116 @@ png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units =
 tenx.pheatmap(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
+
+
+########################################################################################################
+#                            Load Antler data and generate gene modules                                #
+########################################################################################################
+
+
+# Set plot path
+curr.plot.path <- paste0(plot.path, "temp_gene_modules/")
+dir.create(curr.plot.path, recursive = TRUE)
+
+# first extract expression data and make dataset compatible with antler
+# strip end of cell names as this is incorrectly reformated in Antler
+norm.data.clustfilt.cc <- RenameCells(norm.data.clustfilt.cc, new.names = sub('-.*','',colnames(norm.data.clustfilt.cc)))
+
+antler_data <- data.frame(row.names = colnames(norm.data.clustfilt.cc),
+                          "timepoint" = as.numeric(substring(colnames(norm.data.clustfilt.cc), 3, 3)),
+                          "treatment" = rep("null", ncol(norm.data.clustfilt.cc)),
+                          "replicate_id" = rep(1, ncol(norm.data.clustfilt.cc))
+)
+# save pheno data
+write.table(antler_data, file = paste0(antler.dir, "phenoData.csv"), row.names = T, sep = "\t", col.names = T)
+# save count data
+write.table(GetAssayData(norm.data.clustfilt.cc, assay = "RNA", slot = "counts"), file = paste0(antler.dir, "assayData.csv"), row.names = T, sep = "\t", col.names = T, quote = F)
+
+# load data into antler
+antler <- Antler$new(output_folder = curr.plot.path, num_cores = 4)
+antler$load_dataset(folder_path = antler.dir)
+
+# remove genes which do not have >= 1 UMI count in >= 10 cells
+antler$exclude_unexpressed_genes(min_cells=10, min_level=1, verbose=T, data_status='Raw')
+
+antler$normalize(method = 'MR')
+
+antler$gene_modules$identify(
+  name                  = "unbiasedGMs",
+  corr_t                = 0.3,  # the Spearman correlation treshold
+  corr_min              = 3,    # min. number of genes a gene must correlate with
+  mod_min_cell          = 10,   # min. number of cells expressing the module
+  mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
+  process_plots         = TRUE)
+
+# get automated cluster order based on percentage of cells in adjacent stages
+cluster.order = order.cell.stage.clust(seurat_object = norm.data.clustfilt.cc, col.to.sort = seurat_clusters, sort.by = orig.ident)
+
+# plot all gene modules
+png(paste0(curr.plot.path, 'allmodules.png'), height = 150, width = 120, units = 'cm', res = 500)
+GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
+        show_rownames = F, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+graphics.off()
+
+# Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
+DEgenes <- FindAllMarkers(norm.data.clustfilt.cc, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
+gms <- subset.gm(antler$gene_modules$lists$unbiasedGMs$content, selected_genes = DEgenes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
+
+png(paste0(curr.plot.path, 'DE.GM.png'), height = 160, width = 80, units = 'cm', res = 500)
+GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = gms, gaps_col = "seurat_clusters",
+        show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+graphics.off()
+
+
+
+# Keep only genes from network in the gene modules
+network_genes <- read.csv('./input_files/network_expression.csv')
+
+filtered_gms <- lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) x[x %in% network_genes$gene])
+# remove empty list elements
+filtered_gms <- filtered_gms[lapply(filtered_gms,length)>0]
+
+
+png(paste0(curr.plot.path, 'network.GM.png'), height = 60, width = 80, units = 'cm', res = 500)
+GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = filtered_gms, gaps_col = "seurat_clusters",
+        show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+graphics.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #####################################################################################################
 #                                        Cell type identification                                   #
