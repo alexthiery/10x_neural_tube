@@ -52,9 +52,9 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 if (opt$runtype == "user"){
   sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
   
-  plot.path = "./results/R_results/plots/"
-  rds.path = "./results/R_results/RDS.files/"
-  antler.dir = "./results/R_results/antler.input/"
+  plot.path = "./output/NF-downstream_analysis/plots/"
+  rds.path = "./output/NF-downstream_analysis/RDS.files/"
+  antler.dir = "./output/NF-downstream_analysis/antler.input/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
   dir.create(antler.dir, recursive = T)
@@ -739,7 +739,7 @@ pc1_rank <- neural_subset@meta.data[,'orig.ident', drop=F] %>%
   mutate(pseudotime = rank*(100/max(rank)))
 
 # Plot cell stage along PC1
-png(paste0(plot.path, 'pc1.png'), height = 18, width = 26, units = 'cm', res = 400)
+png(paste0(curr.plot.path, 'pc1.png'), height = 18, width = 26, units = 'cm', res = 400)
 ggplot(pc1_rank, aes(x = pc1, y = orig.ident, colour = orig.ident)) +
   geom_quasirandom(groupOnX = FALSE) +
   theme_classic() +
@@ -767,14 +767,14 @@ plot_data_summary <- plot_data %>%
 
 
 # plot gam for all stages without standard error
-png(paste0(plot.path, 'gam_pseudotime_allnetwork.png'), height = 18, width = 26, units = 'cm', res = 400)
+png(paste0(curr.plot.path, 'gam_pseudotime_allnetwork.png'), height = 18, width = 26, units = 'cm', res = 400)
 ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)) +
   geom_smooth(method="gam", se=FALSE) +
   theme_classic()
 graphics.off()
 
 # plot gam for all stages with standard error
-png(paste0(plot.path, 'gam_se_pseudotime_allnetwork.png'), height = 18, width = 26, units = 'cm', res = 400)
+png(paste0(curr.plot.path, 'gam_se_pseudotime_allnetwork.png'), height = 18, width = 26, units = 'cm', res = 400)
 ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)) +
   geom_errorbar(data = plot_data_summary, aes(x = rank_bin, y = mn, 
                                               ymax = mn + se, ymin = mn - se), width = 2) +
