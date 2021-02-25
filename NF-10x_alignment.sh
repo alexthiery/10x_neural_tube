@@ -15,7 +15,7 @@ export NXF_VER=20.07.1
 export NXF_SINGULARITY_CACHEDIR=/camp/home/thierya/working/NF_singularity
 
 nextflow run NF-10x_alignment/main.nf \
--profile crick \
+-c conf/crick.config \
 --samplesheet NF-10x_alignment/crick_samplesheet.csv \
 --output output/NF-10x_alignment \
 --gtf /camp/home/thierya/working/genomes/galgal5/Gallus_gallus.Gallus_gallus-5.0.94_modified.gtf \

@@ -15,6 +15,6 @@ export NXF_VER=20.07.1
 export NXF_SINGULARITY_CACHEDIR=/camp/home/thierya/working/NF_singularity
 
 nextflow run NF-downstream_analysis/main.nf \
--profile crick \
+-c conf/crick.config \
 --input output/NF-10x_alignment/cellrangerCounts \
 --output output/NF-downstream_analysis
