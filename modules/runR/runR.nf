@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2
 
 process runR {
-    publishDir "${params.outDir}",
+    publishDir "${params.output}",
         mode: "copy", overwrite: true
 
     label 'process_high'

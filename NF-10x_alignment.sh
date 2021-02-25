@@ -16,7 +16,8 @@ export NXF_SINGULARITY_CACHEDIR=/camp/home/thierya/working/NF_singularity
 
 nextflow run NF-10x_alignment/main.nf \
 -profile crick \
---samplesheet ./NF-10x_alignment/crick_samplesheet.csv \
+--samplesheet NF-10x_alignment/crick_samplesheet.csv \
+--output output/NF-10x_alignment \
 --gtf /camp/home/thierya/working/genomes/galgal5/Gallus_gallus.Gallus_gallus-5.0.94_modified.gtf \
 --fasta /camp/home/thierya/working/genomes/galgal5/Gallus_gallus.Gallus_gallus-5.0.dna.toplevel.fa \
 -resume

@@ -5,7 +5,7 @@ nextflow.enable.dsl=2
 
 process cellrangerCount {
 
-    publishDir "${params.outDir}/cellrangerCounts",
+    publishDir "${params.output}/cellrangerCounts",
         mode: "copy", overwrite: true
 
     label 'process_high'

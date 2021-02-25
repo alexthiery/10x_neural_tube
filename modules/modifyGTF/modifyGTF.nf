@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 
 process modifyGTF {
 
-    publishDir "${params.outDir}/modifiedGTF",
+    publishDir "${params.output}/modifiedGTF",
     mode: "copy", overwrite: true
 
     label 'process_low'
