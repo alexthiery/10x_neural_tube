@@ -670,16 +670,13 @@ options(future.globals.maxSize = 2000 * 1024^2)
 
 neural_subset <- ScaleData(neural_subset, features = rownames(neural_subset), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
+# PCA
+neural_subset <- RunPCA(object = neural_subset, verbose = FALSE)
 
 saveRDS(neural_subset, paste0(rds.path, "neural_subset.RDS"))
 
-rm(neural_subset)
-
 # Read in RDS data if needed
-neural_subset <- readRDS(paste0(rds.path, "neural_subset.RDS"))
-
-# PCA
-neural_subset <- RunPCA(object = neural_subset, verbose = FALSE)
+# neural_subset <- readRDS(paste0(rds.path, "neural_subset.RDS"))
 
 cat('neural_subset')
 print(neural_subset@meta.data[,'orig.ident', drop=F] %>%
