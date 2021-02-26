@@ -7,7 +7,7 @@
 ## LOAD REQUIRED MODULES
 ml purge
 ml Nextflow/20.07.1
-ml Singularity/2.6.0-foss-2016b
+ml Singularity/3.4.2
 ml Graphviz
 
 export TERM=xterm
