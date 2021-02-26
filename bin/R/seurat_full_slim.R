@@ -673,8 +673,10 @@ neural_subset <- ScaleData(neural_subset, features = rownames(neural_subset), va
 
 saveRDS(neural_subset, paste0(rds.path, "neural_subset.RDS"))
 
+rm(neural_subset)
+
 # Read in RDS data if needed
-# neural_subset <- readRDS(paste0(rds.path, "neural_subset.RDS"))
+neural_subset <- readRDS(paste0(rds.path, "neural_subset.RDS"))
 
 # PCA
 neural_subset <- RunPCA(object = neural_subset, verbose = FALSE)
