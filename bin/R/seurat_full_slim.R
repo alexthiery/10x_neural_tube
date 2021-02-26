@@ -648,13 +648,18 @@ graphics.off()
 #                                     Subset neural clusters                                          #
 #######################################################################################################
 
-neural_cells = norm.data.clustfilt.cc@meta.data %>% tibble::rownames_to_column('cell') %>% filter(!seurat_clusters %in% c(12, 3, 11, 8, 10)) %>% dplyr::pull("cell")
-
-neural_subset = subset(norm.data.clustfilt.cc, cells = neural_cells)
-
 # Set plot path
 curr.plot.path <- paste0(plot.path, "6_neural_subset/")
 dir.create(curr.plot.path)
+
+# Clust 12, 3, 11, 8, 10 = not neural clusters of interest
+neural_subset <- rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.cc@meta.data$seurat_clusters ==  12 |
+                                                                    norm.data.clustfilt.cc@meta.data$seurat_clusters == 3 |
+                                                                    norm.data.clustfilt.cc@meta.data$seurat_clusters == 11 |
+                                                                    norm.data.clustfilt.cc@meta.data$seurat_clusters == 8|
+                                                                    norm.data.clustfilt.cc@meta.data$seurat_clusters == 10]
+
+neural_subset <- subset(norm.data.clustfilt.cc, cells = neural_subset, invert = T)
 
 # Re-run findvariablefeatures and scaling
 neural_subset <- FindVariableFeatures(neural_subset, selection.method = "vst", nfeatures = 2000)
@@ -665,6 +670,7 @@ options(future.globals.maxSize = 2000 * 1024^2)
 
 neural_subset <- ScaleData(neural_subset, features = rownames(neural_subset), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
+
 saveRDS(neural_subset, paste0(rds.path, "neural_subset.RDS"))
 
 # Read in RDS data if needed
@@ -672,6 +678,11 @@ saveRDS(neural_subset, paste0(rds.path, "neural_subset.RDS"))
 
 # PCA
 neural_subset <- RunPCA(object = neural_subset, verbose = FALSE)
+
+cat('neural_subset')
+print(neural_subset@meta.data[,'orig.ident', drop=F] %>%
+        tibble::rownames_to_column(var = "cell_name") %>%
+        mutate(pc1 = Embeddings(object = neural_subset[["pca"]])[, 1]))
 
 png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
 DimHeatmap(neural_subset, dims = 1:30, balanced = TRUE, cells = 500)
@@ -737,6 +748,11 @@ pc1_rank <- neural_subset@meta.data[,'orig.ident', drop=F] %>%
   mutate(pc1 = Embeddings(object = neural_subset[["pca"]])[, 1]) %>%
   mutate(rank = rank(pc1)) %>%
   mutate(pseudotime = rank*(100/max(rank)))
+
+cat('neural_subset PC1 before plotting pseudotime')
+print(neural_subset@meta.data[,'orig.ident', drop=F] %>%
+        tibble::rownames_to_column(var = "cell_name") %>%
+        mutate(pc1 = Embeddings(object = neural_subset[["pca"]])[, 1]))
 
 # Plot cell stage along PC1
 png(paste0(curr.plot.path, 'pc1.png'), height = 18, width = 26, units = 'cm', res = 400)
