@@ -62,7 +62,7 @@ if (opt$runtype == "user"){
   ##################################
   # set path where data is located #
   ##################################
-  data_path = "./alignmentOut/cellrangerCounts"
+  data_path = "./output/NF-10x_alignment/cellrangerCounts"
   
   # read all files from dir
   files <- list.files(data_path, recursive = T, full.names = T)
