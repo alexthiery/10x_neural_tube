@@ -574,6 +574,89 @@ graphics.off()
 
 
 ########################################################################################################
+#                                      Cluster classification                                          #
+########################################################################################################
+
+
+
+
+# list of neural genes at each stage
+GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
+                     "AATF", "MAFA", "ING5", "SETD2", "LIN28B", "YEATS4",
+                     "EOMES", "ADMP"),
+           "hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
+           "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
+           "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
+
+# Get unique genes
+GOI = unique(unlist(GOI))
+
+# Change order or clusters for plotting dotplots
+levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,4,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,1,6,4))
+for(stage in names(levels)){
+  seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
+}
+
+png(paste0(curr.plot.path, "dotplot.", stage, ".png"), width = 30, height = 12, units = "cm", res = 200)
+print(DotPlot(norm.data.clustfilt.cc, group.by = "seurat_clusters", features = GOI) +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
+graphics.off()
+
+
+
+
+
+
+# make pie charts for cluster dev stage composition
+
+venn_data <- norm.data.clustfilt.cc@meta.data %>%
+  rownames_to_column('cell_name') %>%
+  dplyr::select(c(cell_name, orig.ident, seurat_clusters)) %>%
+  group_by(seurat_clusters) %>%
+  count(orig.ident, .drop = FALSE)
+
+
+
+lay = as.matrix(plyr::ldply(1:nlevels(norm.data.clustfilt.cc@meta.data$seurat_clusters)-1, function(x) c(rep(1,5), x)))
+
+
+dotplot <- DotPlot(norm.data.clustfilt.cc, group.by = "seurat_clusters", features = GOI) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5), legend.position="bottom", legend.box = "horizontal", axis.title.x=element_blank())
+
+
+# 
+pies <- as.ggplot(ggplot(venn_data, aes(x='', y=n, fill=orig.ident)) +
+  geom_bar(position="fill", stat = "identity") +
+  coord_polar("y") +
+  facet_wrap( ~ seurat_clusters, nrow = nlevels(norm.data.clustfilt.cc@meta.data$seurat_clusters)) +
+  theme_void() +
+  theme(strip.background = element_blank(), strip.text.x = element_blank()))
+
+grobs <- c(dotplot, pies)
+
+plot_grid(dotplot, pies, rel_widths = c(5,1), rel_heights = c(2,1), )
+
+grid.arrange(dotplot, pies)
+
+
+# Plot dotplot to identify clusters
+for(stage in names(GOI)){
+  png(paste0(curr.plot.path, "dotplot.", stage, ".png"), width = 30, height = 12, units = "cm", res = 200)
+  print(DotPlot(seurat_stage[[stage]], group.by = "seurat_clusters", features = unlist(GOI[names(GOI) %in% stage])) +
+          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
+  graphics.off()
+}
+
+
+for(stage in names(GOI)){
+  ncol = 3
+  png(paste0(curr.plot.path, "UMAP_GOI.", stage, ".png"), width = ncol*10, height = 10*ceiling((length(unlist(GOI[names(GOI) %in% stage]))+1)/ncol), units = "cm", res = 200)
+  print(multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage])))
+  graphics.off()
+}
+
+
+########################################################################################################
 #                            Load Antler data and generate gene modules                                #
 ########################################################################################################
 
@@ -678,11 +761,6 @@ saveRDS(neural_subset, paste0(rds.path, "neural_subset.RDS"))
 # Read in RDS data if needed
 # neural_subset <- readRDS(paste0(rds.path, "neural_subset.RDS"))
 
-cat('neural_subset')
-print(neural_subset@meta.data[,'orig.ident', drop=F] %>%
-        tibble::rownames_to_column(var = "cell_name") %>%
-        mutate(pc1 = Embeddings(object = neural_subset[["pca"]])[, 1]))
-
 png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
 DimHeatmap(neural_subset, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
@@ -741,26 +819,26 @@ graphics.off()
 curr.plot.path <- paste0(plot.path, "7_pseudotime/")
 dir.create(curr.plot.path)
 
-# Rank cells according to position on PC1
-pc1_rank <- neural_subset@meta.data[,'orig.ident', drop=F] %>%
-  tibble::rownames_to_column(var = "cell_name") %>%
-  mutate(pc1 = Embeddings(object = neural_subset[["pca"]])[, 1]) %>%
-  mutate(rank = rank(pc1)) %>%
-  mutate(pseudotime = rank*(100/max(rank)))
 
-cat('neural_subset PC1 before plotting pseudotime')
-print(neural_subset@meta.data[,'orig.ident', drop=F] %>%
-        tibble::rownames_to_column(var = "cell_name") %>%
-        mutate(pc1 = Embeddings(object = neural_subset[["pca"]])[, 1]))
+# Extract PC1 values
+pc1 <- neural_subset@meta.data[,'orig.ident', drop=F] %>%
+  tibble::rownames_to_column(var = "cell_name") %>%
+  mutate(pc1 = Embeddings(object = neural_subset[["pca"]])[, 1])
+
 
 # Plot cell stage along PC1
 png(paste0(curr.plot.path, 'pc1.png'), height = 18, width = 26, units = 'cm', res = 400)
-ggplot(pc1_rank, aes(x = pc1, y = orig.ident, colour = orig.ident)) +
+ggplot(pc1, aes(x = pc1, y = orig.ident, colour = orig.ident)) +
   geom_quasirandom(groupOnX = FALSE) +
   theme_classic() +
   xlab("PC1") + ylab("Timepoint") +
   ggtitle("Cells ordered by first principal component")
 graphics.off()
+
+# Developmental timepoint negatively correlated with pc1 - inverse PC1 and calculate cell rank. Rank is then converted to 0-99 pseudotime scale
+pc1_rank <- pc1 %>%
+  mutate(rank = rank(-pc1)) %>%
+  mutate(pseudotime = rank*(99/max(rank)))
 
 
 # Filter scaled seurat counts by network_genes -> generate long df with corresponding pseudotime and normalised count
@@ -797,6 +875,8 @@ ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)
   geom_smooth(method="gam", se=FALSE) +
   theme_classic()
 graphics.off()
+
+
 
 
 #
