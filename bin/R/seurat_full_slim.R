@@ -574,86 +574,84 @@ graphics.off()
 
 
 ########################################################################################################
-#                                      Cluster classification                                          #
+#                                      Cluster state classification                                    #
 ########################################################################################################
 
-
+# Set plot path
+curr.plot.path <- paste0(plot.path, "5_cell_state_classification/")
+dir.create(curr.plot.path)
 
 
 # list of neural genes at each stage
-GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
-                     "AATF", "MAFA", "ING5", "SETD2", "LIN28B", "YEATS4",
-                     "EOMES", "ADMP"),
-           "hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
-           "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
-           "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
-
-# Get unique genes
-GOI = unique(unlist(GOI))
+GOI = rev(c( "EOMES", "ADMP","YEATS4", "MAFA", "ING5", "LIN28B", "AATF","SETD2",
+             "GATA2", "DLX5", "TFAP2A", "BMP4", "SIX1", "EYA2",
+             "MSX1", "PAX7", "CSRNP1", "SOX10",
+             "SOX2", "SOX21", "SIX3", "OLIG2", "PAX6", "FOXA2", "SHH", "PAX2", "WNT4", "HOXB2", "HOXA2", "GBX2"))
 
 # Change order or clusters for plotting dotplots
-levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,4,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,1,6,4))
-for(stage in names(levels)){
-  seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
-}
+cluster_order <- factor(norm.data.clustfilt.cc$seurat_clusters, levels = c(12,5,2,1,
+                                                                           3,8,0,
+                                                                           11, 10,
+                                                                           7,4,14,
+                                                                           9,6,13))
 
-png(paste0(curr.plot.path, "dotplot.", stage, ".png"), width = 30, height = 12, units = "cm", res = 200)
-print(DotPlot(norm.data.clustfilt.cc, group.by = "seurat_clusters", features = GOI) +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
-graphics.off()
-
-
-
-
-
+# Set factor levels for plotting
+norm.data.clustfilt.cc$seurat_clusters <- cluster_order
 
 # make pie charts for cluster dev stage composition
-
 venn_data <- norm.data.clustfilt.cc@meta.data %>%
   rownames_to_column('cell_name') %>%
   dplyr::select(c(cell_name, orig.ident, seurat_clusters)) %>%
   group_by(seurat_clusters) %>%
   count(orig.ident, .drop = FALSE)
 
+venn_data <- venn_data %>%
+  mutate(total_cells = sum(n)) %>%
+  mutate(n = n/total_cells)
 
 
-lay = as.matrix(plyr::ldply(1:nlevels(norm.data.clustfilt.cc@meta.data$seurat_clusters)-1, function(x) c(rep(1,5), x)))
-
+# Reverse levels to deal with seurat dotplot reversing y axis
+norm.data.clustfilt.cc$seurat_clusters <- fct_rev(cluster_order)
 
 dotplot <- DotPlot(norm.data.clustfilt.cc, group.by = "seurat_clusters", features = GOI) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5), legend.position="bottom", legend.box = "horizontal", axis.title.x=element_blank())
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position="bottom", legend.box = "horizontal",
+        axis.title.x=element_blank(), legend.text=element_text(size=10),
+        legend.title=element_text(size=12))
 
-
-# 
-pies <- as.ggplot(ggplot(venn_data, aes(x='', y=n, fill=orig.ident)) +
-  geom_bar(position="fill", stat = "identity") +
-  coord_polar("y") +
+pies <- ggplot(venn_data, aes(x=as.numeric(total_cells)/2, y=as.numeric(n), fill=orig.ident, width = total_cells)) +
+  geom_bar(position = 'fill', stat = "identity") +
   facet_wrap( ~ seurat_clusters, nrow = nlevels(norm.data.clustfilt.cc@meta.data$seurat_clusters)) +
+  coord_polar("y") +
   theme_void() +
-  theme(strip.background = element_blank(), strip.text.x = element_blank()))
+  theme(strip.background = element_blank(), strip.text.x = element_blank(),
+        legend.position=c(0,0), legend.direction = "horizontal",
+        plot.margin = margin(t = 14, r = 0, b = 119, l = -110, unit = "pt"),
+        legend.margin=margin(t = 70, r = 0, b = -100, l = -200, unit = "pt"),
+        legend.text=element_text(size=10),
+        legend.title=element_text(size=12)) +
+  labs(fill = "Stage")
 
-grobs <- c(dotplot, pies)
-
-plot_grid(dotplot, pies, rel_widths = c(5,1), rel_heights = c(2,1), )
-
-grid.arrange(dotplot, pies)
-
-
-# Plot dotplot to identify clusters
-for(stage in names(GOI)){
-  png(paste0(curr.plot.path, "dotplot.", stage, ".png"), width = 30, height = 12, units = "cm", res = 200)
-  print(DotPlot(seurat_stage[[stage]], group.by = "seurat_clusters", features = unlist(GOI[names(GOI) %in% stage])) +
-          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
-  graphics.off()
-}
+# Plot dotplot
+png(paste0(curr.plot.path, "dotplot.png"), width = 32, height = 18, units = "cm", res = 200)
+print(plot_grid(dotplot, pies, rel_widths = c(5,1)))
+graphics.off()
 
 
-for(stage in names(GOI)){
-  ncol = 3
-  png(paste0(curr.plot.path, "UMAP_GOI.", stage, ".png"), width = ncol*10, height = 10*ceiling((length(unlist(GOI[names(GOI) %in% stage]))+1)/ncol), units = "cm", res = 200)
-  print(multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage])))
-  graphics.off()
-}
+# Plot dotplot with cell classification labels
+dotplot <- DotPlot(norm.data.clustfilt.cc, group.by = "seurat_clusters", features = GOI) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position="bottom", legend.box = "horizontal",
+        axis.title.x=element_blank(), legend.text=element_text(size=10),
+        axis.title.y = element_blank(), 
+        legend.title=element_text(size=12)) +
+  scale_y_discrete(labels = rev(c('Node', 'HH4-1', 'HH4-2', 'HH4-3', 'Non-Neural Plate Progenitors',
+                                  'Placodes', 'Neural Plate Progenitors', 'NC Progenitors', 'Delaminating NC',
+                                  'Ventral Forebrain', 'Early Forebrain','Late Forebrain', 'Early Midbrain', 'Late Midbrain', 'Hindbrain')))
+
+png(paste0(curr.plot.path, "dotplot_classified.png"), width = 36, height = 18, units = "cm", res = 200)
+print(plot_grid(dotplot, pies, rel_widths = c(5,1)))
+graphics.off()
 
 
 ########################################################################################################
@@ -662,7 +660,7 @@ for(stage in names(GOI)){
 
 
 # Set plot path
-curr.plot.path <- paste0(plot.path, "5_gene_modules/")
+curr.plot.path <- paste0(plot.path, "6_gene_modules/")
 dir.create(curr.plot.path, recursive = TRUE)
 
 # first extract expression data and make dataset compatible with antler
@@ -732,7 +730,7 @@ graphics.off()
 #######################################################################################################
 
 # Set plot path
-curr.plot.path <- paste0(plot.path, "6_neural_subset/")
+curr.plot.path <- paste0(plot.path, "7_neural_subset/")
 dir.create(curr.plot.path)
 
 # Clust 12, 3, 11, 8, 10 = not neural clusters of interest
@@ -858,10 +856,10 @@ plot_data_summary <- plot_data %>%
   summarise(mn = mean(scaled_expression),
             se = sd(scaled_expression)/sqrt(n()))
 
-
 # plot gam for all stages without standard error
 png(paste0(curr.plot.path, 'gam_pseudotime_allnetwork.png'), height = 18, width = 26, units = 'cm', res = 400)
 ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)) +
+  scale_color_manual(values=c("#6600ff", "#0000ff", "#009900", "#ffcc00", "#ff8533", "#ee0000")) +
   geom_smooth(method="gam", se=FALSE) +
   theme_classic()
 graphics.off()
@@ -872,95 +870,10 @@ ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)
   geom_errorbar(data = plot_data_summary, aes(x = rank_bin, y = mn, 
                                               ymax = mn + se, ymin = mn - se), width = 2) +
   geom_point(data = plot_data_summary, aes(x = rank_bin, y = mn)) +
+  scale_color_manual(values=c("#6600ff", "#0000ff", "#009900", "#ffcc00", "#ff8533", "#ee0000")) +
   geom_smooth(method="gam", se=FALSE) +
   theme_classic()
 graphics.off()
 
 
-
-
 #
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 
-# 
-# 
-# 
-# #####################################################################################################
-# #                                        Cell type identification                                   #
-# #####################################################################################################
-# 
-# # Set plot path
-# curr.plot.path <- paste0(plot.path, "5_stage_split/")
-# dir.create(curr.plot.path)
-# 
-# # Split dataset into different stages
-# seurat_stage <- lapply(c('hh4', 'hh6', 'ss4', 'ss8'),
-#                        function(x) subset(norm.data.clustfilt.cc, cells = rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.cc$orig.ident == x]))
-# names(seurat_stage) = c('hh4', 'hh6', 'ss4', 'ss8')
-# 
-# 
-# # Re-run findvariablefeatures and scaling
-# seurat_stage <- lapply(seurat_stage, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
-# 
-# # Enable parallelisation
-# plan("multiprocess", workers = ncores)
-# options(future.globals.maxSize = 2000 * 1024^2)
-# 
-# seurat_stage <- lapply(seurat_stage, function(x) ScaleData(x, features = rownames(norm.data.clustfilt.cc),
-#                                                            vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score")))
-# 
-# saveRDS(seurat_stage, paste0(rds.path, "seurat_stage.RDS"))
-# 
-# 
-# # Plot features listed below at each stage
-# GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
-#                      "AATF", "MAFA", "ING5", "SETD2", "LIN28B", "YEATS4",
-#                      "EOMES", "ADMP"),
-#            "hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
-#            "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
-#            "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
-# 
-# for(stage in names(GOI)){
-#   ncol = 3
-#   png(paste0(curr.plot.path, "UMAP_GOI.", stage, ".png"), width = ncol*10, height = 10*ceiling((length(unlist(GOI[names(GOI) %in% stage]))+1)/ncol), units = "cm", res = 200)
-#   print(multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage])))
-#   graphics.off()
-# }
-# 
-# # Change order or clusters for plotting dotplots
-# levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,4,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,1,6,4))
-# for(stage in names(levels)){
-#   seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
-# }
-# 
-# # Plot dotplot to identify clusters
-# for(stage in names(GOI)){
-#   png(paste0(curr.plot.path, "dotplot.", stage, ".png"), width = 30, height = 12, units = "cm", res = 200)
-#   print(DotPlot(seurat_stage[[stage]], group.by = "seurat_clusters", features = unlist(GOI[names(GOI) %in% stage])) +
-#           theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
-#   graphics.off()
-# }
