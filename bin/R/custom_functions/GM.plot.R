@@ -130,5 +130,5 @@ GM.plot <- function(data, metadata, col_order = metadata[1], custom_order = NULL
   print(pheatmap(t(new.dat), color = PurpleAndYellow(),
                  cluster_rows = hclust_rows, cluster_cols = hclust_cols, show_colnames = FALSE,
                  annotation_col = HM.col[,rev(col_ann_order), drop = FALSE], gaps_col = gaps_col,
-                 gaps_row = gaps_row, main = main, show_rownames = show_rownames, annotation_row = row_ann, annotation_colors = ann_colours, treeheight_row = treeheight_row), ...)
+                 gaps_row = gaps_row, main = main, show_rownames = show_rownames, annotation_row = row_ann, annotation_colors = ann_colours, treeheight_row = treeheight_row, ...))
 }

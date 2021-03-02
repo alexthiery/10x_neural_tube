@@ -699,25 +699,31 @@ antler$gene_modules$identify(
   mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
   process_plots         = TRUE)
 
+# Copy seurat object for plotting
+plot_data <- norm.data.clustfilt.cc
+plot_data@meta.data <- plot_data@meta.data %>%
+  rename(Stage = orig.ident,
+         Clusters = seurat_clusters)
+
 # Get automated cluster order based on percentage of cells in adjacent stages
-cluster.order = order.cell.stage.clust(seurat_object = norm.data.clustfilt.cc, col.to.sort = seurat_clusters, sort.by = orig.ident)
+cluster.order = order.cell.stage.clust(seurat_object = plot_data, col.to.sort = Clusters, sort.by = Stage)
 
 # plot all gene modules
 png(paste0(curr.plot.path, 'allmodules.png'), height = 150, width = 120, units = 'cm', res = 500)
-GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
-        show_rownames = F, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+GM.plot(data = plot_data, metadata = c("Clusters", "Stage"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
+        show_rownames = F, custom_order = cluster.order, custom_order_column = "Clusters")
 graphics.off()
 
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
 # Find DEGs
-DEgenes <- FindAllMarkers(norm.data.clustfilt.cc, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
+DEgenes <- FindAllMarkers(plot_data, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
 
 # Filter GMs with 50% genes DE logFC > 0.25 & FDR < 0.001
 gms <- subset.gm(antler$gene_modules$lists$unbiasedGMs$content, selected_genes = DEgenes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
 
 png(paste0(curr.plot.path, 'DE.GM.png'), height = 160, width = 80, units = 'cm', res = 500)
-GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = gms, gaps_col = "seurat_clusters",
-        show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+GM.plot(data = plot_data, metadata = c("Clusters", "Stage"), gene_modules = gms, gaps_col = "Clusters",
+        show_rownames = T, custom_order = cluster.order, custom_order_column = "Clusters", fontsize = 25, fontsize_row = 10)
 graphics.off()
 
 
@@ -728,9 +734,9 @@ filtered_gms <- lapply(gms, function(x) x[x %in% network_genes$gene])
 # Remove empty list elements
 filtered_gms <- filtered_gms[lapply(filtered_gms,length)>0]
 
-png(paste0(curr.plot.path, 'network.GM.png'), height = 40, width = 80, units = 'cm', res = 500)
-GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = filtered_gms, gaps_col = "seurat_clusters",
-        show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+png(paste0(curr.plot.path, 'network.GM.png'), height = 22, width = 37, units = 'cm', res = 1500)
+GM.plot(data = plot_data, metadata = c("Clusters", "Stage"), gene_modules = filtered_gms, gaps_col = "Clusters",
+        show_rownames = T, custom_order = cluster.order, custom_order_column = "Clusters", fontsize = 10, fontsize_row = 13)
 graphics.off()
 
 
