@@ -5,7 +5,7 @@ nextflow.enable.dsl=2
 /*-----------------------------------------------------------------------------------------------------------------------------
 Pipeline params
 -------------------------------------------------------------------------------------------------------------------------------*/
-params.rFile = "$baseDir/../bin/R/seurat_full_slim.R"
+params.rFile = "$baseDir/../bin/R/seurat_full.R"
 params.customFuncs = "$baseDir/../bin/R/custom_functions"
 params.networkGenes = "$baseDir/../input_files/network_expression.csv"
 
