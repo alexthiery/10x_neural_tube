@@ -93,14 +93,35 @@ To do this, follow these steps:
 This analysis is ran using Seurat v3.1. For more information see https://satijalab.org/seurat/
 
 
-Set environmental variables, load data and make Seurat object
-In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
+
+
+
+
+Load packages
 
 ``` R
 #!/usr/bin/env Rscript
 
-library('getopt')
+reticulate::use_python('/usr/bin/python3.7')
+library(Seurat)
 
+library(getopt)
+library(future)
+library(cowplot)
+library(clustree)
+library(gridExtra)
+library(grid)
+library(pheatmap)
+library(RColorBrewer)
+library(Antler)
+library(ggbeeswarm)
+library(tidyverse)
+```
+
+Set environmental variables, load data and make Seurat object
+In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
+
+``` R
 # set arguments for Rscript
 spec = matrix(c(
   'runtype', 'l', 2, "character",
@@ -137,15 +158,17 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 if (opt$runtype == "user"){
   sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
   
-  plot.path = "./results/R_results/plots/"
-  rds.path = "./results/R_results/RDS.files/"
+  plot.path = "./output/NF-downstream_analysis/plots/"
+  rds.path = "./output/NF-downstream_analysis/RDS.files/"
+  antler.dir = "./output/NF-downstream_analysis/antler.input/"
   dir.create(plot.path, recursive = T)
   dir.create(rds.path, recursive = T)
+  dir.create(antler.dir, recursive = T)
   
   ##################################
   # set path where data is located #
   ##################################
-  data_path = "./alignmentOut/cellrangerCounts_renamed"
+  data_path = "./output/NF-10x_alignment/cellrangerCounts"
   
   # read all files from dir
   files <- list.files(data_path, recursive = T, full.names = T)
@@ -156,10 +179,9 @@ if (opt$runtype == "user"){
   matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
   
-  # Read in favourite genes
-  network_genes <- list.files("./bin/network_genes/", full.names = T)
-  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
-  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+  # Read in network genes and remove 0 timepoint
+  network_genes <- read.csv('./input_files/network_expression.csv') %>%
+    filter(!timepoint == 0)
 
 } else if (opt$runtype == "nextflow"){
   cat('pipeling running through nextflow\n')
@@ -170,66 +192,31 @@ if (opt$runtype == "user"){
   dir.create(plot.path, recursive = T)
   rds.path = "RDS.files/"
   dir.create(rds.path, recursive = T)
+  antler.dir = "antler.input/"
+  dir.create(antler.dir, recursive = T)
+  
   
   # read all files from folder and keep only those from chr_edit
-  files <- list.files("./", recursive = T, full.names = T)
+  files <- list.files("./cellrangerCounts", recursive = T, full.names = T)
   # remove file suffix
   file.path <- dirname(files)[!duplicated(dirname(files))]
   # make dataframe with tissue matching directory
   tissue = c("hh4", "hh6", "ss4", "ss8")
-  matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
-  sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
-  
-  # Read in favourite genes
-  network_genes <- list.files(opt$networkGenes, full.names = T)
-  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
-  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
 
-} else if (opt$runtype == "docker"){
-  cat('R script running through docker\n')
-  
-  sapply(list.files('/home/bin/R/custom_functions/', full.names = T), source)
-  
-  plot.path = "/home/results/R_results/plots/"
-  rds.path = "/home/results/R_results/RDS.files/"
-  dir.create(plot.path, recursive = T)
-  dir.create(rds.path, recursive = T)
-  
-  data_path = "/home/alignmentOut/cellrangerCounts_renamed"
-  # read all files from dir
-  files <- list.files(data_path, recursive = T, full.names = T)
-  # remove file suffix
-  file.path <- dirname(files)[!duplicated(dirname(files))]
-  # make dataframe with tissue matching directory
-  tissue = c("hh4", "hh6", "ss4", "ss8")
+  print(files)
   matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
   sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
   
-  # Read in favourite genes
-  network_genes <- list.files("/home/bin/network_genes/", full.names = T)
-  hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
-  hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
+  # Read in network genes and remove 0 timepoint
+  network_genes <- read.csv(opt$networkGenes) %>%
+    filter(!timepoint == 0)
 }
-
-# set number of cores to use for parallelisation
-if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
-cat(paste0("script ran with ", ncores, " cores\n"))
 ```
 
-Load packages
-
-``` R
-reticulate::use_python('/usr/bin/python3.7')
-library(Seurat)
-
-library(future)
-library(dplyr)
-library(cowplot)
-library(clustree)
-library(gridExtra)
-library(grid)
-library(pheatmap)
-library(RColorBrewer)
+Set number of cores to use for parallelisation
+```R
+if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
+cat(paste0("script ran with ", ncores, " cores\n"))
 ```
 
 Make Seurat objects for each of the different samples.
@@ -297,19 +284,9 @@ Scale data and regress out MT content
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 ```
 
-Save RDS after scaling as this step takes time
-``` R
-saveRDS(norm.data, paste0(rds.path, "norm.data.RDS"))
-```
-
 <br />
 
 #### Perform dimensionality reduction by PCA and UMAP embedding
-
-Read in RDS data if needed
-``` R
-# norm.data <- readRDS(paste0(rds.path, "norm.data.RDS"))
-```
 
 Change plot path
 ``` R
@@ -450,7 +427,6 @@ if(sumclus1 < sumclus2){
 }
 
 cell.sex.ID <- list("male.cells" = k.male, "female.cells" = k.female)
-saveRDS(cell.sex.ID, paste0(rds.path, "sex_kmeans.RDS"))
 ```
 
 Add sex data to meta.data
@@ -480,16 +456,6 @@ plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
 norm.data.sexscale <- ScaleData(norm.data.sexscale, features = rownames(norm.data.sexscale), vars.to.regress = c("percent.mt", "sex"))
-```
-
-Save RDS
-``` R
-saveRDS(norm.data.sexfilt, paste0(rds.path, "norm.data.sexfilt.RDS"))
-```
-
-Read in RDS data if needed
-``` R
-# norm.data.sexfilt <- readRDS(paste0(rds.path, "norm.data.sexfilt.RDS"))
 ```
 
 Set plot path
@@ -632,12 +598,6 @@ plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
 norm.data.contamfilt <- ScaleData(norm.data.contamfilt, features = rownames(norm.data.contamfilt), vars.to.regress = c("percent.mt", "sex"))
-
-saveRDS(norm.data.contamfilt, paste0(rds.path, "norm.data.contamfilt.RDS"))
-```
-Read in RDS data if needed
-``` R
-# norm.data.contamfilt <- readRDS(paste0(rds.path, "norm.data.contamfilt.RDS"))
 ```
 
 PCA
@@ -722,13 +682,6 @@ plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
 norm.data.clustfilt <- ScaleData(norm.data.clustfilt, features = rownames(norm.data.clustfilt), vars.to.regress = c("percent.mt", "sex"))
-
-saveRDS(norm.data.clustfilt, paste0(rds.path, "norm.data.clustfilt.RDS"))
-```
-
-Read in RDS data if needed
-``` R
-# norm.data.clustfilt <- readRDS(paste0(rds.path, "norm.data.clustfilt.RDS"))
 ```
 
 Change plot path
@@ -813,8 +766,8 @@ g2m.genes <- cc.genes$g2m.genes
 pre.cell.cycle.dat <- CellCycleScoring(norm.data.clustfilt, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)
 ```
 
-``` R
 Re-run findvariablefeatures and scaling
+``` R
 norm.data.clustfilt.cc <- FindVariableFeatures(pre.cell.cycle.dat, selection.method = "vst", nfeatures = 2000)
 
 # Enable parallelisation
@@ -822,13 +775,6 @@ plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
 norm.data.clustfilt.cc <- ScaleData(norm.data.clustfilt.cc, features = rownames(norm.data.clustfilt.cc), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
-
-saveRDS(norm.data.clustfilt.cc, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
-```
-
-Read in RDS data if needed
-``` R
-# norm.data.clustfilt.cc <- readRDS(paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
 ```
 
 PCA
@@ -881,6 +827,8 @@ print(gridExtra::grid.arrange(pre.plot, post.plot, ncol = 2))
 graphics.off()
 ```
 
+![](./suppl_files/plots/4_cell_cycle/cell.cycle.png)
+
 Plot UMAP for clusters and developmental stage
 ``` R
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
@@ -920,376 +868,389 @@ graphics.off()
 <br />
 
 
-### Cell type identification
+### Cell state classification
 
 Set plot path
 ``` R
-curr.plot.path <- paste0(plot.path, "5_stage_split/")
+curr.plot.path <- paste0(plot.path, "5_cell_state_classification/")
 dir.create(curr.plot.path)
 ```
 
-Split dataset into different stages
+Genes of interest used for cell state classification
 ``` R
-seurat_stage <- lapply(c('hh4', 'hh6', 'ss4', 'ss8'),
-                       function(x) subset(norm.data.clustfilt.cc, cells = rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.cc$orig.ident == x]))
-names(seurat_stage) = c('hh4', 'hh6', 'ss4', 'ss8')
+GOI = rev(c( "EOMES", "ADMP","YEATS4", "MAFA", "ING5", "LIN28B", "AATF", "SETD2", "GATA2", "DLX5", "TFAP2A", "BMP4", "SIX1", "EYA2", "MSX1", "PAX7", "CSRNP1", "SOX10", "SOX2", "SOX21", "SIX3", "OLIG2", "PAX6", "FOXA2", "SHH", "PAX2", "WNT4", "HOXB2", "HOXA2", "GBX2"))
 ```
-
-Re-run findvariablefeatures and scaling
-``` R
-seurat_stage <- lapply(seurat_stage, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
-
-# Enable parallelisation
-plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 2000 * 1024^2)
-
-seurat_stage <- lapply(seurat_stage, function(x) ScaleData(x, features = rownames(norm.data.clustfilt.cc),
-                                                           vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score")))
-
-saveRDS(seurat_stage, paste0(rds.path, "seurat_stage.RDS"))
-```
-
-Read in RDS data if needed
-``` R
-# seurat_stage <- readRDS(paste0(rds.path, "seurat_stage.RDS"))
-```
-
-PCA
-``` R
-seurat_stage <- lapply(seurat_stage, function(x) RunPCA(object = x, verbose = FALSE))
-
-for(stage in names(seurat_stage)){
-  png(paste0(curr.plot.path, "dimHM.",stage,".png"), width=30, height=50, units = 'cm', res = 200)
-  DimHeatmap(seurat_stage[[stage]], dims = 1:30, balanced = TRUE, cells = 500)
-  graphics.off()
-  
-  png(paste0(curr.plot.path, "elbowplot.", stage, ".png"), width=24, height=20, units = 'cm', res = 200)
-  print(ElbowPlot(seurat_stage[[stage]], ndims = 40))
-  graphics.off()
-  
-  png(paste0(curr.plot.path, "UMAP_PCA_comparison.", stage, ".png"), width=40, height=30, units = 'cm', res = 200)
-  PCA.level.comparison(seurat_stage[[stage]], PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
-  graphics.off()
-}
-```
-
-### HH4
- 
-|Dimensions heatmap|ElbowPlot|PCA level comparison|
-| :---: | :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/dimHM.hh4.png)|![](./suppl_files/plots/5_stage_split/elbowplot.hh4.png)|![](./suppl_files/plots/5_stage_split/UMAP_PCA_comparison.hh4.png)|
-
-<br />
-
-### HH6
- 
-|Dimensions heatmap|ElbowPlot|PCA level comparison|
-| :---: | :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/dimHM.hh6.png)|![](./suppl_files/plots/5_stage_split/elbowplot.hh6.png)|![](./suppl_files/plots/5_stage_split/UMAP_PCA_comparison.hh6.png)|
- 
-<br />
-
-### 4ss
-|Dimensions heatmap|ElbowPlot|PCA level comparison|
-| :---: | :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/dimHM.ss4.png)|![](./suppl_files/plots/5_stage_split/elbowplot.ss4.png)|![](./suppl_files/plots/5_stage_split/UMAP_PCA_comparison.ss4.png)|
- 
-<br />
-
-### 8ss
-
-|Dimensions heatmap|ElbowPlot|PCA level comparison|
-| :---: | :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/dimHM.ss8.png)|![](./suppl_files/plots/5_stage_split/elbowplot.ss8.png)|![](./suppl_files/plots/5_stage_split/UMAP_PCA_comparison.ss8.png)|
-
-<br />
-
-Use PCA=15 as elbow plot is relatively stable across stages
-``` R
-seurat_stage <- lapply(seurat_stage, function(x) FindNeighbors(x, dims = 1:15, verbose = FALSE))
-seurat_stage <- lapply(seurat_stage, function(x) RunUMAP(x, dims = 1:15, verbose = FALSE))
-```
-
-Find optimal cluster resolution
-``` R
-for(stage in names(seurat_stage)){
-  png(paste0(curr.plot.path, "clustree.", stage, ".png"), width=70, height=35, units = 'cm', res = 200)
-  clust.res(seurat.obj = seurat_stage[[stage]], by = 0.1)
-  graphics.off()
-}
-```
-
-|HH4|HH6|4ss|8ss|
-| :---: | :---: | :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/clustree.hh4.png)|![](./suppl_files/plots/5_stage_split/clustree.hh6.png)|![](./suppl_files/plots/5_stage_split/clustree.ss4.png)|![](./suppl_files/plots/5_stage_split/clustree.ss8.png)|
-
-
-Cluster each stage
-``` R
-res = c("hh4" = 0.5, "hh6" = 0.5, "ss4" = 0.5, "ss8" = 0.5)
-seurat_stage <- lapply(names(res), function(x) FindClusters(seurat_stage[[x]], resolution = res[names(res) %in% x]))
-names(seurat_stage) = names(res)
-```
-
-Plot UMAP for clusters and developmental stage
-``` R
-for(stage in names(seurat_stage)){
-  png(paste0(curr.plot.path, "UMAP.", stage, ".png"), width=20, height=10, units = 'cm', res = 200)
-  clust.stage.plot(seurat_stage[[stage]])
-  graphics.off()
-}
-```
-
-|HH4|HH6|4ss|8ss|
-| :---: | :---: | :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/UMAP.hh4.png)|![](./suppl_files/plots/5_stage_split/UMAP.hh6.png)|![](./suppl_files/plots/5_stage_split/UMAP.ss4.png)|![](./suppl_files/plots/5_stage_split/UMAP.ss8.png)|
-
-Find differentially expressed genes and plot heatmap of top DE genes for each cluster at each stage
-lower FC threshold as some clusters have no DE genes
-``` R
-markers <- lapply(seurat_stage, function(x) FindAllMarkers(x, only.pos = T, logfc.threshold = 0.1))
-top15 <- lapply(markers, function(x) x %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC))
-
-for(stage in names(seurat_stage)){
-  png(paste0(curr.plot.path, "HM.top15.DE.", stage, ".png"), height = 75, width = 100, units = 'cm', res = 500)
-  tenx.pheatmap(data = seurat_stage[[stage]], metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
-                selected_genes = unique(top15[[stage]]$gene), gaps_col = "seurat_clusters")
-  graphics.off()
-}
-```
-
-|HH4|HH6|4ss|8ss|
-| :---: | :---: | :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/HM.top15.DE.hh4.png)|![](./suppl_files/plots/5_stage_split/HM.top15.DE.hh6.png)|![](./suppl_files/plots/5_stage_split/HM.top15.DE.ss4.png)|![](./suppl_files/plots/5_stage_split/HM.top15.DE.ss8.png)|
-
-<br />
-
-Plot features listed below at each stage
-``` R
-GOI = list("hh4" = c("VGLL1", "EPAS1", "GRHL3", "MSX1", "DLX5", "GATA2",
-                     "AATF", "MAFA", "ING5", "SETD2", "LIN28B", "YEATS4",
-                     "EOMES", "ADMP"),
-           "hh6" = c("DLX5", "SIX1", "GATA2", "MSX1", "BMP4", "GBX2", "SIX3", "SOX2", "SOX21"),
-           "ss4" = c("SIX1", "EYA2", "CSRNP1", "PAX7", "WNT4", "SIX3", "OLIG2", "SOX2", "SOX21"),
-           "ss8" = c("SIX1", "EYA2", "SOX10", "TFAP2A", "GBX2", "SIX3", "OLIG2", "SOX2", "SOX21"))
-
-for(stage in names(GOI)){
-  ncol = 3
-  png(paste0(curr.plot.path, "UMAP_GOI.", stage, ".png"), width = ncol*10, height = 10*ceiling((length(unlist(GOI[names(GOI) %in% stage]))+1)/ncol), units = "cm", res = 200)
-  print(multi.feature.plot(seurat_stage[[stage]], stage.name = stage, n.col = ncol, label = "", gene.list = unlist(GOI[names(GOI) %in% stage])))
-  graphics.off()
-}
-```
-
-|HH4|HH6|4ss|8ss|
-| :---: | :---: | :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/UMAP_GOI.hh4.png)|![](./suppl_files/plots/5_stage_split/UMAP_GOI.hh6.png)|![](./suppl_files/plots/5_stage_split/UMAP_GOI.ss4.png)|![](./suppl_files/plots/5_stage_split/UMAP_GOI.ss8.png)|
-
-<br />
 
 Change order or clusters for plotting dotplots
 ``` R
-levels = list("hh4" = c(3,0,1,2), "hh6" = c(1,3,4,2,0), "ss4" = c(2,3,1,0), "ss8" = c(3,2,5,0,7,1,6,4))
-for(stage in names(levels)){
-  seurat_stage[[stage]]$seurat_clusters <- factor(seurat_stage[[stage]]$seurat_clusters, levels = unlist(levels[names(levels) %in% stage]))
-}
+cluster_order <- factor(norm.data.clustfilt.cc$seurat_clusters, levels = c(12,5,2,1,3,8,0,11, 10,7,4,14,9,6,13))
 ```
 
-Plot dotplot to identify clusters
+Set factor levels for plotting
 ``` R
-for(stage in names(GOI)){
-  png(paste0(curr.plot.path, "dotplot.", stage, ".png"), width = 30, height = 12, units = "cm", res = 200)
-  print(DotPlot(seurat_stage[[stage]], group.by = "seurat_clusters", features = unlist(GOI[names(GOI) %in% stage])) +
-          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
-  graphics.off()
-}
+norm.data.clustfilt.cc$seurat_clusters <- cluster_order
 ```
 
-|HH4|HH6|4ss|8ss|
-| :---: | :---: | :---: | :---: |
-|![](./suppl_files/plots/5_stage_split/dotplot.hh4.png)|![](./suppl_files/plots/5_stage_split/dotplot.hh6.png)|![](./suppl_files/plots/5_stage_split/dotplot.ss4.png)|![](./suppl_files/plots/5_stage_split/dotplot.ss8.png)|
+Generate pie charts for cluster dev stage composition
+``` R
+venn_data <- norm.data.clustfilt.cc@meta.data %>%
+  rownames_to_column('cell_name') %>%
+  dplyr::select(c(cell_name, orig.ident, seurat_clusters)) %>%
+  group_by(seurat_clusters) %>%
+  count(orig.ident, .drop = FALSE)
+
+venn_data <- venn_data %>%
+  mutate(total_cells = sum(n)) %>%
+  mutate(n = n/total_cells)
+```
+
+Reverse levels to deal with seurat dotplot reversing y axis
+```R
+norm.data.clustfilt.cc$seurat_clusters <- fct_rev(cluster_order)
+```
+
+Generate DotPlot
+```R
+dotplot <- DotPlot(norm.data.clustfilt.cc, group.by = "seurat_clusters", features = GOI) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position="bottom", legend.box = "horizontal",
+        axis.title.x=element_blank(), legend.text=element_text(size=10),
+        legend.title=element_text(size=12))
+```
+
+Generate Pie charts
+```R
+numeric(n), fill=orig.ident, width = total_cells)) +
+  geom_bar(position = 'fill', stat = "identity") +
+  facet_wrap( ~ seurat_clusters, nrow = nlevels(norm.data.clustfilt.cc@meta.data$seurat_clusters)) +
+  coord_polar("y") +
+  theme_void() +
+  theme(strip.background = element_blank(), strip.text.x = element_blank(),
+        legend.position=c(0,0), legend.direction = "horizontal",
+        plot.margin = margin(t = 14, r = 0, b = 119, l = -110, unit = "pt"),
+        legend.margin=margin(t = 70, r = 0, b = -100, l = -200, unit = "pt"),
+        legend.text=element_text(size=10),
+        legend.title=element_text(size=12)) +
+  labs(fill = "Stage")
+```
+
+Plot dotplot and pies
+```R
+png(paste0(curr.plot.path, "dotplot.png"), width = 32, height = 18, units = "cm", res = 200)
+print(plot_grid(dotplot, pies, rel_widths = c(5,1)))
+graphics.off()
+```
+
+Plot dotplot with cell classification labels
+```R
+dotplot <- DotPlot(norm.data.clustfilt.cc, group.by = "seurat_clusters", features = GOI) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position="bottom", legend.box = "horizontal",
+        axis.title.x=element_blank(), legend.text=element_text(size=10),
+        axis.title.y = element_blank(), 
+        legend.title=element_text(size=12)) +
+  scale_y_discrete(labels = rev(c('Node', 'HH4-1', 'HH4-2', 'HH4-3', 'Non-Neural Plate Progenitors',
+                                  'Placodes', 'Neural Plate Progenitors', 'NC Progenitors', 'Delaminating NC',
+                                  'Early Forebrain', 'Late Forebrain', 'Ventral Forebrain', 'Early Midbrain', 'Late Midbrain', 'Hindbrain')))
+
+png(paste0(curr.plot.path, "dotplot_classified.png"), width = 36, height = 18, units = "cm", res = 200)
+print(plot_grid(dotplot, pies, rel_widths = c(5,1)))
+graphics.off()
+```
+
+|Cluster ID dotplot|Cell state dotplot|
+| :---: | :---: 
+|![](./suppl_files/plots/5_cell_state_classification/dotplot.png)|![](./suppl_files/plots/5_cell_state_classification/dotplot_classified.png)|
 
 <br />
 
-Change target gene names if they are from Z and W chromosomes
-``` R
-hh4_genes <- unlist(lapply(hh4_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
-hh6_genes <- unlist(lapply(hh6_genes, function(g) ifelse(paste0("Z-", g) %in% rownames(norm.data), paste0("Z-", g), ifelse(paste0("W-", g) %in% rownames(norm.data), paste0("W-", g), g))))
-```
+### Gene modules
 
-Plot genes from hh4 gene list at each stage - plots can be found [here](./suppl_files/plots/5_stage_split/hh4_genes_UMAPs/)
-``` R
-lapply(names(seurat_stage), function(x) umap.gene.list(seurat_stage[[x]], hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/", x, "/")))
-```
+Unbiased identification of modules of co-correlated genes using Antler.
 
-Plot genes from hh6 gene list at each stage - plots can be found [here](./suppl_files/plots/5_stage_split/hh6_genes_UMAPs/)
-``` R
-lapply(names(seurat_stage), function(x) umap.gene.list(seurat_stage[[x]], hh6_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/", x, "/")))
-```
-
-Save stage data after clustering
-``` R
-saveRDS(seurat_stage, paste0(rds.path, 'seurat_stage_out.RDS'))
-```
-
-Read in RDS data if needed
-``` R
-# seurat_stage <- readRDS(paste0(rds.path, "seurat_stage_out.RDS"))
-```
-
-Make list of clusters to subset
-``` R
-clust.sub = list("hh4" = c(0,1,2), "hh6" = c(0,2,4), "ss4" = c(0,1), "ss8" = c(0,1,4,6,7))
-```
-
-<br />
-
-### Subset neural cells from clear seurat data (norm.data.clustfilt.cc)
+For further information on Antler gene module identification, click [here](https://juliendelile.github.io/Antler/articles/Transcriptomic-summary.html#gene-modules-identification).
 
 Set plot path
-``` R
-curr.plot.path <- paste0(plot.path, "6_neural_subset/")
+```R
+curr.plot.path <- paste0(plot.path, "6_gene_modules/")
+dir.create(curr.plot.path, recursive = TRUE)
+```
+
+Extract expression data and make dataset compatible with Antler
+```R
+# strip end of cell names as this is incorrectly reformated in Antler
+norm.data.clustfilt.cc <- RenameCells(norm.data.clustfilt.cc, new.names = sub('-.*','',colnames(norm.data.clustfilt.cc)))
+
+antler_data <- data.frame(row.names = colnames(norm.data.clustfilt.cc),
+                          "timepoint" = as.numeric(substring(colnames(norm.data.clustfilt.cc), 3, 3)),
+                          "treatment" = rep("null", ncol(norm.data.clustfilt.cc)),
+                          "replicate_id" = rep(1, ncol(norm.data.clustfilt.cc))
+)
+# save pheno data
+write.table(antler_data, file = paste0(antler.dir, "phenoData.csv"), row.names = T, sep = "\t", col.names = T)
+# save count data
+write.table(GetAssayData(norm.data.clustfilt.cc, assay = "RNA", slot = "counts"), file = paste0(antler.dir, "assayData.csv"), row.names = T, sep = "\t", col.names = T, quote = F)
+```
+
+Load data into antler
+```R
+antler <- Antler$new(output_folder = curr.plot.path, num_cores = 4)
+antler$load_dataset(folder_path = antler.dir)
+```
+
+Remove genes which do not have >= 1 UMI count in >= 10 cells
+```R
+antler$exclude_unexpressed_genes(min_cells=10, min_level=1, verbose=T, data_status='Raw')
+```
+
+Normalise data
+```R
+antler$normalize(method = 'MR')
+```
+
+Calculate unbiased gene modules
+```R
+antler$gene_modules$identify(
+  name                  = "unbiasedGMs",
+  corr_t                = 0.3,  # the Spearman correlation treshold
+  corr_min              = 3,    # min. number of genes a gene must correlate with
+  mod_min_cell          = 10,   # min. number of cells expressing the module
+  mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
+  process_plots         = TRUE)
+```
+
+Get automated cluster order based on percentage of cells in adjacent stages
+```R
+cluster.order = order.cell.stage.clust(seurat_object = norm.data.clustfilt.cc, col.to.sort = seurat_clusters, sort.by = orig.ident)
+```
+
+Plot all gene modules
+```R
+png(paste0(curr.plot.path, 'allmodules.png'), height = 150, width = 120, units = 'cm', res = 500)
+GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
+        show_rownames = F, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+graphics.off()
+```
+
+Plot gene modules with at least 50% of genes DE logFC > 0.25 & FDR < 0.001
+```R
+# Find DEGs
+DEgenes <- FindAllMarkers(norm.data.clustfilt.cc, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
+
+# Filter GMs with 50% genes DE logFC > 0.25 & FDR < 0.001
+gms <- subset.gm(antler$gene_modules$lists$unbiasedGMs$content, selected_genes = DEgenes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
+
+png(paste0(curr.plot.path, 'DE.GM.png'), height = 160, width = 80, units = 'cm', res = 500)
+GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = gms, gaps_col = "seurat_clusters",
+        show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+graphics.off()
+```
+
+Screen DE GMs for neural induction GRN genes
+```R
+# Intersect DE GMs with network genes
+filtered_gms <- lapply(gms, function(x) x[x %in% network_genes$gene])
+
+# Remove empty list elements
+filtered_gms <- filtered_gms[lapply(filtered_gms,length)>0]
+
+png(paste0(curr.plot.path, 'network.GM.png'), height = 40, width = 80, units = 'cm', res = 500)
+GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = filtered_gms, gaps_col = "seurat_clusters",
+        show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+graphics.off()
+```
+
+# Subset neural clusters
+
+Set plot path
+```R
+curr.plot.path <- paste0(plot.path, "7_neural_subset/")
 dir.create(curr.plot.path)
 ```
 
-Get cell IDs from each stage based on clusters to subset
-``` R
-cell.sub = unlist(lapply(names(clust.sub), function(x){
-  rownames(seurat_stage[[x]]@meta.data)[seurat_stage[[x]]$seurat_clusters %in% unlist(clust.sub[names(clust.sub) %in% x])]
-}))
-```
+Subset neural clusters
+```R
+# Clust 12, 3, 11, 8, 10 = not neural clusters of interest
+neural_subset <- rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.cc@meta.data$seurat_clusters ==  12 |
+                                                                    norm.data.clustfilt.cc@meta.data$seurat_clusters == 3 |
+                                                                    norm.data.clustfilt.cc@meta.data$seurat_clusters == 11 |
+                                                                    norm.data.clustfilt.cc@meta.data$seurat_clusters == 8|
+                                                                    norm.data.clustfilt.cc@meta.data$seurat_clusters == 10]
 
-Subset neural cells
-``` R
-neural.seurat <- subset(norm.data.clustfilt.cc, cells = cell.sub)
+neural_subset <- subset(norm.data.clustfilt.cc, cells = neural_subset, invert = T)
 ```
 
 Re-run findvariablefeatures and scaling
-``` R
-neural.seurat <- FindVariableFeatures(neural.seurat, selection.method = "vst", nfeatures = 2000)
-
+```R
 # Enable parallelisation
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
-neural.seurat <- ScaleData(neural.seurat, features = rownames(neural.seurat), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
-
-saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.RDS"))
-```
-
-Read in RDS data if needed
-``` R
-# neural.seurat <- readRDS(paste0(rds.path, "neural.seurat.RDS"))
+neural_subset <- ScaleData(neural_subset, features = rownames(neural_subset), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 ```
 
 PCA
-``` R
-neural.seurat <- RunPCA(object = neural.seurat, verbose = FALSE)
+```R
+neural_subset <- RunPCA(object = neural_subset, verbose = FALSE)
 
 png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
-DimHeatmap(neural.seurat, dims = 1:30, balanced = TRUE, cells = 500)
+DimHeatmap(neural_subset, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 
 png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
-print(ElbowPlot(neural.seurat, ndims = 40))
+print(ElbowPlot(neural_subset, ndims = 40))
 graphics.off()
 
 png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCA.level.comparison(neural.seurat, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+PCA.level.comparison(neural_subset, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
 graphics.off()
 ```
 
 |Dimensions heatmap|ElbowPlot|PCA level comparison|
 | :---: | :---: | :---: |
-|![](./suppl_files/plots/6_neural_subset/dimHM.png)|![](./suppl_files/plots/6_neural_subset/elbowplot.png)|![](./suppl_files/plots/6_neural_subset/UMAP_PCA_comparison.png)|
+|![](./suppl_files/plots/7_neural_subset/dimHM.png)|![](./suppl_files/plots/7_neural_subset/elbowplot.png)|![](./suppl_files/plots/7_neural_subset/UMAP_PCA_comparison.png)|
 
-<br />    
+<br />
+
 
 Use PCA=15 as elbow plot is relatively stable across stages
 ``` R
-neural.seurat <- FindNeighbors(neural.seurat, dims = 1:15, verbose = FALSE)
-neural.seurat <- RunUMAP(neural.seurat, dims = 1:15, verbose = FALSE)
+neural_subset <- FindNeighbors(neural_subset, dims = 1:15, verbose = FALSE)
+neural_subset <- RunUMAP(neural_subset, dims = 1:15, verbose = FALSE)
 ```
 
 Find optimal cluster resolution
 ``` R
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = neural.seurat, by = 0.2)
+clust.res(seurat.obj = neural_subset, by = 0.2)
 graphics.off()
 ```
 
 Use clustering resolution = 1.2
 ``` R
-neural.seurat <- FindClusters(neural.seurat, resolution = 1.2)
+neural_subset <- FindClusters(neural_subset, resolution = 1.2)
 ```
 
 Plot UMAP for clusters and developmental stage
 ``` R
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(neural.seurat)
+clust.stage.plot(neural_subset)
 graphics.off()
 ```
 
 Plot QC for each cluster
 ``` R
 png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
-QC.plot(neural.seurat)
+QC.plot(neural_subset)
 graphics.off()
 ```
 
 |ClusTree|UMAP|Cluster QC|
 | :---: | :---: | :---: |
-|![](./suppl_files/plots/6_neural_subset/clustree.png)|![](./suppl_files/plots/6_neural_subset/UMAP.png)|![](./suppl_files/plots/6_neural_subset/cluster.QC.png)         
+|![](./suppl_files/plots/7_neural_subset/clustree.png)|![](./suppl_files/plots/7_neural_subset/UMAP.png)|![](./suppl_files/plots/7_neural_subset/cluster.QC.png)    
+
 <br />
 
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 ``` R
-markers <- FindAllMarkers(neural.seurat, only.pos = T, logfc.threshold = 0.25)
+markers <- FindAllMarkers(neural_subset, only.pos = T, logfc.threshold = 0.25)
 # get automated cluster order based on percentage of cells in adjacent stages
-cluster.order = order.cell.stage.clust(seurat_object = neural.seurat, col.to.sort = seurat_clusters, sort.by = orig.ident)
+cluster.order = order.cell.stage.clust(seurat_object = neural_subset, col.to.sort = seurat_clusters, sort.by = orig.ident)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
 png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 500)
-tenx.pheatmap(data = neural.seurat, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+tenx.pheatmap(data = neural_subset, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
-
-saveRDS(neural.seurat, paste0(rds.path, "neural.seurat.out.RDS"))
 ```
-![](./suppl_files/plots/6_neural_subset/HM.top15.DE.png)
+
+![](./suppl_files/plots/7_neural_subset/HM.top15.DE.png)
 
 <br />
 
-Plot genes from hh4 gene list in neural subset - plots can be found [here](./suppl_files/plots/6_neural_subset/hh4_genes_UMAPs/)
-``` R
-umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh4_genes_UMAPs/"))
+### Pseudotime
+
+Set plot path
+```R
+curr.plot.path <- paste0(plot.path, "8_pseudotime/")
+dir.create(curr.plot.path)
 ```
 
-Plot genes from hh6 gene list in neural subset - plots can be found [here](./suppl_files/plots/6_neural_subset/hh6_genes_UMAPs/)
-``` R
-umap.gene.list(neural.seurat, hh4_genes, paste0(curr.plot.path, "hh6_genes_UMAPs/"))
+
+Extract PC1 values
+```R
+pc1 <- neural_subset@meta.data[,'orig.ident', drop=F] %>%
+  tibble::rownames_to_column(var = "cell_name") %>%
+  mutate(pc1 = Embeddings(object = neural_subset[["pca"]])[, 1])
 ```
 
-Plot heatmap for hh4 genes in neural subset
-``` R
-png(paste0(curr.plot.path, "neural.seurat_hh4genes.HM.png"), width=75, height=100, units = "cm", res = 500)
-tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh4_genes[hh4_genes %in% rownames(neural.seurat)],
-              hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
-graphics.off()
-```
-![](./suppl_files/plots/6_neural_subset/neural.seurat_hh4genes.HM.png)
-
-<br />
-
-Plot heatmap for hh6 genes in neural subset
-``` R
-png(paste0(curr.plot.path, "neural.seurat_hh6genes.HM.png"), width=75, height=50, units = "cm", res = 500)
-tenx.pheatmap(data = neural.seurat, metadata = c("orig.ident", "seurat_clusters"), selected_genes = hh6_genes[hh6_genes %in% rownames(neural.seurat)],
-              hclust_rows = T, gaps_col = "orig.ident", col_ann_order = c("orig.ident", "seurat_clusters"))
+Plot cell stage along PC1
+```R
+png(paste0(curr.plot.path, 'pc1.png'), height = 18, width = 26, units = 'cm', res = 400)
+ggplot(pc1, aes(x = pc1, y = orig.ident, colour = orig.ident)) +
+  geom_quasirandom(groupOnX = FALSE) +
+  theme_classic() +
+  xlab("PC1") + ylab("Timepoint") +
+  ggtitle("Cells ordered by first principal component")
 graphics.off()
 ```
 
-![](./suppl_files/plots/6_neural_subset/neural.seurat_hh6genes.HM.png)
+![](./suppl_files/plots/8_pseudotime/pc1.png)
 
-<br />
+Developmental time is negatively correlated with pc1 - inverse PC1 and calculate cell rank.
+
+Rank is then converted to 0-99 pseudotime scale
+```R
+pc1_rank <- pc1 %>%
+  mutate(rank = rank(-pc1)) %>%
+  mutate(pseudotime = rank*(99/max(rank)))
+```
+
+Filter scaled seurat counts by network_genes -> generate long df with corresponding pseudotime and normalised count
+```R
+plot_data <- as.data.frame(t(as.matrix(GetAssayData(neural_subset, slot = 'scale.data')[rownames(neural_subset) %in% network_genes$gene_name,]))) %>%
+  tibble::rownames_to_column(var = "cell_name") %>%
+  dplyr::full_join(pc1_rank) %>%
+  pivot_longer(!c(cell_name, orig.ident, pseudotime, pc1, rank), names_to = "gene_name", values_to = "scaled_expression") %>%
+  dplyr::left_join(network_genes) %>%
+  droplevels() %>%
+  mutate(timepoint = factor(timepoint, levels = c(1,3,5,7,9,12)))
+```
+
+Mean and SE summary data
+```R
+plot_data_summary <- plot_data %>%
+  mutate(rank_bin = pseudotime - (pseudotime %% 2.5)) %>% 
+  group_by(rank_bin, timepoint) %>% 
+  summarise(mn = mean(scaled_expression),
+            se = sd(scaled_expression)/sqrt(n()))
+
+```
+
+Plot GAM for all stages without standard error
+```R
+png(paste0(curr.plot.path, 'gam_pseudotime_allnetwork.png'), height = 18, width = 26, units = 'cm', res = 400)
+ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)) +
+  scale_color_manual(values=c("#6600ff", "#0000ff", "#009900", "#ffcc00", "#ff8533", "#ee0000")) +
+  geom_smooth(method="gam", se=FALSE) +
+  theme_classic()
+graphics.off()
+```
+
+Plot GAM for all stages with standard error
+```R
+png(paste0(curr.plot.path, 'gam_se_pseudotime_allnetwork.png'), height = 18, width = 26, units = 'cm', res = 400)
+ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)) +
+  geom_errorbar(data = plot_data_summary, aes(x = rank_bin, y = mn, 
+                                              ymax = mn + se, ymin = mn - se), width = 2) +
+  geom_point(data = plot_data_summary, aes(x = rank_bin, y = mn)) +
+  scale_color_manual(values=c("#6600ff", "#0000ff", "#009900", "#ffcc00", "#ff8533", "#ee0000")) +
+  geom_smooth(method="gam", se=FALSE) +
+  theme_classic()
+graphics.off()
+```
+
+|Pseudotime|Pseudotime SE|
+| :---: | :---: |
+|![](./suppl_files/plots/8_pseudotime/gam_pseudotime_allnetwork.png)|![](./suppl_files/plots/8_pseudotime/gam_se_pseudotime_allnetwork.png)|
