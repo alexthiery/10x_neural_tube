@@ -24,12 +24,16 @@ This repository contains the required code to run the entire alignment and downs
 - to run the analysis including the alignment, the raw fastq sequencing files can be found [here]().
 - to run the downstream analysis from the UMI counts generated from 10x Genomics Cell Ranger are embedded can be found within the repository [here]("./alignmentOut/cellrangerCounts_renamed").
 
+</br>
+
 #
 ## Analysis pre-requisites
 #
 The pipeline is run using Nextflow and Docker to ensure reproducibility. The repository can be called directly from GitHub, so to re-run the analysis you just need to install [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) and [Docker](https://docs.docker.com/get-docker/).
 
 If you are wanting to run the downstream analysis interactively outside of Nextflow, you still need to download Docker and you will also need to download this repository.
+
+</br>
 
 #
 ## Docker
@@ -39,6 +43,8 @@ Docker allows us to run our analysis through a container with all required libra
 The docker image used can be found [here](https://hub.docker.com/r/alexthiery/10x_neural_tube)
 
 We have also included Rstudio within our docker image to allow you to run the downstream analysis interactively if you wish - for details on how to do this click [here](#interactive-downstream-analysis).
+
+</br>
 
 #
 ## Nextflow
@@ -71,7 +77,7 @@ nextflow run alexthiery/10x_neural_tube \
 
  For a template of a custom.config file, see [crick.config](conf/crick.config). Further information on Nextflow config files can be found [here](https://www.nextflow.io/docs/latest/config.html#configuration-file).
 
-
+</br>
 
 #
 ## Interactive downstream analysis
@@ -86,16 +92,13 @@ To do this, follow these steps:
 3) within terminal launch a docker container interactively - `docker run --rm -e PASSWORD=test -p 8787:8787 -v <PATH_TO_LOCAL_REPOSITORY>:/home/rstudio alexthiery/10x_neural_tube:v1.0`
 4) go to `localhost:8787` in the browser to open RStudio
 
+</br>
+
 #
 ## Downstream analysis pipeline
 #
 
-This analysis is ran using Seurat v3.1. For more information see https://satijalab.org/seurat/
-
-
-
-
-
+This analysis is ran using Seurat v3.1.5 For more information see https://satijalab.org/seurat/
 
 Load packages
 
@@ -213,11 +216,15 @@ if (opt$runtype == "user"){
 }
 ```
 
+</br>
+
 Set number of cores to use for parallelisation
 ```R
 if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
 cat(paste0("script ran with ", ncores, " cores\n"))
 ```
+
+</br>
 
 Make Seurat objects for each of the different samples.
 ``` R
@@ -227,11 +234,15 @@ for(i in 1:nrow(sample.paths["path"])){
 }
 ```
 
+</br>
+
 The four Seurat objects are then merged, before running CreateSeuratObject again on the output in order to apply the min.cells parameter on the final merged dataset.
 ``` R
 temp <- merge(hh4, y = c(hh6, ss4, ss8), add.cell.ids = c("hh4", "hh6", "ss4", "ss8"), project = "chick.10x")
 merged.data<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
 ```
+
+</br>
 
 Make seurat object with ensembl names and save as separate dataframe for adding to misc slot
 ``` R
@@ -243,15 +254,21 @@ temp <- merge(hh4_ensID, y = c(hh6_ensID, ss4_ensID, ss8_ensID), add.cell.ids = 
 merged.data_ensID<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
 ```
 
+</br>
+
 Add gene IDs dataframe to merged data object
 ``` R
 Misc(merged.data, slot = "geneIDs") <- cbind("gene_ID" = rownames(merged.data_ensID), "gene_name" =  rownames(merged.data))
 ```
 
+</br>
+
 The original Seurat objects are then removed from the global environment
 ``` R
 rm(hh4, hh6, ss4, ss8, sample.paths, temp, hh4_ensID, hh6_ensID, ss4_ensID, ss8_ensID, merged.data_ensID)
 ```
+
+</br>
 
 Store mitochondrial percentage in object meta data
 ``` R
@@ -267,17 +284,23 @@ Remove data which do not pass filter threshold
 merged.data <- subset(merged.data, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
 ```
 
+</br>
+
 Log normalize data and find variable features
 ``` R
 norm.data <- NormalizeData(merged.data, normalization.method = "LogNormalize", scale.factor = 10000)
 norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures = 2000)
 ```
 
+</br>
+
 Enable parallelisation
 ``` R
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 ```
+
+</br>
 
 Scale data and regress out MT content
 ``` R
@@ -286,7 +309,7 @@ norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regres
 
 <br />
 
-#### Perform dimensionality reduction by PCA and UMAP embedding
+### Perform dimensionality reduction by PCA and UMAP embedding
 
 Change plot path
 ``` R
@@ -294,10 +317,14 @@ curr.plot.path <- paste0(plot.path, '0_filt_data/')
 dir.create(curr.plot.path)
 ```
 
+</br>
+
 Run PCA analysis on the each set of data
 ``` R
 norm.data <- RunPCA(object = norm.data, verbose = FALSE)
 ```
+
+</br>
 
 Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept
 
@@ -308,12 +335,16 @@ DimHeatmap(norm.data, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 ```
 
+</br>
+
 Another heuristic method is ElbowPlot which ranks PCs based on the % variance explained by each PC
 ``` R
 png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
 print(ElbowPlot(norm.data, ndims = 40))
 graphics.off()
 ```
+
+</br>
 
 Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
 ``` R
@@ -328,6 +359,8 @@ graphics.off()
 
 <br />
 
+<br />
+
 Use PCA=15 as elbow plot is relatively stable across stages
 Use clustering resolution = 0.5 for filtering
 ``` R
@@ -336,12 +369,16 @@ norm.data <- RunUMAP(norm.data, dims = 1:15, verbose = FALSE)
 norm.data <- FindClusters(norm.data, resolution = 0.5, verbose = FALSE)
 ```
 
+</br>
+
 Plot UMAP for clusters and developmental stage
 ``` R
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 clust.stage.plot(norm.data)
 graphics.off()
 ```
+
+</br>
 
 Plot QC for each cluster
 ``` R
@@ -376,6 +413,9 @@ graphics.off()
 **Heatmap clearly shows clusters segregate by sex - check this and remove sex genes**
 ![](./suppl_files/plots/0_filt_data/HM.top15.DE.png)
 
+</br>
+
+</br>
 
 #
 ### Calculating sex effect and removing sex genes
@@ -1019,30 +1059,38 @@ antler$gene_modules$identify(
   process_plots         = TRUE)
 ```
 
+Copy seurat object for plotting
+```R
+plot_data <- norm.data.clustfilt.cc
+plot_data@meta.data <- plot_data@meta.data %>%
+  rename(Stage = orig.ident,
+         Clusters = seurat_clusters)
+```
+
 Get automated cluster order based on percentage of cells in adjacent stages
 ```R
-cluster.order = order.cell.stage.clust(seurat_object = norm.data.clustfilt.cc, col.to.sort = seurat_clusters, sort.by = orig.ident)
+cluster.order = order.cell.stage.clust(seurat_object = plot_data, col.to.sort = Clusters, sort.by = Stage)
 ```
 
 Plot all gene modules
 ```R
 png(paste0(curr.plot.path, 'allmodules.png'), height = 150, width = 120, units = 'cm', res = 500)
-GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
-        show_rownames = F, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+GM.plot(data = plot_data, metadata = c("Clusters", "Stage"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
+        show_rownames = F, custom_order = cluster.order, custom_order_column = "Clusters")
 graphics.off()
 ```
 
 Plot gene modules with at least 50% of genes DE logFC > 0.25 & FDR < 0.001
 ```R
 # Find DEGs
-DEgenes <- FindAllMarkers(norm.data.clustfilt.cc, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
+DEgenes <- FindAllMarkers(plot_data, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
 
 # Filter GMs with 50% genes DE logFC > 0.25 & FDR < 0.001
 gms <- subset.gm(antler$gene_modules$lists$unbiasedGMs$content, selected_genes = DEgenes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
 
 png(paste0(curr.plot.path, 'DE.GM.png'), height = 160, width = 80, units = 'cm', res = 500)
-GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = gms, gaps_col = "seurat_clusters",
-        show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+GM.plot(data = plot_data, metadata = c("Clusters", "Stage"), gene_modules = gms, gaps_col = "Clusters",
+        show_rownames = T, custom_order = cluster.order, custom_order_column = "Clusters", fontsize = 25, fontsize_row = 10)
 graphics.off()
 ```
 
@@ -1054,9 +1102,9 @@ filtered_gms <- lapply(gms, function(x) x[x %in% network_genes$gene])
 # Remove empty list elements
 filtered_gms <- filtered_gms[lapply(filtered_gms,length)>0]
 
-png(paste0(curr.plot.path, 'network.GM.png'), height = 40, width = 80, units = 'cm', res = 500)
-GM.plot(data = norm.data.clustfilt.cc, metadata = c("seurat_clusters", "orig.ident"), gene_modules = filtered_gms, gaps_col = "seurat_clusters",
-        show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+png(paste0(curr.plot.path, 'network.GM.png'), height = 22, width = 37, units = 'cm', res = 1500)
+GM.plot(data = plot_data, metadata = c("Clusters", "Stage"), gene_modules = filtered_gms, gaps_col = "Clusters",
+        show_rownames = T, custom_order = cluster.order, custom_order_column = "Clusters", fontsize = 10, fontsize_row = 13)
 graphics.off()
 ```
 
