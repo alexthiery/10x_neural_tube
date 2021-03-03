@@ -307,7 +307,7 @@ norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regres
 
 <br />
 
-### Perform dimensionality reduction by PCA and UMAP embedding
+***Perform dimensionality reduction by PCA and UMAP embedding***
 
 Change plot path
 ``` R
@@ -413,7 +413,7 @@ graphics.off()
 
 
 #
-### Calculating sex effect and removing sex genes
+### 1) Calculating sex effect and removing sex genes
 
 Change plot path
 ``` R
@@ -430,7 +430,7 @@ tenx.pheatmap(data = norm.data[,rownames(norm.data@meta.data[norm.data$seurat_cl
 graphics.off()
 ```
 
-![](./supp_files/plots/1_sex_filt/HM.top15.DE.pre-sexfilt.png)
+![](./suppl_files/plots/1_sex_filt/HM.top15.DE.pre-sexfilt.png)
 
 </br>
 
@@ -479,8 +479,7 @@ norm.data@meta.data$sex <- unlist(lapply(rownames(norm.data@meta.data), function
 
 <br />
 
-#
-### Filter W chrom genes
+***Filter W chrom genes***
 
 Following subsetting of cells and/or genes, the same pipeline as above is repeated i.e.
 Find variable features -> Scale data/regress out confounding variables -> PCA -> Find neighbours -> Run UMAP -> Find Clusters -> Cluster QC -> Find top DE genes
@@ -599,7 +598,7 @@ graphics.off()
 <br />
 
 #
-### Identify and remove contamination
+### 2) Identify and remove contamination
 
 Change plot path
 ``` R
@@ -637,7 +636,7 @@ graphics.off()
 
 <br />
 
-### Remove contaminating cells from clusters
+***Remove contaminating cells from clusters***
 
 Clust 8 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
 Clust 10 = Late mesoderm - expresses twist1, six1, eya2
@@ -735,7 +734,7 @@ graphics.off()
 <br />
 
 #
-### Remove poor quality clusters
+### 3) Remove poor quality clusters
 
 Clust 11, 14, 16, 18 = poor quality cells
 ``` R
@@ -840,7 +839,7 @@ graphics.off()
 <br />
 
 #
-### Check for cell cycle effect
+### 4) Check for cell cycle effect
 
 Set plot path
 ``` R
@@ -939,6 +938,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/4_cell_cycle/clustree.png)|![](./suppl_files/plots/4_cell_cycle/UMAP.png)|![](./suppl_files/plots/4_cell_cycle/cluster.QC.png)             
 
+<br />
 
 UMAP of cell cycle before and after regressing out
 ``` R
@@ -951,6 +951,7 @@ graphics.off()
 
 ![](./suppl_files/plots/4_cell_cycle/cell.cycle.png)
 
+<br />
 
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 ``` R
@@ -970,8 +971,7 @@ graphics.off()
 
 <br />
 
-
-### Cell state classification
+### 5) Cell state classification
 
 Set plot path
 ``` R
@@ -979,20 +979,28 @@ curr.plot.path <- paste0(plot.path, "5_cell_state_classification/")
 dir.create(curr.plot.path)
 ```
 
+</br>
+
 Genes of interest used for cell state classification
 ``` R
 GOI = rev(c( "EOMES", "ADMP","YEATS4", "MAFA", "ING5", "LIN28B", "AATF", "SETD2", "GATA2", "DLX5", "TFAP2A", "BMP4", "SIX1", "EYA2", "MSX1", "PAX7", "CSRNP1", "SOX10", "SOX2", "SOX21", "SIX3", "OLIG2", "PAX6", "FOXA2", "SHH", "PAX2", "WNT4", "HOXB2", "HOXA2", "GBX2"))
 ```
+
+</br>
 
 Change order or clusters for plotting dotplots
 ``` R
 cluster_order <- factor(norm.data.clustfilt.cc$seurat_clusters, levels = c(12,5,2,1,3,8,0,11, 10,7,4,14,9,6,13))
 ```
 
+</br>
+
 Set factor levels for plotting
 ``` R
 norm.data.clustfilt.cc$seurat_clusters <- cluster_order
 ```
+
+</br>
 
 Generate pie charts for cluster dev stage composition
 ``` R
@@ -1007,10 +1015,14 @@ venn_data <- venn_data %>%
   mutate(n = n/total_cells)
 ```
 
+</br>
+
 Reverse levels to deal with seurat dotplot reversing y axis
 ```R
 norm.data.clustfilt.cc$seurat_clusters <- fct_rev(cluster_order)
 ```
+
+</br>
 
 Generate DotPlot
 ```R
@@ -1020,6 +1032,8 @@ dotplot <- DotPlot(norm.data.clustfilt.cc, group.by = "seurat_clusters", feature
         axis.title.x=element_blank(), legend.text=element_text(size=10),
         legend.title=element_text(size=12))
 ```
+
+</br>
 
 Generate Pie charts
 ```R
@@ -1037,12 +1051,16 @@ numeric(n), fill=orig.ident, width = total_cells)) +
   labs(fill = "Stage")
 ```
 
+</br>
+
 Plot dotplot and pies
 ```R
 png(paste0(curr.plot.path, "dotplot.png"), width = 32, height = 18, units = "cm", res = 200)
 print(plot_grid(dotplot, pies, rel_widths = c(5,1)))
 graphics.off()
 ```
+
+</br>
 
 Plot dotplot with cell classification labels
 ```R
@@ -1067,7 +1085,7 @@ graphics.off()
 
 <br />
 
-### Gene modules
+### 6) Gene modules
 
 Unbiased identification of modules of co-correlated genes using Antler.
 
@@ -1078,6 +1096,8 @@ Set plot path
 curr.plot.path <- paste0(plot.path, "6_gene_modules/")
 dir.create(curr.plot.path, recursive = TRUE)
 ```
+
+</br>
 
 Extract expression data and make dataset compatible with Antler
 ```R
@@ -1095,21 +1115,29 @@ write.table(antler_data, file = paste0(antler.dir, "phenoData.csv"), row.names =
 write.table(GetAssayData(norm.data.clustfilt.cc, assay = "RNA", slot = "counts"), file = paste0(antler.dir, "assayData.csv"), row.names = T, sep = "\t", col.names = T, quote = F)
 ```
 
+</br>
+
 Load data into antler
 ```R
 antler <- Antler$new(output_folder = curr.plot.path, num_cores = 4)
 antler$load_dataset(folder_path = antler.dir)
 ```
 
+</br>
+
 Remove genes which do not have >= 1 UMI count in >= 10 cells
 ```R
 antler$exclude_unexpressed_genes(min_cells=10, min_level=1, verbose=T, data_status='Raw')
 ```
 
+</br>
+
 Normalise data
 ```R
 antler$normalize(method = 'MR')
 ```
+
+</br>
 
 Calculate unbiased gene modules
 ```R
@@ -1122,6 +1150,8 @@ antler$gene_modules$identify(
   process_plots         = TRUE)
 ```
 
+</br>
+
 Copy seurat object for plotting
 ```R
 plot_data <- norm.data.clustfilt.cc
@@ -1130,10 +1160,14 @@ plot_data@meta.data <- plot_data@meta.data %>%
          Clusters = seurat_clusters)
 ```
 
+</br>
+
 Get automated cluster order based on percentage of cells in adjacent stages
 ```R
 cluster.order = order.cell.stage.clust(seurat_object = plot_data, col.to.sort = Clusters, sort.by = Stage)
 ```
+
+</br>
 
 Plot all gene modules
 ```R
@@ -1142,6 +1176,8 @@ GM.plot(data = plot_data, metadata = c("Clusters", "Stage"), gene_modules = antl
         show_rownames = F, custom_order = cluster.order, custom_order_column = "Clusters")
 graphics.off()
 ```
+
+</br>
 
 Plot gene modules with at least 50% of genes DE logFC > 0.25 & FDR < 0.001
 ```R
@@ -1157,6 +1193,8 @@ GM.plot(data = plot_data, metadata = c("Clusters", "Stage"), gene_modules = gms,
 graphics.off()
 ```
 
+</br>
+
 Screen DE GMs for neural induction GRN genes
 ```R
 # Intersect DE GMs with network genes
@@ -1171,13 +1209,18 @@ GM.plot(data = plot_data, metadata = c("Clusters", "Stage"), gene_modules = filt
 graphics.off()
 ```
 
-# Subset neural clusters
+</br>
+
+#
+### 7) Subset neural clusters
 
 Set plot path
 ```R
 curr.plot.path <- paste0(plot.path, "7_neural_subset/")
 dir.create(curr.plot.path)
 ```
+
+</br>
 
 Subset neural clusters
 ```R
@@ -1191,6 +1234,8 @@ neural_subset <- rownames(norm.data.clustfilt.cc@meta.data)[norm.data.clustfilt.
 neural_subset <- subset(norm.data.clustfilt.cc, cells = neural_subset, invert = T)
 ```
 
+</br>
+
 Re-run findvariablefeatures and scaling
 ```R
 # Enable parallelisation
@@ -1199,6 +1244,8 @@ options(future.globals.maxSize = 2000 * 1024^2)
 
 neural_subset <- ScaleData(neural_subset, features = rownames(neural_subset), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 ```
+
+</br>
 
 PCA
 ```R
@@ -1230,6 +1277,8 @@ neural_subset <- FindNeighbors(neural_subset, dims = 1:15, verbose = FALSE)
 neural_subset <- RunUMAP(neural_subset, dims = 1:15, verbose = FALSE)
 ```
 
+</br>
+
 Find optimal cluster resolution
 ``` R
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
@@ -1237,10 +1286,14 @@ clust.res(seurat.obj = neural_subset, by = 0.2)
 graphics.off()
 ```
 
+</br>
+
 Use clustering resolution = 1.2
 ``` R
 neural_subset <- FindClusters(neural_subset, resolution = 1.2)
 ```
+
+</br>
 
 Plot UMAP for clusters and developmental stage
 ``` R
@@ -1248,6 +1301,8 @@ png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res =
 clust.stage.plot(neural_subset)
 graphics.off()
 ```
+
+</br>
 
 Plot QC for each cluster
 ``` R
@@ -1280,7 +1335,7 @@ graphics.off()
 
 <br />
 
-### Pseudotime
+### 8) Pseudotime
 
 Set plot path
 ```R
@@ -1288,6 +1343,7 @@ curr.plot.path <- paste0(plot.path, "8_pseudotime/")
 dir.create(curr.plot.path)
 ```
 
+</br>
 
 Extract PC1 values
 ```R
@@ -1295,6 +1351,8 @@ pc1 <- neural_subset@meta.data[,'orig.ident', drop=F] %>%
   tibble::rownames_to_column(var = "cell_name") %>%
   mutate(pc1 = Embeddings(object = neural_subset[["pca"]])[, 1])
 ```
+
+</br>
 
 Plot cell stage along PC1
 ```R
@@ -1308,6 +1366,8 @@ graphics.off()
 ```
 
 ![](./suppl_files/plots/8_pseudotime/pc1.png)
+
+</br>
 
 Developmental time is negatively correlated with pc1 - inverse PC1 and calculate cell rank.
 
