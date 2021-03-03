@@ -81,7 +81,6 @@ nextflow run alexthiery/10x_neural_tube \
 
 #
 ## Interactive downstream analysis
-#
 
 If do not want to re-run the alignment, but would like to run the downstream analysis from the count files, you can run RStudio from within the docker container.
 
@@ -96,7 +95,6 @@ To do this, follow these steps:
 
 #
 ## Downstream analysis pipeline
-#
 
 This analysis is ran using Seurat v3.1.5 For more information see https://satijalab.org/seurat/
 
@@ -120,6 +118,8 @@ library(Antler)
 library(ggbeeswarm)
 library(tidyverse)
 ```
+
+</br>
 
 Set environmental variables, load data and make Seurat object
 In order to be able to run the script from either Rstudio, local terminal, or cluster terminal, I add a switch which looks for command line arguments. This then sets the directory paths accordingly.
@@ -277,8 +277,6 @@ merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "p
 
 <br />
 
-#### Filter data based on variable threshold
-
 Remove data which do not pass filter threshold
 ``` R
 merged.data <- subset(merged.data, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
@@ -359,8 +357,6 @@ graphics.off()
 
 <br />
 
-<br />
-
 Use PCA=15 as elbow plot is relatively stable across stages
 Use clustering resolution = 0.5 for filtering
 ``` R
@@ -394,7 +390,7 @@ graphics.off()
 <br />
 
 Find differentially expressed genes and plot heatmap of top 15 DE genes for each cluster
-```{r eval = FALSE}
+```R
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(norm.data, only.pos = T, logfc.threshold = 0.25)
 
@@ -415,11 +411,9 @@ graphics.off()
 
 </br>
 
-</br>
 
 #
 ### Calculating sex effect and removing sex genes
-#
 
 Change plot path
 ``` R
@@ -438,6 +432,8 @@ graphics.off()
 
 ![](./supp_files/plots/1_sex_filt/HM.top15.DE.pre-sexfilt.png)
 
+</br>
+
 Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
 ``` R
 W_genes <- as.matrix(norm.data@assays$RNA[grepl("W-", rownames(norm.data@assays$RNA)),])
@@ -446,11 +442,15 @@ k_clusters <- data.frame(k_clusters$cluster)
 norm.data@meta.data$k_clusters <- k_clusters[match(colnames(norm.data@assays$RNA), rownames(k_clusters)),]
 ```
 
+</br>
+
 Get rownames for kmeans clusters 1 and 2
 ``` R
 k_clus_1 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 1,])
 k_clus_2 <- rownames(norm.data@meta.data[norm.data@meta.data$k_clusters == 2,])
 ```
+
+</br>
 
 K clustering identities are stochastic, so I need to identify which cluster is male and female
 Sum of W genes is order of magnitude greater in cluster 2 - these are the female cells
@@ -469,6 +469,8 @@ if(sumclus1 < sumclus2){
 cell.sex.ID <- list("male.cells" = k.male, "female.cells" = k.female)
 ```
 
+</br>
+
 Add sex data to meta.data
 ``` R
 norm.data@meta.data$sex <- unlist(lapply(rownames(norm.data@meta.data), function(x)
@@ -477,7 +479,8 @@ norm.data@meta.data$sex <- unlist(lapply(rownames(norm.data@meta.data), function
 
 <br />
 
-#### Filter W chrom genes
+#
+### Filter W chrom genes
 
 Following subsetting of cells and/or genes, the same pipeline as above is repeated i.e.
 Find variable features -> Scale data/regress out confounding variables -> PCA -> Find neighbours -> Run UMAP -> Find Clusters -> Cluster QC -> Find top DE genes
@@ -486,6 +489,8 @@ Remove W genes
 ``` R
 norm.data.sexscale <- norm.data[rownames(norm.data)[!grepl("W-", rownames(norm.data))],]
 ```
+
+</br>
 
 Re-run findvariablefeatures and scaling
 ``` R
@@ -498,10 +503,14 @@ options(future.globals.maxSize = 2000 * 1024^2)
 norm.data.sexscale <- ScaleData(norm.data.sexscale, features = rownames(norm.data.sexscale), vars.to.regress = c("percent.mt", "sex"))
 ```
 
+</br>
+
 Set plot path
 ``` R
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
 ```
+
+</br>
 
 PCA
 ``` R
@@ -532,6 +541,8 @@ norm.data.sexscale <- FindNeighbors(norm.data.sexscale, dims = 1:15, verbose = F
 norm.data.sexscale <- RunUMAP(norm.data.sexscale, dims = 1:15, verbose = FALSE)
 ```
 
+</br>
+
 Find optimal cluster resolution
 ``` R
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
@@ -539,10 +550,14 @@ clust.res(seurat.obj = norm.data.sexscale, by = 0.1)
 graphics.off()
 ```
 
+</br>
+
 Use clustering resolution = 0.5 to look for contamination clusters
 ``` R
 norm.data.sexscale <- FindClusters(norm.data.sexscale, resolution = 0.5, verbose = FALSE)
 ```
+
+</br>
 
 Plot UMAP for clusters and developmental stage
 ``` R
@@ -550,6 +565,8 @@ png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res =
 clust.stage.plot(norm.data.sexscale)
 graphics.off()
 ```
+
+</br>
 
 Plot QC for each cluster
 ``` R
@@ -581,6 +598,7 @@ graphics.off()
 
 <br />
 
+#
 ### Identify and remove contamination
 
 Change plot path
@@ -588,6 +606,8 @@ Change plot path
 curr.plot.path <- paste0(plot.path, "2_cluster_filt/")
 dir.create(curr.plot.path)
 ```
+
+</br>
 
 Identify mesoderm and PGCs using candidate genes
 ``` R
@@ -618,6 +638,7 @@ graphics.off()
 <br />
 
 ### Remove contaminating cells from clusters
+
 Clust 8 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
 Clust 10 = Late mesoderm - expresses twist1, six1, eya2
 Clust 11 = PGC's - expresses dazl very highly
@@ -629,6 +650,8 @@ norm.data.contamfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscal
 norm.data.contamfilt <- subset(norm.data.sexscale, cells = norm.data.contamfilt, invert = T)
 ```
 
+</br>
+
 Re-run findvariablefeatures and scaling
 ``` R
 norm.data.contamfilt <- FindVariableFeatures(norm.data.contamfilt, selection.method = "vst", nfeatures = 2000)
@@ -639,6 +662,8 @@ options(future.globals.maxSize = 2000 * 1024^2)
 
 norm.data.contamfilt <- ScaleData(norm.data.contamfilt, features = rownames(norm.data.contamfilt), vars.to.regress = c("percent.mt", "sex"))
 ```
+
+</br>
 
 PCA
 ``` R
@@ -669,6 +694,8 @@ norm.data.contamfilt <- FindNeighbors(norm.data.contamfilt, dims = 1:15, verbose
 norm.data.contamfilt <- RunUMAP(norm.data.contamfilt, dims = 1:15, verbose = FALSE)
 ```
 
+</br>
+
 Find optimal cluster resolution
 ``` R
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
@@ -676,10 +703,14 @@ clust.res(seurat.obj = norm.data.contamfilt, by = 0.2)
 graphics.off()
 ```
 
+</br>
+
 Use clustering resolution = 1.4 in order to make lots of clusters and identify any remaining poor quality cells
 ``` R
 norm.data.contamfilt <- FindClusters(norm.data.contamfilt, resolution = 1.4)
 ```
+
+</br>
 
 Plot UMAP for clusters and developmental stage
 ``` R
@@ -687,6 +718,8 @@ png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res =
 clust.stage.plot(norm.data.contamfilt)
 graphics.off()
 ```
+
+</br>
 
 Plot QC for each cluster
 ``` R
@@ -701,6 +734,7 @@ graphics.off()
 
 <br />
 
+#
 ### Remove poor quality clusters
 
 Clust 11, 14, 16, 18 = poor quality cells
@@ -713,6 +747,8 @@ norm.data.clustfilt <- rownames(norm.data.contamfilt@meta.data)[norm.data.contam
 norm.data.clustfilt <- subset(norm.data.contamfilt, cells = norm.data.clustfilt, invert = T)
 ```
 
+</br>
+
 Re-run findvariablefeatures and scaling
 ``` R
 norm.data.clustfilt <- FindVariableFeatures(norm.data.clustfilt, selection.method = "vst", nfeatures = 2000)
@@ -724,11 +760,15 @@ options(future.globals.maxSize = 2000 * 1024^2)
 norm.data.clustfilt <- ScaleData(norm.data.clustfilt, features = rownames(norm.data.clustfilt), vars.to.regress = c("percent.mt", "sex"))
 ```
 
+</br>
+
 Change plot path
 ``` R
 curr.plot.path <- paste0(plot.path, "3_cluster_filt/")
 dir.create(curr.plot.path)
 ```
+
+</br>
 
 PCA
 ``` R
@@ -759,6 +799,8 @@ norm.data.clustfilt <- FindNeighbors(norm.data.clustfilt, dims = 1:15, verbose =
 norm.data.clustfilt <- RunUMAP(norm.data.clustfilt, dims = 1:15, verbose = FALSE)
 ```
 
+</br>
+
 Find optimal cluster resolution
 ``` R
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
@@ -766,10 +808,14 @@ clust.res(seurat.obj = norm.data.clustfilt, by = 0.2)
 graphics.off()
 ```
 
+</br>
+
 Use clustering resolution = 0.8
 ``` R
 norm.data.clustfilt <- FindClusters(norm.data.clustfilt, resolution = 0.8)
 ```
+
+</br>
 
 Plot UMAP for clusters and developmental stage
 ``` R
@@ -777,6 +823,8 @@ png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res =
 clust.stage.plot(norm.data.clustfilt)
 graphics.off()
 ```
+
+</br>
 
 Plot QC for each cluster
 ``` R
@@ -791,6 +839,7 @@ graphics.off()
 
 <br />
 
+#
 ### Check for cell cycle effect
 
 Set plot path
@@ -799,12 +848,16 @@ curr.plot.path <- paste0(plot.path, "4_cell_cycle/")
 dir.create(curr.plot.path)
 ```
 
+</br>
+
 Calculate cell cycle for each cell
 ``` R
 s.genes <- cc.genes$s.genes
 g2m.genes <- cc.genes$g2m.genes
 pre.cell.cycle.dat <- CellCycleScoring(norm.data.clustfilt, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)
 ```
+
+</br>
 
 Re-run findvariablefeatures and scaling
 ``` R
@@ -816,6 +869,8 @@ options(future.globals.maxSize = 2000 * 1024^2)
 
 norm.data.clustfilt.cc <- ScaleData(norm.data.clustfilt.cc, features = rownames(norm.data.clustfilt.cc), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 ```
+
+</br>
 
 PCA
 ``` R
@@ -846,6 +901,8 @@ norm.data.clustfilt.cc <- FindNeighbors(norm.data.clustfilt.cc, dims = 1:15, ver
 norm.data.clustfilt.cc <- RunUMAP(norm.data.clustfilt.cc, dims = 1:15, verbose = FALSE)
 ```
 
+</br>
+
 ``` R
 Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
@@ -853,21 +910,14 @@ clust.res(seurat.obj = norm.data.clustfilt.cc, by = 0.2)
 graphics.off()
 ```
 
+</br>
+
 Use clustering resolution = 1.2
 ``` R
 norm.data.clustfilt.cc <- FindClusters(norm.data.clustfilt.cc, resolution = 1.2)
 ```
 
-UMAP of cell cycle before and after regressing out
-``` R
-png(paste0(curr.plot.path, "cell.cycle.png"), width=40, height=20, units = 'cm', res = 200)
-pre.plot <- DimPlot(pre.cell.cycle.dat, group.by = "Phase", reduction = "umap")
-post.plot <- DimPlot(norm.data.clustfilt.cc, group.by = "Phase", reduction = "umap")
-print(gridExtra::grid.arrange(pre.plot, post.plot, ncol = 2))
-graphics.off()
-```
-
-![](./suppl_files/plots/4_cell_cycle/cell.cycle.png)
+</br>
 
 Plot UMAP for clusters and developmental stage
 ``` R
@@ -875,6 +925,8 @@ png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res =
 clust.stage.plot(norm.data.clustfilt.cc)
 graphics.off()
 ```
+
+</br>
 
 Plot QC for each cluster
 ``` R
@@ -887,7 +939,18 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/4_cell_cycle/clustree.png)|![](./suppl_files/plots/4_cell_cycle/UMAP.png)|![](./suppl_files/plots/4_cell_cycle/cluster.QC.png)             
 
-<br />
+
+UMAP of cell cycle before and after regressing out
+``` R
+png(paste0(curr.plot.path, "cell.cycle.png"), width=40, height=20, units = 'cm', res = 200)
+pre.plot <- DimPlot(pre.cell.cycle.dat, group.by = "Phase", reduction = "umap")
+post.plot <- DimPlot(norm.data.clustfilt.cc, group.by = "Phase", reduction = "umap")
+print(gridExtra::grid.arrange(pre.plot, post.plot, ncol = 2))
+graphics.off()
+```
+
+![](./suppl_files/plots/4_cell_cycle/cell.cycle.png)
+
 
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 ``` R
