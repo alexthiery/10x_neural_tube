@@ -543,13 +543,6 @@ graphics.off()
 # Use clustering resolution = 1.2
 norm.data.clustfilt.cc <- FindClusters(norm.data.clustfilt.cc, resolution = 1.2)
 
-# UMAP of cell cycle before and after regressing out
-png(paste0(curr.plot.path, "cell.cycle.png"), width=40, height=20, units = 'cm', res = 200)
-pre.plot <- DimPlot(pre.cell.cycle.dat, group.by = "Phase", reduction = "umap")
-post.plot <- DimPlot(norm.data.clustfilt.cc, group.by = "Phase", reduction = "umap")
-print(gridExtra::grid.arrange(pre.plot, post.plot, ncol = 2))
-graphics.off()
-
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 clust.stage.plot(norm.data.clustfilt.cc)
@@ -559,6 +552,14 @@ graphics.off()
 png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
 QC.plot(norm.data.clustfilt.cc)
 graphics.off()
+
+# UMAP of cell cycle before and after regressing out
+png(paste0(curr.plot.path, "cell.cycle.png"), width=40, height=20, units = 'cm', res = 200)
+pre.plot <- DimPlot(pre.cell.cycle.dat, group.by = "Phase", reduction = "umap")
+post.plot <- DimPlot(norm.data.clustfilt.cc, group.by = "Phase", reduction = "umap")
+print(gridExtra::grid.arrange(pre.plot, post.plot, ncol = 2))
+graphics.off()
+
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(norm.data.clustfilt.cc, only.pos = T, logfc.threshold = 0.25)
@@ -734,9 +735,9 @@ filtered_gms <- lapply(gms, function(x) x[x %in% network_genes$gene])
 # Remove empty list elements
 filtered_gms <- filtered_gms[lapply(filtered_gms,length)>0]
 
-png(paste0(curr.plot.path, 'network.GM.png'), height = 22, width = 37, units = 'cm', res = 1500)
+png(paste0(curr.plot.path, 'network.GM.png'), height = 33, width = 55, units = 'cm', res = 1200)
 GM.plot(data = plot_data, metadata = c("Clusters", "Stage"), gene_modules = filtered_gms, gaps_col = "Clusters",
-        show_rownames = T, custom_order = cluster.order, custom_order_column = "Clusters", fontsize = 10, fontsize_row = 13)
+        show_rownames = T, custom_order = cluster.order, custom_order_column = "Clusters", fontsize = 15, fontsize_row = 19)
 graphics.off()
 
 
