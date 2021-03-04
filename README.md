@@ -15,6 +15,14 @@ This repository provides the code to run the 10x single cell RNA-eq analysis.
 - [Nextflow](#nextflow)
 - [Interactive downstream analysis](#interactive-downstream-analysis)
 - [Downstream analysis pipeline](#downstream-analysis-pipeline)
+  1) [Calculating sex effect and removing sex genes](#sex_effect)
+  2) Identify and remove contamination
+  3) Remove poor quality clusters
+  4) Check for cell cycle effect
+  5) Cell state classification
+  6) Gene modules
+  7) Subset neural clusters
+  8) Pseudotime
 
 #
 ## Data availability
@@ -413,7 +421,7 @@ graphics.off()
 
 
 #
-### 1) Calculating sex effect and removing sex genes
+### 1) Calculating sex effect and removing sex genes<a name="sex_effect"></a>
 
 Change plot path
 ``` R
