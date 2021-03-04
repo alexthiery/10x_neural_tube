@@ -11,7 +11,6 @@ This repository provides the code to run the 10x single cell RNA-eq analysis.
 
 - [Data availability](#data-availability)
 - [Analysis pre-requisites](#analysis-pre-requisites)
-- [Docker](#docker)
 - [Nextflow](#nextflow)
 - [Interactive downstream analysis](#interactive-downstream-analysis)
 - [Downstream analysis pipeline](#downstream-analysis-pipeline)
@@ -30,27 +29,16 @@ This repository provides the code to run the 10x single cell RNA-eq analysis.
 This repository contains the required code to run the entire alignment and downstream analysis pipeline. For those who would like to re-run the analysis, the following files should be downloaded:
 
 - to run the analysis including the alignment, the raw fastq sequencing files can be found [here]().
-- to run the downstream analysis from the UMI counts generated from 10x Genomics Cell Ranger are embedded can be found within the repository [here]("./NF-10x_alignment/cellrangerCounts").
+- to run the downstream analysis from the UMI counts generated from 10x Genomics Cell Ranger are embedded can be found within the repository [here]("https://github.com/alexthiery/10x_neural_tube/tree/master/output/NF-10x_alignment/cellrangerCounts").
 
 </br>
 
 #
 ## Analysis pre-requisites
 
-The pipeline is run using Nextflow and Docker to ensure reproducibility. To re-run the analysis you just need to install [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) and [Docker](https://docs.docker.com/get-docker/).
+The pipeline is run using [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) and [Docker](https://docs.docker.com/get-docker/) to ensure reproducibility.
 
-If you are wanting to run the downstream analysis interactively outside of Nextflow, you still need to download Docker and you will also need to download this repository.
-
-</br>
-
-#
-## Docker
-
-Docker allows us to run our analysis through a container with all required libraries and dependencies. This ensures cross-platform reproducibility of our results.
-
-The docker image used can be found [here](https://hub.docker.com/r/alexthiery/10x_neural_tube:v1.1)
-
-We have also included Rstudio within our docker image to allow you to run the downstream analysis interactively if you wish - for details on how to do this click [here](#interactive-downstream-analysis).
+To re-run the analysis, first you need to [download](https://github.com/alexthiery/10x_neural_tube/archive/master.zip) this repository.
 
 </br>
 
@@ -90,14 +78,16 @@ nextflow run alexthiery/10x_neural_tube \
 #
 ## Interactive downstream analysis
 
-If do not want to re-run the alignment, but would like to run the downstream analysis from the count files, you can run RStudio from within the docker container.
+If do not want to re-run the alignment, but would like to run the downstream analysis from the count files, you can run RStudio from within our Docker container. This will ensure that you have all of the same packages and dependencies required to carry out the analysis.
 
-To do this, follow these steps:
+To interactively explore the data, follow these steps:
 
-1) clone this repository to your local computer
-2) start a terminal session and download the docker image - `docker pull alexthiery/10x_neural_tube:v1.0`
-3) within terminal launch a docker container interactively - `docker run --rm -e PASSWORD=test -p 8787:8787 -v <PATH_TO_LOCAL_REPOSITORY>:/home/rstudio alexthiery/10x_neural_tube:v1.0`
-4) go to `localhost:8787` in the browser to open RStudio
+1. clone our GitHub repository to your local computer - `git clone https://github.com/alexthiery/10x_neural_tube`
+2. start a terminal session and pull the Docker image from Dockerhub - `docker pull alexthiery/10x_neural_tube:v1.1`
+3. within terminal launch a Docker container interactively - `docker run --rm -e PASSWORD=password -p 8787:8787 -v <PATH_TO_LOCAL_REPOSITORY>:/home/rstudio alexthiery/10x_neural_tube:v1.1`
+4. go to `localhost:8787` in the browser to open RStudio
+5. enter the username `rstudio` and the password `password`
+6. access the downstream analysis R script in the `Files` tab in R studio by following the path `./bin/R/seurat_full.R`
 
 </br>
 
@@ -1343,6 +1333,7 @@ graphics.off()
 
 </br>
 
+#
 ### 8) Pseudotime<a name="pseudotime"></a>
 
 Set plot path
