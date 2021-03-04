@@ -36,7 +36,7 @@ This repository contains the required code to run the entire alignment and downs
 #
 ## Analysis pre-requisites
 
-The pipeline is run using [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) and [Docker](https://docs.docker.com/get-docker/) to ensure reproducibility.
+The pipeline is run using  to ensure reproducibility.
 
 To re-run the analysis, first you need to [download](https://github.com/alexthiery/10x_neural_tube/archive/master.zip) this repository.
 
@@ -46,7 +46,7 @@ To re-run the analysis, first you need to [download](https://github.com/alexthie
 ## Nextflow
 
 You can easily re-run our entire pipeline in Nextflow using the following steps:
-1) Install Nextflow (version >=20.07.1) and Docker
+1) Install [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) (version >=20.07.1) and [Docker](https://docs.docker.com/get-docker/)
 2) Download chick genome ([galgal5](ftp://ftp.ensembl.org/pub/release-94/fasta/gallus_gallus/dna/Gallus_gallus.Gallus_gallus-5.0.dna.toplevel.fa.gz))
 3) For this analysis we used a manually edited GTF file as described in the paper methods. However you can also run the analysis with the GTF from ensembl ([galgal5](ftp://ftp.ensembl.org/pub/release-94/gtf/gallus_gallus/Gallus_gallus.Gallus_gallus-5.0.94.gtf.gz))
 4) Download raw reads from [here]()
