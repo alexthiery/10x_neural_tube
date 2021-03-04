@@ -16,13 +16,13 @@ This repository provides the code to run the 10x single cell RNA-eq analysis.
 - [Interactive downstream analysis](#interactive-downstream-analysis)
 - [Downstream analysis pipeline](#downstream-analysis-pipeline)
   1) [Calculating sex effect and removing sex genes](#sex_effect)
-  2) Identify and remove contamination
-  3) Remove poor quality clusters
-  4) Check for cell cycle effect
-  5) Cell state classification
-  6) Gene modules
-  7) Subset neural clusters
-  8) Pseudotime
+  2) [Identify and remove contamination](#remove_contam)
+  3) [Remove poor quality clusters](#remove_poor_qual)
+  4) [Check for cell cycle effect](#cell_cycle)
+  5) [Cell state classification](#cell_state)
+  6) [Gene modules](#gm)
+  7) [Subset neural clusters](#subset_nt)
+  8) [Pseudotime](#pseudotime)
 
 #
 ## Data availability
@@ -606,7 +606,7 @@ graphics.off()
 </br>
 
 #
-### 2) Identify and remove contamination
+### 2) Identify and remove contamination<a name="remove_contam"></a>
 
 Change plot path
 ``` R
@@ -742,7 +742,7 @@ graphics.off()
 </br>
 
 #
-### 3) Remove poor quality clusters
+### 3) Remove poor quality clusters<a name="remove_poor_qual"></a>
 
 Clust 11, 14, 16, 18 = poor quality cells
 ``` R
@@ -847,7 +847,7 @@ graphics.off()
 </br>
 
 #
-### 4) Check for cell cycle effect
+### 4) Check for cell cycle effect<a name="cell_cycle"></a>
 
 Set plot path
 ``` R
@@ -979,7 +979,7 @@ graphics.off()
 
 </br>
 
-### 5) Cell state classification
+### 5) Cell state classification<a name="cell_state"></a>
 
 Set plot path
 ``` R
@@ -1093,7 +1093,7 @@ graphics.off()
 
 </br>
 
-### 6) Gene modules
+### 6) Gene modules<a name="gm"></a>
 
 Unbiased identification of modules of co-correlated genes using Antler.
 
@@ -1343,7 +1343,7 @@ graphics.off()
 
 </br>
 
-### 8) Pseudotime
+### 8) Pseudotime<a name="pseudotime"></a>
 
 Set plot path
 ```R
