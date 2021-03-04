@@ -22,14 +22,14 @@ This repository provides the code to run the 10x single cell RNA-eq analysis.
 This repository contains the required code to run the entire alignment and downstream analysis pipeline. For those who would like to re-run the analysis, the following files should be downloaded:
 
 - to run the analysis including the alignment, the raw fastq sequencing files can be found [here]().
-- to run the downstream analysis from the UMI counts generated from 10x Genomics Cell Ranger are embedded can be found within the repository [here]("./alignmentOut/cellrangerCounts_renamed").
+- to run the downstream analysis from the UMI counts generated from 10x Genomics Cell Ranger are embedded can be found within the repository [here]("./NF-10x_alignment/cellrangerCounts").
 
 </br>
 
 #
 ## Analysis pre-requisites
 
-The pipeline is run using Nextflow and Docker to ensure reproducibility. The repository can be called directly from GitHub, so to re-run the analysis you just need to install [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) and [Docker](https://docs.docker.com/get-docker/).
+The pipeline is run using Nextflow and Docker to ensure reproducibility. To re-run the analysis you just need to install [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) and [Docker](https://docs.docker.com/get-docker/).
 
 If you are wanting to run the downstream analysis interactively outside of Nextflow, you still need to download Docker and you will also need to download this repository.
 
@@ -40,7 +40,7 @@ If you are wanting to run the downstream analysis interactively outside of Nextf
 
 Docker allows us to run our analysis through a container with all required libraries and dependencies. This ensures cross-platform reproducibility of our results.
 
-The docker image used can be found [here](https://hub.docker.com/r/alexthiery/10x_neural_tube)
+The docker image used can be found [here](https://hub.docker.com/r/alexthiery/10x_neural_tube:v1.1)
 
 We have also included Rstudio within our docker image to allow you to run the downstream analysis interactively if you wish - for details on how to do this click [here](#interactive-downstream-analysis).
 
@@ -275,7 +275,7 @@ Store mitochondrial percentage in object meta data
 merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "percent.mt")
 ```
 
-<br />
+</br>
 
 Remove data which do not pass filter threshold
 ``` R
@@ -305,7 +305,7 @@ Scale data and regress out MT content
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 ```
 
-<br />
+</br>
 
 ***Perform dimensionality reduction by PCA and UMAP embedding***
 
@@ -355,7 +355,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/0_filt_data/dimHM.png)|![](./suppl_files/plots/0_filt_data/elbowplot.png)|![](./suppl_files/plots/0_filt_data/UMAP_PCA_comparison.png)|
 
-<br />
+</br>
 
 Use PCA=15 as elbow plot is relatively stable across stages
 Use clustering resolution = 0.5 for filtering
@@ -387,7 +387,7 @@ graphics.off()
 | :---: | :---: |
 |![](./suppl_files/plots/0_filt_data/UMAP.png)|![](./suppl_files/plots/0_filt_data/cluster.QC.png)             
 
-<br />
+</br>
 
 Find differentially expressed genes and plot heatmap of top 15 DE genes for each cluster
 ```R
@@ -477,7 +477,7 @@ norm.data@meta.data$sex <- unlist(lapply(rownames(norm.data@meta.data), function
   if(x %in% k.male){"male"} else if(x %in% k.female){"female"} else{stop("cell sex is not assigned")}))
 ```
 
-<br />
+</br>
 
 ***Filter W chrom genes***
 
@@ -532,7 +532,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/1_sex_filt/dimHM.png)|![](./suppl_files/plots/1_sex_filt/elbowplot.png)|![](./suppl_files/plots/1_sex_filt/UMAP_PCA_comparison.png)|
 
-<br />
+</br>
 
 Use PCA=15 as elbow plot is relatively stable across stages
 ``` R
@@ -578,7 +578,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/1_sex_filt/clustree.png)|![](./suppl_files/plots/1_sex_filt/UMAP.png)|![](./suppl_files/plots/1_sex_filt/cluster.QC.png)             
 
-<br />
+</br>
 
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 ``` R
@@ -595,7 +595,7 @@ graphics.off()
 ```
 ![](./suppl_files/plots/1_sex_filt/HM.top15.DE.post-sexfilt.png)
 
-<br />
+</br>
 
 #
 ### 2) Identify and remove contamination
@@ -634,7 +634,7 @@ graphics.off()
 | :---: | :---: |
 |![](./suppl_files/plots/2_contamination_filt/UMAP_GOI.png)|![](./suppl_files/plots/2_contamination_filt/dotplot.GOI.png)             
 
-<br />
+</br>
 
 ***Remove contaminating cells from clusters***
 
@@ -685,7 +685,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/2_contamination_filt/dimHM.png)|![](./suppl_files/plots/2_contamination_filt/elbowplot.png)|![](./suppl_files/plots/2_contamination_filt/UMAP_PCA_comparison.png)|
 
-<br />
+</br>
 
 Use PCA=15 as elbow plot is relatively stable across stages
 ``` R
@@ -731,7 +731,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/2_contamination_filt/clustree.png)|![](./suppl_files/plots/2_contamination_filt/UMAP.png)|![](./suppl_files/plots/2_contamination_filt/cluster.QC.png)             
 
-<br />
+</br>
 
 #
 ### 3) Remove poor quality clusters
@@ -790,7 +790,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/3_cluster_filt/dimHM.png)|![](./suppl_files/plots/3_cluster_filt/elbowplot.png)|![](./suppl_files/plots/3_cluster_filt/UMAP_PCA_comparison.png)|
 
-<br />
+</br>
 
 Use PCA=15 as elbow plot is relatively stable across stages
 ``` R
@@ -836,7 +836,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/3_cluster_filt/clustree.png)|![](./suppl_files/plots/3_cluster_filt/UMAP.png)|![](./suppl_files/plots/3_cluster_filt/cluster.QC.png)             
 
-<br />
+</br>
 
 #
 ### 4) Check for cell cycle effect
@@ -892,7 +892,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/4_cell_cycle/dimHM.png)|![](./suppl_files/plots/4_cell_cycle/elbowplot.png)|![](./suppl_files/plots/4_cell_cycle/UMAP_PCA_comparison.png)|
 
-<br />
+</br>
 
 Use PCA=15 as elbow plot is relatively stable across stages
 ``` R
@@ -938,7 +938,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/4_cell_cycle/clustree.png)|![](./suppl_files/plots/4_cell_cycle/UMAP.png)|![](./suppl_files/plots/4_cell_cycle/cluster.QC.png)             
 
-<br />
+</br>
 
 UMAP of cell cycle before and after regressing out
 ``` R
@@ -951,7 +951,7 @@ graphics.off()
 
 ![](./suppl_files/plots/4_cell_cycle/cell.cycle.png)
 
-<br />
+</br>
 
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 ``` R
@@ -969,7 +969,7 @@ graphics.off()
 
 ![](./suppl_files/plots/4_cell_cycle/HM.top15.DE.png)
 
-<br />
+</br>
 
 ### 5) Cell state classification
 
@@ -1083,7 +1083,7 @@ graphics.off()
 | :---: | :---: 
 |![](./suppl_files/plots/5_cell_state_classification/dotplot.png)|![](./suppl_files/plots/5_cell_state_classification/dotplot_classified.png)|
 
-<br />
+</br>
 
 ### 6) Gene modules
 
@@ -1203,9 +1203,9 @@ filtered_gms <- lapply(gms, function(x) x[x %in% network_genes$gene])
 # Remove empty list elements
 filtered_gms <- filtered_gms[lapply(filtered_gms,length)>0]
 
-png(paste0(curr.plot.path, 'network.GM.png'), height = 22, width = 37, units = 'cm', res = 1500)
+png(paste0(curr.plot.path, 'network.GM.png'), height = 33, width = 55, units = 'cm', res = 1200)
 GM.plot(data = plot_data, metadata = c("Clusters", "Stage"), gene_modules = filtered_gms, gaps_col = "Clusters",
-        show_rownames = T, custom_order = cluster.order, custom_order_column = "Clusters", fontsize = 10, fontsize_row = 13)
+        show_rownames = T, custom_order = cluster.order, custom_order_column = "Clusters", fontsize = 15, fontsize_row = 19)
 graphics.off()
 ```
 
@@ -1268,7 +1268,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/7_neural_subset/dimHM.png)|![](./suppl_files/plots/7_neural_subset/elbowplot.png)|![](./suppl_files/plots/7_neural_subset/UMAP_PCA_comparison.png)|
 
-<br />
+</br>
 
 
 Use PCA=15 as elbow plot is relatively stable across stages
@@ -1315,7 +1315,7 @@ graphics.off()
 | :---: | :---: | :---: |
 |![](./suppl_files/plots/7_neural_subset/clustree.png)|![](./suppl_files/plots/7_neural_subset/UMAP.png)|![](./suppl_files/plots/7_neural_subset/cluster.QC.png)    
 
-<br />
+</br>
 
 Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 ``` R
@@ -1333,7 +1333,7 @@ graphics.off()
 
 ![](./suppl_files/plots/7_neural_subset/HM.top15.DE.png)
 
-<br />
+</br>
 
 ### 8) Pseudotime
 
@@ -1378,6 +1378,8 @@ pc1_rank <- pc1 %>%
   mutate(pseudotime = rank*(99/max(rank)))
 ```
 
+</br>
+
 Filter scaled seurat counts by network_genes -> generate long df with corresponding pseudotime and normalised count
 ```R
 plot_data <- as.data.frame(t(as.matrix(GetAssayData(neural_subset, slot = 'scale.data')[rownames(neural_subset) %in% network_genes$gene_name,]))) %>%
@@ -1389,6 +1391,8 @@ plot_data <- as.data.frame(t(as.matrix(GetAssayData(neural_subset, slot = 'scale
   mutate(timepoint = factor(timepoint, levels = c(1,3,5,7,9,12)))
 ```
 
+</br>
+
 Mean and SE summary data
 ```R
 plot_data_summary <- plot_data %>%
@@ -1399,6 +1403,8 @@ plot_data_summary <- plot_data %>%
 
 ```
 
+</br>
+
 Plot GAM for all stages without standard error
 ```R
 png(paste0(curr.plot.path, 'gam_pseudotime_allnetwork.png'), height = 18, width = 26, units = 'cm', res = 400)
@@ -1408,6 +1414,8 @@ ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)
   theme_classic()
 graphics.off()
 ```
+
+</br>
 
 Plot GAM for all stages with standard error
 ```R
