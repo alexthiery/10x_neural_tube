@@ -9,13 +9,14 @@ process runR {
     label 'process_high'
 
     input:
-        path(rFile)
-        path(cellrangerOut)
+        path rFile
+        path 'input/*'
 
     output:
-        path("plots")
+        file '*'
 
     """
     Rscript ${rFile} --customFuncs ${params.customFuncs} --networkGenes ${params.networkGenes} --cores ${task.cpus} --runtype nextflow
+    rm -r input
     """
 }
