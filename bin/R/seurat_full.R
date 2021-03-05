@@ -157,15 +157,9 @@ options(future.globals.maxSize = 2000 * 1024^2)
 # Scale data and regress out MT content
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 
-# Save RDS after scaling as this step takes time
-saveRDS(norm.data, paste0(rds.path, "norm.data.RDS"))
-
 #####################################################################################################
 #                    Perform dimensionality reduction by PCA and UMAP embedding                    #
 #####################################################################################################
-
-# Read in RDS data if needed
-# norm.data <- readRDS(paste0(rds.path, "norm.data.RDS"))
 
 # Change plot path
 curr.plot.path <- paste0(plot.path, '0_filt_data/')
@@ -260,7 +254,6 @@ if(sumclus1 < sumclus2){
 }
 
 cell.sex.ID <- list("male.cells" = k.male, "female.cells" = k.female)
-saveRDS(cell.sex.ID, paste0(rds.path, "sex_kmeans.RDS"))
 
 # Add sex data to meta.data
 norm.data@meta.data$sex <- unlist(lapply(rownames(norm.data@meta.data), function(x)
@@ -280,12 +273,6 @@ plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
 norm.data.sexscale <- ScaleData(norm.data.sexscale, features = rownames(norm.data.sexscale), vars.to.regress = c("percent.mt", "sex"))
-
-# Save RDS
-saveRDS(norm.data.sexscale, paste0(rds.path, "norm.data.sexscale.RDS"))
-
-# Read in RDS data if needed
-# norm.data.sexscale <- readRDS(paste0(rds.path, "norm.data.sexscale.RDS"))
 
 # Set plot path
 curr.plot.path <- paste0(plot.path, '1_sex_filt/')
@@ -381,11 +368,6 @@ options(future.globals.maxSize = 2000 * 1024^2)
 
 norm.data.contamfilt <- ScaleData(norm.data.contamfilt, features = rownames(norm.data.contamfilt), vars.to.regress = c("percent.mt", "sex"))
 
-saveRDS(norm.data.contamfilt, paste0(rds.path, "norm.data.contamfilt.RDS"))
-
-# Read in RDS data if needed
-# norm.data.contamfilt <- readRDS(paste0(rds.path, "norm.data.contamfilt.RDS"))
-
 # PCA
 norm.data.contamfilt <- RunPCA(object = norm.data.contamfilt, verbose = FALSE)
 
@@ -443,11 +425,6 @@ plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
 norm.data.clustfilt <- ScaleData(norm.data.clustfilt, features = rownames(norm.data.clustfilt), vars.to.regress = c("percent.mt", "sex"))
-
-saveRDS(norm.data.clustfilt, paste0(rds.path, "norm.data.clustfilt.RDS"))
-
-# Read in RDS data if needed
-# norm.data.clustfilt <- readRDS(paste0(rds.path, "norm.data.clustfilt.RDS"))
 
 # Change plot path
 curr.plot.path <- paste0(plot.path, "3_cluster_filt/")
@@ -510,11 +487,6 @@ plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
 norm.data.clustfilt.cc <- ScaleData(norm.data.clustfilt.cc, features = rownames(norm.data.clustfilt.cc), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
-
-saveRDS(norm.data.clustfilt.cc, paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
-
-# Read in RDS data if needed
-# norm.data.clustfilt.cc <- readRDS(paste0(rds.path, "norm.data.clustfilt.cc.RDS"))
 
 # PCA
 norm.data.clustfilt.cc <- RunPCA(object = norm.data.clustfilt.cc, verbose = FALSE)
@@ -771,11 +743,6 @@ neural_subset <- ScaleData(neural_subset, features = rownames(neural_subset), va
 # PCA
 neural_subset <- RunPCA(object = neural_subset, verbose = FALSE)
 
-saveRDS(neural_subset, paste0(rds.path, "neural_subset.RDS"))
-
-# Read in RDS data if needed
-# neural_subset <- readRDS(paste0(rds.path, "neural_subset.RDS"))
-
 png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
 DimHeatmap(neural_subset, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
@@ -823,7 +790,6 @@ png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 75, width = 100, units =
 tenx.pheatmap(data = neural_subset, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
-
 
 
 ######################################################################################################
@@ -892,6 +858,3 @@ ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)
   geom_smooth(method="gam", se=FALSE) +
   theme_classic()
 graphics.off()
-
-
-#
