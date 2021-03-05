@@ -56,16 +56,15 @@ Channel
     .fromPath( params.samplesheet )
     .splitCsv(header: ['sample_id', 'sample_name', 'data'], skip: 1 )
     .map { row -> [row.sample_id, row.sample_name, file(row.data)] }
-    .view()
     .set { ch_fastq }
 
-// /*-----------------------------------------------------------------------------------------------------------------------------
-// Main workflow
-// -------------------------------------------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------------------------------------
+Main workflow
+-------------------------------------------------------------------------------------------------------------------------------*/
 
-// workflow {
-//     modifyGTF( file(params.pymodifyGTF), ch_gtf, file(params.wGenes) )
-//     filterGTF( modifyGTF.out )
-//     makeRef( filterGTF.out, ch_fasta )
-//     cellrangerCount( ch_fastq.combine(makeRef.out) )
-// }
+workflow {
+    modifyGTF( file(params.pymodifyGTF), ch_gtf, file(params.wGenes) )
+    filterGTF( modifyGTF.out )
+    makeRef( filterGTF.out, ch_fasta )
+    cellrangerCount( ch_fastq.combine(makeRef.out) )
+}
