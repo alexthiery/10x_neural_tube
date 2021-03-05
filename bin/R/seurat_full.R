@@ -848,3 +848,6 @@ ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)
   geom_smooth(method="gam", se=FALSE) +
   theme_classic()
 graphics.off()
+
+
+saveRDS(neural_subset, paste0(rds_path, "neural_subset.RDS"))
