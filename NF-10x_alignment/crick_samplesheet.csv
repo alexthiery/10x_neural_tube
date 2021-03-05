@@ -1,5 +1,5 @@
-﻿sample_id,sample_name,path1,path2
-THI300A1,hh4,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190524_K00102_0343_AH7MYHBBXY/fastq/THI300A1,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190614_K00102_0353_BH7T3WBBXY/fastq/THI300A1
-THI300A3,ss4,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190524_K00102_0343_AH7MYHBBXY/fastq/THI300A3,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190614_K00102_0353_BH7T3WBBXY/fastq/THI300A3
-THI300A4,ss8,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190524_K00102_0343_AH7MYHBBXY/fastq/THI300A4,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190614_K00102_0353_BH7T3WBBXY/fastq/THI300A4
-THI300A6,hh6,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190524_K00102_0343_AH7MYHBBXY/fastq/THI300A6,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190614_K00102_0353_BH7T3WBBXY/fastq/THI300A6
+﻿sample_id,sample_name,data
+THI300A1,hh4,/camp/home/thierya/working/raw_data/10x_neural_tube/THI300A1*
+THI300A3,ss4,/camp/home/thierya/working/raw_data/10x_neural_tube/THI300A3*
+THI300A4,ss8,/camp/home/thierya/working/raw_data/10x_neural_tube/THI300A4*
+THI300A6,hh6,/camp/home/thierya/working/raw_data/10x_neural_tube/THI300A6*
