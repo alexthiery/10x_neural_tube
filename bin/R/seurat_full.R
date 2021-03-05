@@ -76,10 +76,6 @@ if (opt$runtype == "user"){
 
 }
 
-# Set number of cores to use for parallelisation
-if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
-cat(paste0("script ran with ", ncores, " cores\n"))
-
 # Load custom functions
 sapply(list.files(custom_func_path, full.names = T), source)
 
@@ -99,6 +95,14 @@ sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = 
 
 # Read in network genes and remove 0 timepoint
 network_genes <- read.csv(network_genes_path) %>% filter(!timepoint == 0)
+
+#################################################################################
+
+
+# Set number of cores to use for parallelisation
+if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
+cat(paste0("script ran with ", ncores, " cores\n"))
+
 
 # Make Seurat objects for each of the different samples.
 for(i in 1:nrow(sample.paths["path"])){
