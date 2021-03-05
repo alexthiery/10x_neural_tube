@@ -21,12 +21,12 @@ ${c_magenta}                      __   ___ ${c_reset}
 ${c_magenta}                     /_ | / _ \\ ${c_reset}
 ${c_magenta}                      | || | | |__  __ ${c_reset}
 ${c_magenta}                      | || | | |\\ \\/ / ${c_reset}
-${c_blue}  _______  _    ${c_reset}${c_green}  _  ${c_reset}${c_magenta} | || |_| | >  < ${c_reset}${c_blue}   ___    ___  ___    ___ ${c_reset}
-${c_blue} |__   __|| |   ${c_reset}${c_green} (_)  ${c_reset}${c_magenta}|_| \\___/ /_/\\_\\ ${c_reset}${c_blue} |__ \\  / _ \\|__ \\  / _ \\ ${c_reset}
-${c_blue}    | |   | |__   _   ___  _ __  _   _     ) || | | |  ) || | | | ${c_reset}
-${c_blue}    | |   | '_ \\ | | / _ \\| '__|| | | |   / / | | | | / / | | | | ${c_reset}
-${c_blue}    | |   | | | || ||  __/| |   | |_| |  / /_ | |_| |/ /_ | |_| | ${c_reset}
-${c_blue}    |_|   |_| |_||_| \\___||_|    \\__, | |____| \\___/|____| \\___/ ${c_reset}
+${c_blue}  _______  _    ${c_reset}${c_green}  _  ${c_reset}${c_magenta} | || |_| | >  < ${c_reset}${c_blue}   ___    ___  ___  __ ${c_reset}
+${c_blue} |__   __|| |   ${c_reset}${c_green} (_)  ${c_reset}${c_magenta}|_| \\___/ /_/\\_\\ ${c_reset}${c_blue} |__ \\  / _ \\|__ \\/_ | ${c_reset}
+${c_blue}    | |   | |__   _   ___  _ __  _   _     ) || | | |  ) || | ${c_reset}
+${c_blue}    | |   | '_ \\ | | / _ \\| '__|| | | |   / / | | | | / / | | ${c_reset}
+${c_blue}    | |   | | | || ||  __/| |   | |_| |  / /_ | |_| |/ /_ | | ${c_reset}
+${c_blue}    |_|   |_| |_||_| \\___||_|    \\__, | |____| \\___/|____||_| ${c_reset}
 ${c_blue}                                  __/ | ${c_reset}
 ${c_blue}                                 |___/ ${c_reset}
 ${c_magenta} alexthiery/10x_neural_tube ${c_reset}
