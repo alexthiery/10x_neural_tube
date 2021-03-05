@@ -11,7 +11,7 @@ process cellrangerCount {
     label 'process_high'
 
     input:
-        tuple val(sample_id), val(sample_name), path(fastqs), path(reference_genome)
+        tuple val(sample_id), val(sample_name), path('fastqs/*') path(reference_genome)
 
     output:
         val sample_name, emit: sampleName
@@ -21,7 +21,7 @@ process cellrangerCount {
     #!/bin/bash
     
     cellranger count --id="cellrangerOut_${sample_name}" \
-    --fastqs=${fastqs} \
+    --fastqs="fastqs" \
     --sample=${sample_id} \
     --transcriptome=${reference_genome}
 
