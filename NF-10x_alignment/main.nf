@@ -54,8 +54,8 @@ Channel
 
 Channel
     .fromPath( params.samplesheet )
-    .splitCsv(header: ['sample_id', 'sample_name', 'dir1', 'dir2'], skip: 1 )
-    .map { row -> [row.sample_id, row.sample_name, file(row.dir1), file(row.dir2)] }
+    .splitCsv(header: ['sample_id', 'sample_name', 'data'], skip: 1 )
+    .map { row -> [row.sample_id, row.sample_name, file(row.data)] }
     .set { ch_fastq }
 
 /*-----------------------------------------------------------------------------------------------------------------------------

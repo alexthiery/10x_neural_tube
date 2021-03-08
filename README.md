@@ -14,14 +14,14 @@ This repository provides the code to run the 10x single cell RNA-eq analysis.
 - [Nextflow](#nextflow)
 - [Interactive downstream analysis](#interactive-downstream-analysis)
 - [Downstream analysis pipeline](#downstream-analysis-pipeline)
-  1) [Calculating sex effect and removing sex genes](#sex_effect)
-  2) [Identify and remove contamination](#remove_contam)
-  3) [Remove poor quality clusters](#remove_poor_qual)
-  4) [Check for cell cycle effect](#cell_cycle)
-  5) [Cell state classification](#cell_state)
-  6) [Gene modules](#gm)
-  7) [Subset neural clusters](#subset_nt)
-  8) [Pseudotime](#pseudotime)
+1) [Calculating sex effect and removing sex genes](#sex_effect)
+2) [Identify and remove contamination](#remove_contam)
+3) [Remove poor quality clusters](#remove_poor_qual)
+4) [Check for cell cycle effect](#cell_cycle)
+5) [Cell state classification](#cell_state)
+6) [Gene modules](#gm)
+7) [Subset neural clusters](#subset_nt)
+8) [Pseudotime](#pseudotime)
 
 #
 ## Data availability
@@ -30,15 +30,6 @@ This repository contains the required code to run the entire alignment and downs
 
 - to run the analysis including the alignment, the raw fastq sequencing files can be found [here]().
 - to run the downstream analysis from the UMI counts generated from 10x Genomics Cell Ranger are embedded can be found within the repository [here]("https://github.com/alexthiery/10x_neural_tube/tree/master/output/NF-10x_alignment/cellrangerCounts").
-
-</br>
-
-#
-## Analysis pre-requisites
-
-The pipeline is run using  to ensure reproducibility.
-
-To re-run the analysis, first you need to [download](https://github.com/alexthiery/10x_neural_tube/archive/master.zip) this repository.
 
 </br>
 
@@ -157,61 +148,51 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 # user paths need to be defined here in order to run interactively #
 ####################################################################
 if (opt$runtype == "user"){
-  sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
   
-  plot.path = "./output/NF-downstream_analysis/plots/"
-  rds.path = "./output/NF-downstream_analysis/RDS.files/"
-  antler.dir = "./output/NF-downstream_analysis/antler.input/"
-  dir.create(plot.path, recursive = T)
-  dir.create(rds.path, recursive = T)
-  dir.create(antler.dir, recursive = T)
-  
-  ##################################
-  # set path where data is located #
-  ##################################
+  # Input data paths
   data_path = "./output/NF-10x_alignment/cellrangerCounts"
-  
-  # read all files from dir
-  files <- list.files(data_path, recursive = T, full.names = T)
-  # remove file suffix
-  file.path <- dirname(files)[!duplicated(dirname(files))]
-  # make dataframe with tissue matching directory
-  tissue = c("hh4", "hh6", "ss4", "ss8")
-  matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
-  sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
-  
-  # Read in network genes and remove 0 timepoint
-  network_genes <- read.csv('./input_files/network_expression.csv') %>%
-    filter(!timepoint == 0)
+  custom_func_path = './bin/R/custom_functions/'
+  network_genes_path = './input_files/network_expression.csv'
+
+  # Output data paths  
+  plot_path = "./output/NF-downstream_analysis/plots/"
+  rds_path = "./output/NF-downstream_analysis/rds_files/"
+  antler_dir = "./output/NF-downstream_analysis/antler_input/"
 
 } else if (opt$runtype == "nextflow"){
   cat('pipeling running through nextflow\n')
-  
-  sapply(list.files(opt$customFuncs, full.names = T), source)
-  
-  plot.path = "plots/"
-  dir.create(plot.path, recursive = T)
-  rds.path = "RDS.files/"
-  dir.create(rds.path, recursive = T)
-  antler.dir = "antler.input/"
-  dir.create(antler.dir, recursive = T)
-  
-  
-  # read all files from folder and keep only those from chr_edit
-  files <- list.files("./cellrangerCounts", recursive = T, full.names = T)
-  # remove file suffix
-  file.path <- dirname(files)[!duplicated(dirname(files))]
-  # make dataframe with tissue matching directory
-  tissue = c("hh4", "hh6", "ss4", "ss8")
 
-  print(files)
-  matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
-  sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
+  # Input data paths
+  data_path = "./input/cellrangerCounts"
+  custom_func_path = opt$customFuncs
+  network_genes_path = opt$networkGenes
   
-  # Read in network genes and remove 0 timepoint
-  network_genes <- read.csv(opt$networkGenes) %>%
-    filter(!timepoint == 0)
+  # Output data paths
+  plot_path = "./plots/"
+  rds_path = "./rds_files/"
+  antler_dir = "./antler_input/"
+
 }
+
+# Load custom functions
+sapply(list.files(custom_func_path, full.names = T), source)
+
+# Create output directories
+dir.create(plot_path, recursive = T)
+dir.create(rds_path, recursive = T)
+dir.create(antler_dir, recursive = T)
+  
+# Read input files
+files <- list.files(data_path, recursive = T, full.names = T)
+# Remove file suffix
+file.path <- dirname(files)[!duplicated(dirname(files))]
+# Make dataframe with tissue matching directory
+tissue = c("hh4", "hh6", "ss4", "ss8")
+matches <- sapply(tissue, function(x) file.path[grep(pattern = x, x = file.path)])
+sample.paths <- data.frame(tissue = names(matches), path = matches, row.names = NULL)
+
+# Read in network genes and remove 0 timepoint
+network_genes <- read.csv(network_genes_path) %>% filter(!timepoint == 0)
 ```
 
 </br>
