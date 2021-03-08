@@ -104,7 +104,7 @@ GM.plot <- function(data, metadata, col_order = metadata[1], custom_order = NULL
     # set colours ggplot default colours, as in Seurat::DimPlot
     ann_colours <- list()
     for(column in colnames(HM.col)){
-      ann_colours[[column]] <- setNames(ggplotColours(n = length(levels(HM.col[,column]))), levels(HM.col[,column]))
+      ann_colours[[column]] <- setNames(ggplotColours(n = length(levels(HM.col[,column]))), levels(droplevels(data@meta.data[, column])))
       
       # change levels of HM col so that heatmap annotations are in the same order as plotted
       ann_colours[[column]] <- ann_colours[[column]][match(levels(HM.col[[column]]), names(ann_colours[[column]]))]
