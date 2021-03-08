@@ -29,7 +29,7 @@ This repository provides the code to run the 10x single cell RNA-eq analysis.
 This repository contains the required code to run the entire alignment and downstream analysis pipeline. For those who would like to re-run the analysis, the following files should be downloaded:
 
 - to run the analysis including the alignment, the raw fastq sequencing files can be found [here]().
-- to run the downstream analysis from the UMI counts generated from 10x Genomics Cell Ranger are embedded can be found within the repository [here]("https://github.com/alexthiery/10x_neural_tube/tree/master/output/NF-10x_alignment/cellrangerCounts").
+- to run the downstream analysis from the UMI counts generated from 10x Genomics Cell Ranger are embedded can be found within the repository [here](https://github.com/alexthiery/10x_neural_tube/tree/master/output/NF-10x_alignment/cellrangerCounts).
 
 </br>
 
