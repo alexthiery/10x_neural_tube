@@ -18,6 +18,6 @@ nextflow run NF-10x_alignment/main.nf \
 -c conf/crick.config \
 --samplesheet NF-10x_alignment/crick_samplesheet.csv \
 --output output/NF-10x_alignment \
---gtf /camp/home/thierya/working/genomes/galgal5/Gallus_gallus.Gallus_gallus-5.0.94_modified.gtf \
+--gtf /camp/home/thierya/working/genomes/galgal5/Gallus_gallus.Gallus_gallus-5.0.94.gtf \
 --fasta /camp/home/thierya/working/genomes/galgal5/Gallus_gallus.Gallus_gallus-5.0.dna.toplevel.fa \
 -resume
