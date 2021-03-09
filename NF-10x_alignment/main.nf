@@ -6,13 +6,14 @@ nextflow.enable.dsl=2
 Pipeline params
 -------------------------------------------------------------------------------------------------------------------------------*/
 params.wGenes = "$baseDir/../input_files/wGenes.csv"
-params.pymodifyGTF = "$baseDir/../bin/python/modifyGTF.py"
+params.erni_gtf = "$baseDir/../input_files/erni.gtf"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Include modules
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 include {projectHeader} from "$baseDir/../modules/projectHeader/projectHeader.nf"
+include {cat as concatenate_gtf} from "$baseDir/../modules/cat/cat.nf"
 include {modifyGTF} from "$baseDir/../modules/modifyGTF/modifyGTF.nf"
 include {filterGTF} from "$baseDir/../modules/filterGTF/filterGTF.nf"
 include {makeRef} from "$baseDir/../modules/makeRef/makeRef.nf"
@@ -63,7 +64,8 @@ Main workflow
 -------------------------------------------------------------------------------------------------------------------------------*/
 
 workflow {
-    modifyGTF( file(params.pymodifyGTF), ch_gtf, file(params.wGenes) )
+    concatenate_gtf( ch_gtf, file(params.erni_gtf ) )
+    modifyGTF( concatenate_gtf.out, file(params.wGenes) )
     filterGTF( modifyGTF.out )
     makeRef( filterGTF.out, ch_fasta )
     cellrangerCount( ch_fastq.combine(makeRef.out) )
