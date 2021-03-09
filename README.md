@@ -10,8 +10,7 @@ This repository provides the code to run the 10x single cell RNA-eq analysis.
 
 
 - [Data availability](#data-availability)
-- [Analysis pre-requisites](#analysis-pre-requisites)
-- [Nextflow](#nextflow)
+- [Reproducing our analyses](#reproducibility)
 - [Interactive downstream analysis](#interactive-downstream-analysis)
 - [Downstream analysis pipeline](#downstream-analysis-pipeline)
   - [Calculating sex effect and removing sex genes](#sex_effect)
@@ -34,35 +33,131 @@ This repository contains the required code to run the entire alignment and downs
 </br>
 
 #
-## Nextflow
+## Reproducing our analyses<a name="reproducibility"></a>
+
+Reproducing our analysis is computationally intensive, therefore we recommend to run the pipeline on a HPC.
+
+In order to make our analysis fully reproducible, we have developed a Nextflow pipeline which executes the analysis within our custom Docker container.
+
+To re-run our analysis you will need to:
+- [download the GitHub project repository](#download_repo)
+- [install Nextflow](https://www.nextflow.io/docs/latest/getstarted.html)
+- [install Docker Desktop](https://www.docker.com/get-started) (if running on local PC)
+- [download GalGal5 and sequencing data](#download_data)
+- [set Nextflow configuration file](#config)
+- [align sequencing data](#alignment)
+- [run downstream analysis](#downstream)
+
+**Important!** All shell scripts are to be executed from the base directory of the project!
+
+---
+
+<br/>
+
+## Download GitHub repository<a name="download_repo"></a>
+
+<br/>
+
+In order to reproduce our analysis, you will first need to download our otic-repregramming GitHub repository. To do this run:
+
+```shell
+git clone https://github.com/alexthiery/10x_neural_tube
+```
+
+---
+
+<br/>
+
+## Download data<a name="download_data"></a>
+
+<br/>
+
+To download the GalGal5 genome from Ensembl, run:
+
+```shell
+rsync -av rsync://ftp.ensembl.org/ensembl/pub/release-94/fasta/gallus_gallus/dna/Gallus_gallus.Gallus_gallus-5.0.dna.toplevel.fa.gz <LOCAL_PATH>
+```
+
+```shell
+rsync -av rsync://ftp.ensembl.org/ensembl/pub/release-94/gtf/gallus_gallus/Gallus_gallus.Gallus_gallus-5.0.94.gtf.gz <LOCAL_PATH>
+```
+
+For this analysis we used a manually edited GTF file as described in the paper methods. This can be downloaded [here]().
+
+Once the genome files have been downloaded, they need to be unzipped before running the alignment.
+
+**ADD SEQUENCING DATA DOWNLOAD PATHS**
+
+---
+
+<br/>
+
+## Nextflow configuration file<a name="config"></a>
+
+<br/>
+
+Configuration properties and file paths are passed to Nextflow via configuration files.
+
+In order to re-run the alignments and downstream analysis for this project, you will need to create a custom configuration file which contains:
+
+- max system resource allocation
+- Docker/Singularity activation
+
+<br/>
+
+Below is a copy of the config file used to run the pipeline at The Francis Crick Institute HPC. Given that this alignment was run on a HPC, we configure Nextflow to run with Singularity instead of Docker.
+
+```bash
+#!/usr/bin/env nextflow
+
+singularity {
+  enabled = true
+  autoMounts = true
+  docker.enabled = false
+}
+
+process {
+  executor = 'slurm'
+}
+
+params {
+  max_memory = 224.GB
+  max_cpus = 32
+  max_time = 72.h
+}
+```
+
+Further information on Nextflow configuration can be found [here](https://www.nextflow.io/docs/latest/config.html).
+
+After you have saved your custom configuration file, you are ready to align the data!
+
+---
+
+## Sequence alignment<a name="alignment"></a>
+
+
+Sample FASTQ paths are provided via a samplesheet csv. The template csv used to run this analysis can be found [template](NF-10x_alignment/crick_samplesheet.csv).
+
+
 
 You can easily re-run our entire pipeline in Nextflow using the following steps:
-1) Install [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) (version >=20.07.1) and [Docker](https://docs.docker.com/get-docker/)
 2) Download chick genome ([galgal5](ftp://ftp.ensembl.org/pub/release-94/fasta/gallus_gallus/dna/Gallus_gallus.Gallus_gallus-5.0.dna.toplevel.fa.gz))
 3) For this analysis we used a manually edited GTF file as described in the paper methods. However you can also run the analysis with the GTF from ensembl ([galgal5](ftp://ftp.ensembl.org/pub/release-94/gtf/gallus_gallus/Gallus_gallus.Gallus_gallus-5.0.94.gtf.gz))
 4) Download raw reads from [here]()
-5) Make a sampleInfo.csv file containing the sample names and corresponding paths using this [template](sampleInfo.csv)
+5) Make a sampleInfo.csv file containing the sample names and corresponding paths using this [template](NF-10x_alignment/crick_samplesheet.csv)
+6) Prepare a Nextflow config file containing resource allocation
 6) Run Nextflow using the following command
 
 ``` sh
-nextflow run alexthiery/10x_neural_tube \
--profile docker \
---metadata <path to sampleInfo.csv> \
---gtf <path to gtf> \
---fa <path to genome>
+nextflow run NF-10x_alignment/main.nf \
+-c <PATH_TO_CONFIG> \
+--samplesheet <PATH_TO_SAMPLESHEET> \
+--output output/NF-10x_alignment \
+--gtf <PATH_TO_GTF> \
+--fasta <PATH_TO_GENOME> \
+-resume
 ```
 
-This pipeline is configured to be ran on a cluster with 224GB memory and 32CPUs by default. The `-profile` flag can be used to set  either 'docker' or 'singularity', depending on the container application installed on your system. These settings can be adjusted  by replacing the `-profile` flag with a custom config file as below.
-
-``` sh
-nextflow run alexthiery/10x_neural_tube \
--c <path to custom.config file> \
---metadata <path to sampleInfo.csv> \
---gtf <path to gtf> \
---fa <path to genome>
-```
-
- For a template of a custom.config file, see [crick.config](conf/crick.config). Further information on Nextflow config files can be found [here](https://www.nextflow.io/docs/latest/config.html#configuration-file).
 
 </br>
 
