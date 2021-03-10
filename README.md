@@ -25,7 +25,7 @@ This repository provides the code to run the 10x single cell RNA-eq analysis.
 </br>
 
 #
-## Data availability<a name="data-availability"></a>
+# Data availability<a name="data-availability"></a>
 
 This repository contains the required code to run the entire alignment and downstream analysis pipeline. For those who would like to re-run the analysis, the following files should be downloaded:
 
@@ -35,7 +35,7 @@ This repository contains the required code to run the entire alignment and downs
 </br>
 
 #
-## Reproducing our analyses<a name="reproducibility"></a>
+# Reproducing our analyses<a name="reproducibility"></a>
 
 ---
 
@@ -56,9 +56,8 @@ To re-run our analysis you will need to:
 
 <br/>
 
-### Download GitHub repository<a name="download_repo"></a>
+## Download GitHub repository<a name="download_repo"></a>
 
----
 
 In order to reproduce our analysis, you will first need to download our otic-repregramming GitHub repository. To do this run:
 
