@@ -32,8 +32,7 @@ This repository contains the required code to run the entire alignment and downs
 
 </br>
 
-#
-## Reproducing our analyses<a name="reproducibility"></a>
+### Reproducing our analyses<a name="reproducibility"></a>
 
 Reproducing our analysis is computationally intensive, therefore we recommend to run the pipeline on a HPC.
 
@@ -50,11 +49,9 @@ To re-run our analysis you will need to:
 
 **Important!** All shell scripts are to be executed from the base directory of the project!
 
----
-
 <br/>
 
-## Download GitHub repository<a name="download_repo"></a>
+### Download GitHub repository<a name="download_repo"></a>
 
 <br/>
 
@@ -64,11 +61,9 @@ In order to reproduce our analysis, you will first need to download our otic-rep
 git clone https://github.com/alexthiery/10x_neural_tube
 ```
 
----
-
 <br/>
 
-## Download data<a name="download_data"></a>
+### Download data<a name="download_data"></a>
 
 <br/>
 
@@ -89,11 +84,9 @@ Once the genome files have been downloaded, they need to be unzipped before runn
 
 **ADD SEQUENCING DATA DOWNLOAD PATHS**
 
----
-
 <br/>
 
-## Nextflow configuration file<a name="config"></a>
+### Nextflow configuration file<a name="config"></a>
 
 <br/>
 
@@ -132,9 +125,7 @@ Further information on Nextflow configuration can be found [here](https://www.ne
 
 After you have saved your custom configuration file, you are ready to align the data!
 
----
-
-## Sequence alignment<a name="alignment"></a>
+### Sequence alignment<a name="alignment"></a>
 
 Our 10x data is aligned using a custom Nextflow pipeline.
 
