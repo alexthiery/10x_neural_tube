@@ -13,14 +13,6 @@ This repository provides the code to run the 10x single cell RNA-eq analysis.
 - [Reproducing our analyses](#reproducibility)
 - [Interactive downstream analysis](#interactive-downstream-analysis)
 - [Downstream analysis pipeline](#downstream-analysis-pipeline)
-  - [Calculating sex effect and removing sex genes](#sex_effect)
-  - [Identify and remove contamination](#remove_contam)
-  - [Remove poor quality clusters](#remove_poor_qual)
-  - [Check for cell cycle effect](#cell_cycle)
-  - [Cell state classification](#cell_state)
-  - [Gene modules](#gm)
-  - [Subset neural clusters](#subset_nt)
-  - [Pseudotime](#pseudotime)
 
 </br>
 
@@ -171,6 +163,18 @@ To interactively explore the data, follow these steps:
 ## Downstream analysis pipeline
 
 This analysis is ran using Seurat v3.1.5 For more information see https://satijalab.org/seurat/
+
+<br/>
+
+1) [Calculating sex effect and removing sex genes](#sex_effect)
+2) [Identify and remove contamination](#remove_contam)
+3) [Remove poor quality clusters](#remove_poor_qual)
+4) [Check for cell cycle effect](#cell_cycle)
+5) [Cell state classification](#cell_state)
+6) [Gene modules](#gm)
+7) [Subset neural clusters](#subset_nt)
+8) [Pseudotime](#pseudotime)
+
 
 Load packages
 
