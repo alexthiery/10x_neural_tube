@@ -164,7 +164,7 @@ To interactively explore the data, follow these steps:
 
 This analysis is ran using Seurat v3.1.5 For more information see https://satijalab.org/seurat/.
 
-To navigate between different sections of our analysis click here:
+To navigate between the different sections of our analysis click here:
 
 1) [Calculating sex effect and removing sex genes](#sex_effect)
 2) [Identify and remove contamination](#remove_contam)
