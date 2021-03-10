@@ -78,11 +78,12 @@ To download the GalGal5 genome from Ensembl, run:
 rsync -av rsync://ftp.ensembl.org/ensembl/pub/release-94/fasta/gallus_gallus/dna/Gallus_gallus.Gallus_gallus-5.0.dna.toplevel.fa.gz <LOCAL_PATH>
 ```
 
+To download the Galgal5 gtf from Ensembl, run:
+
+
 ```shell
 rsync -av rsync://ftp.ensembl.org/ensembl/pub/release-94/gtf/gallus_gallus/Gallus_gallus.Gallus_gallus-5.0.94.gtf.gz <LOCAL_PATH>
 ```
-
-For this analysis we used a manually edited GTF file as described in the paper methods. This can be downloaded [here]().
 
 Once the genome files have been downloaded, they need to be unzipped before running the alignment.
 
@@ -135,20 +136,15 @@ After you have saved your custom configuration file, you are ready to align the 
 
 ## Sequence alignment<a name="alignment"></a>
 
+Our 10x data is aligned using a custom Nextflow pipeline.
 
 Sample FASTQ paths are provided via a samplesheet csv. The template csv used to run this analysis can be found [template](NF-10x_alignment/crick_samplesheet.csv).
 
-
-
-You can easily re-run our entire pipeline in Nextflow using the following steps:
-2) Download chick genome ([galgal5](ftp://ftp.ensembl.org/pub/release-94/fasta/gallus_gallus/dna/Gallus_gallus.Gallus_gallus-5.0.dna.toplevel.fa.gz))
-3) For this analysis we used a manually edited GTF file as described in the paper methods. However you can also run the analysis with the GTF from ensembl ([galgal5](ftp://ftp.ensembl.org/pub/release-94/gtf/gallus_gallus/Gallus_gallus.Gallus_gallus-5.0.94.gtf.gz))
-4) Download raw reads from [here]()
-5) Make a sampleInfo.csv file containing the sample names and corresponding paths using this [template](NF-10x_alignment/crick_samplesheet.csv)
-6) Prepare a Nextflow config file containing resource allocation
-6) Run Nextflow using the following command
+Once you have changed the sample paths in the samplesheet csv, execute the following commans to align the 10x data.
 
 ``` sh
+export NXF_VER=20.07.1
+
 nextflow run NF-10x_alignment/main.nf \
 -c <PATH_TO_CONFIG> \
 --samplesheet <PATH_TO_SAMPLESHEET> \
@@ -157,7 +153,6 @@ nextflow run NF-10x_alignment/main.nf \
 --fasta <PATH_TO_GENOME> \
 -resume
 ```
-
 
 </br>
 
