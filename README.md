@@ -37,6 +37,8 @@ This repository contains the required code to run the entire alignment and downs
 #
 ## Reproducing our analyses<a name="reproducibility"></a>
 
+---
+
 Reproducing our analysis is computationally intensive, therefore we recommend to run the pipeline on a HPC.
 
 In order to make our analysis fully reproducible, we have developed a Nextflow pipeline which executes the analysis within our custom Docker container.
@@ -56,6 +58,8 @@ To re-run our analysis you will need to:
 
 ### Download GitHub repository<a name="download_repo"></a>
 
+---
+
 In order to reproduce our analysis, you will first need to download our otic-repregramming GitHub repository. To do this run:
 
 ```shell
@@ -65,6 +69,8 @@ git clone https://github.com/alexthiery/10x_neural_tube
 <br/>
 
 ### Download data<a name="download_data"></a>
+
+---
 
 To download the GalGal5 genome from Ensembl, run:
 
@@ -86,6 +92,8 @@ Once the genome files have been downloaded, they need to be unzipped before runn
 <br/>
 
 ### Nextflow configuration file<a name="config"></a>
+
+---
 
 Configuration properties and file paths are passed to Nextflow via configuration files.
 
@@ -125,6 +133,8 @@ After you have saved your custom configuration file, you are ready to align the 
 <br/>
 
 ### Sequence alignment<a name="alignment"></a>
+
+---
 
 Our 10x data is aligned using a custom Nextflow pipeline.
 
