@@ -22,6 +22,8 @@ This repository provides the code to run the 10x single cell RNA-eq analysis.
   - [Subset neural clusters](#subset_nt)
   - [Pseudotime](#pseudotime)
 
+</br>
+
 #
 ## Data availability<a name="data-availability"></a>
 
@@ -32,7 +34,8 @@ This repository contains the required code to run the entire alignment and downs
 
 </br>
 
-### Reproducing our analyses<a name="reproducibility"></a>
+#
+## Reproducing our analyses<a name="reproducibility"></a>
 
 Reproducing our analysis is computationally intensive, therefore we recommend to run the pipeline on a HPC.
 
@@ -63,8 +66,6 @@ git clone https://github.com/alexthiery/10x_neural_tube
 
 ### Download data<a name="download_data"></a>
 
-<br/>
-
 To download the GalGal5 genome from Ensembl, run:
 
 ```shell
@@ -85,8 +86,6 @@ Once the genome files have been downloaded, they need to be unzipped before runn
 <br/>
 
 ### Nextflow configuration file<a name="config"></a>
-
-<br/>
 
 Configuration properties and file paths are passed to Nextflow via configuration files.
 
@@ -122,6 +121,8 @@ params {
 Further information on Nextflow configuration can be found [here](https://www.nextflow.io/docs/latest/config.html).
 
 After you have saved your custom configuration file, you are ready to align the data!
+
+<br/>
 
 ### Sequence alignment<a name="alignment"></a>
 
