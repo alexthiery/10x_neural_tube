@@ -801,11 +801,12 @@ pc1 <- neural_subset@meta.data[,'orig.ident', drop=F] %>%
   mutate(pc1 = Embeddings(object = neural_subset[["pca"]])[, 1])
 
 
-# Plot cell stage along PC1
+# Plot cell stage along PC1 - x-axis inverted to match developmental stage
 png(paste0(curr.plot_path, 'pc1.png'), height = 18, width = 26, units = 'cm', res = 400)
 ggplot(pc1, aes(x = pc1, y = orig.ident, colour = orig.ident)) +
   geom_quasirandom(groupOnX = FALSE) +
   theme_classic() +
+  scale_x_reverse() +
   xlab("PC1") + ylab("Timepoint") +
   ggtitle("Cells ordered by first principal component")
 graphics.off()
@@ -816,42 +817,46 @@ pc1_rank <- pc1 %>%
   mutate(rank = rank(-pc1)) %>%
   mutate(pseudotime = rank*(99/max(rank)))
 
+# Add housekeeping genes as a control group
+housekeeping <- data.frame(gene_name = c('GAPDH', 'SDHA', 'HPRT1', 'HBS1L', 'TUBB1', 'YWHAZ'), timepoint = 'Housekeeping')
+plot_genes <- rbind(network_genes, housekeeping)
 
-# Filter scaled seurat counts by network_genes -> generate long df with corresponding pseudotime and normalised count
-plot_data <- as.data.frame(t(as.matrix(GetAssayData(neural_subset, slot = 'scale.data')[rownames(neural_subset) %in% network_genes$gene_name,]))) %>%
+# Filter scaled seurat counts by plot_genes -> generate long df with corresponding pseudotime and normalised count
+plot_data <- as.data.frame(t(as.matrix(GetAssayData(neural_subset, slot = 'scale.data')[rownames(neural_subset) %in% plot_genes$gene_name,]))) %>%
   tibble::rownames_to_column(var = "cell_name") %>%
   dplyr::full_join(pc1_rank) %>%
   pivot_longer(!c(cell_name, orig.ident, pseudotime, pc1, rank), names_to = "gene_name", values_to = "scaled_expression") %>%
-  dplyr::left_join(network_genes) %>%
+  dplyr::left_join(plot_genes) %>%
   droplevels() %>%
-  mutate(timepoint = factor(timepoint, levels = c(1,3,5,7,9,12)))
+  mutate(timepoint = factor(timepoint, levels = c(1,3,5,7,9,12,'Housekeeping')))
 
 
-# mean and SE summary data
+# Mean and SE summary data
 plot_data_summary <- plot_data %>%
   mutate(rank_bin = pseudotime - (pseudotime %% 2.5)) %>% 
   group_by(rank_bin, timepoint) %>% 
   summarise(mn = mean(scaled_expression),
             se = sd(scaled_expression)/sqrt(n()))
 
-# plot gam for all stages without standard error
+# Plot GAM for all stages without standard error
 png(paste0(curr.plot_path, 'gam_pseudotime_allnetwork.png'), height = 18, width = 26, units = 'cm', res = 400)
 ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)) +
-  scale_color_manual(values=c("#6600ff", "#0000ff", "#009900", "#ffcc00", "#ff8533", "#ee0000")) +
+  scale_color_manual(values=c("#6600ff", "#0000ff", "#009900", "#ffcc00", "#ff8533", "#ee0000", "#c0c0c0")) +
   geom_smooth(method="gam", se=FALSE) +
+  xlab("Ranking of PC1") + ylab("Average expression (scaled)") +
   theme_classic()
 graphics.off()
 
-# plot gam for all stages with standard error
+# Plot GAM for all stages with standard error
 png(paste0(curr.plot_path, 'gam_se_pseudotime_allnetwork.png'), height = 18, width = 26, units = 'cm', res = 400)
 ggplot(plot_data, aes(x = pseudotime, y = scaled_expression, colour = timepoint)) +
   geom_errorbar(data = plot_data_summary, aes(x = rank_bin, y = mn, 
                                               ymax = mn + se, ymin = mn - se), width = 2) +
   geom_point(data = plot_data_summary, aes(x = rank_bin, y = mn)) +
-  scale_color_manual(values=c("#6600ff", "#0000ff", "#009900", "#ffcc00", "#ff8533", "#ee0000")) +
+  scale_color_manual(values=c("#6600ff", "#0000ff", "#009900", "#ffcc00", "#ff8533", "#ee0000", "#c0c0c0")) +
   geom_smooth(method="gam", se=FALSE) +
+  xlab("Ranking of PC1") + ylab("Average expression (scaled)") +
   theme_classic()
 graphics.off()
-
 
 saveRDS(neural_subset, paste0(rds_path, "neural_subset.RDS"))
