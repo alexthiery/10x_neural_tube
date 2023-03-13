@@ -6,7 +6,7 @@
 
 </p>
 
-This repository provides the code to run the 10x single cell RNA-eq analysis.
+This repository provides the code to run the 10x single cell RNA-eq analysis in [Trevers et al. 2023](https://doi.org/10.7554/eLife.73189).
 
 
 - [Data availability](#data-availability)
